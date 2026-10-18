@@ -1,0 +1,65 @@
+# Deploys the web app to Vercel: every PR gets a preview, and main updates the dev site.
+# The only link to Vercel is the VERCEL_TOKEN repo secret (see docs/process.md).
+name: Deploy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERCEL_PROJECT: heynewton-web
+  VERCEL_TELEMETRY_DISABLED: 1
+
+jobs:
+  deploy:
+    # Forks can't read repo secrets, so their PRs get no preview.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event_name == 'push' && 'dev' || 'preview' }}
+      url: ${{ steps.deploy.outputs.url }}
+    defaults:
+      run:
+        working-directory: apps/web
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # main deploys to Vercel's "production" target, which has the stable URL; it is our dev site.
+      VERCEL_TARGET: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global vercel@64.5.0
+
+      - name: Link the Vercel project
+        run: vercel link --yes --project "$VERCEL_PROJECT" --token "$VERCEL_TOKEN"
+
+      # Previews only ever hold fake data, so anyone with the link can open them
+      # (turns off Vercel Authentication on the project).
+      - name: Make previews public
+        run: |
+          project_id=$(jq -r .projectId .vercel/project.json)
+          curl --fail --silent --show-error -X PATCH \
+            -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
+            -d '{"ssoProtection":null}' \
+            "https://api.vercel.com/v9/projects/$project_id" > /dev/null
+
+      - run: vercel pull --yes --environment "$VERCEL_TARGET" --token "$VERCEL_TOKEN"
+      - run: vercel build --target "$VERCEL_TARGET" --token "$VERCEL_TOKEN"
+
+      - name: Deploy
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --target "$VERCEL_TARGET" --token "$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"

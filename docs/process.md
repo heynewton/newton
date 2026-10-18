@@ -57,6 +57,17 @@ An issue moves to Ready when it has:
 - An entry in [build-log.md](build-log.md).
 - Merged into `main` (squash merge).
 
+## Previews
+
+Every PR from a branch in this repo gets a running copy of the web app. Look for
+"This branch was successfully deployed" on the PR and click **View deployment**. Merges to `main`
+update the dev site (the `dev` environment, under **Deployments** on the repo page).
+
+- The deploy runs in GitHub Actions (`.github/workflows/deploy.yml`). Its only link to Vercel is
+  the `VERCEL_TOKEN` repo secret, created on the project's Vercel account (not a personal one).
+- Previews only ever use fake data from `fixtures/`, so they are public to anyone with the link.
+- PRs from forks get no preview, because forks can't read repo secrets.
+
 ## Rhythm
 
 | When | What | Who |
