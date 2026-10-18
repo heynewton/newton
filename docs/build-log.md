@@ -607,6 +607,10 @@ wdyt of "Ask out loud, hands on the helm. Newton answers using data from your in
 add weather and add idea to spec
 ````
 
+````text
+instead of "Newton supports the skipper; it doesn't replace them. Every answer says where it came from and how fresh the data is." just "Newton supports the skipper; it doesn't replace them."
+````
+
 **What Claude did**
 
 - Found no existing issue. #15 (records screen) and #27 (Google and Apple sign-in) were close but
@@ -631,6 +635,8 @@ add weather and add idea to spec
 - Added "Weather on request" to the spec's Phase 2 feature ideas, next to the storm alert: a marine
   forecast downloaded before leaving, always stated with its source and issue time. The forecast
   source is still open, under "Data we don't have yet".
+- Shortened the safety line under "What is Hey Newton?" to "Newton supports the skipper; it
+  doesn't replace them."
 
 **What changed along the way**
 

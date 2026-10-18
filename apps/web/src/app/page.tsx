@@ -91,8 +91,7 @@ export default function Home() {
             </div>
           </div>
           <p className="max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
-            Newton supports the skipper; it doesn&apos;t replace them. Every answer says where
-            it came from and how fresh the data is.
+            Newton supports the skipper; it doesn&apos;t replace them.
           </p>
         </section>
       </main>
