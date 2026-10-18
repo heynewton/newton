@@ -287,7 +287,7 @@ Go ahead with all 3
   normal), and "buoys" as owner-written tips for picking up the mooring.
 - Checked the 12 proposed issues against the 14 open ones: maintenance schedules and reminders
   were already covered (#7, #9, #12), owner-written procedures partly overlap the manuals Q&A
-  (#13, #14), and nothing yet covers the Phase 3 ideas.
+  (#13, #14), and nothing yet covers the on-water voice ideas (then Phase 3, now Phase 2 since #23).
 - Added a "Feature ideas" section to the spec in the team Drive, grouped by phase, with the data
   sources Newton doesn't have yet (marine weather, tidal streams, chart depth, harbours, leeway).
 - Wrote down in `docs/process.md` and `CLAUDE.md` that ideas live in the spec until their phase
@@ -320,6 +320,12 @@ Follow-up, after the PR was up:
 Invert order for phase 2 and 3. I’d like to start working on voice quickly
 ````
 
+````text
+Create issues for the items that you can’t do and I’ll have to do manually.
+Update gdrive specs.
+Double check that all reference to voice as phase 3 have been moved to phase 2 (and friends is now phase 3 everywhere)
+````
+
 **What Claude did**
 
 - Looked in the repo and the Drive spec. The spec has a short architecture section with a diagram,
@@ -341,5 +347,12 @@ Invert order for phase 2 and 3. I’d like to start working on voice quickly
 - On-water voice moved to Phase 2 and friends' boats to Phase 3, in the README, `CLAUDE.md` (including
   the milestone names) and the architecture page. The voice section now says what it needs from
   Phase 1 (only sign-in, boats and memberships) and that its `calc` and tide work can start early.
+- Updated the five phase references in the Drive spec (the Phase 2 ordering note, the emergency alerts
+  phase, the voice ideas heading, the onboarding risk and the friends' boats open question).
+- Searched the repo and the open issues for any other place that still used the old order. One
+  historical build-log line now says "then Phase 3, now Phase 2"; the issues had none.
+- Filed the two steps Claude can't do from its session: renaming the milestones
+  ([#25](https://github.com/heynewton/newton/issues/25)) and redrawing the spec's build phases
+  diagram, which is an image ([#26](https://github.com/heynewton/newton/issues/26)).
 
 **Pull request:** [#23](https://github.com/heynewton/newton/pull/23)
