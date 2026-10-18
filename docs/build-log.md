@@ -935,4 +935,4 @@ start 24, 8 and 9 in 3 parallel sessions
 - The plan in #24 was to put a token in the cloud environment as `GH_TOKEN`. The Claude Code docs
   say that can't work whatever the token, so #24 now closes with docs instead of a token.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#51](https://github.com/heynewton/newton/pull/51)
