@@ -121,10 +121,10 @@ co-owners see who owes whom; questions about the manuals are answered with sourc
 | --- | --- | --- |
 | Web app and API | Next.js in `apps/web`: pages for people, route handlers for webhooks and the API. One deployable. | #15 |
 | Hosting | Vercel, with a preview link on every PR (proposed in #19). | #19 |
-| Database and auth | Supabase Postgres with RLS. Migrations checked in under `supabase/`, local stack via the Supabase CLI. Email magic-link sign-in. | #5 |
-| Records | Tables: `boats`, `people`, `memberships` (role, ownership share), `documents`, `renewals`, `maintenance_items`, `expenses`. Each record can link to its source document. | #5, #8, #9 |
+| Database and auth | Supabase Postgres with RLS. Migrations checked in under `supabase/`, local stack via the Supabase CLI. Supabase Auth: email magic link first, then Google and Apple ([decision](decisions/0001-auth.md)). RLS policies go through a `current_person_id()` function, so the auth provider can change without rewriting them. | #5, #27 |
+| Records | Tables: `boats`, `people` (Newton's own ID; the auth provider's ID only in `auth_subject`; verified sender addresses for email-in), `memberships` (role, ownership share), `documents`, `renewals`, `maintenance_items`, `expenses`. Each record can link to its source document. | #5, #8, #9, #27 |
 | File storage | Supabase Storage, one folder per boat (`<boat_id>/…`), protected by storage RLS policies. | #8 |
-| Email-in | An inbound email provider **(open)** posts each message to a webhook in the web app. The webhook stores the raw email and attachments as documents of that boat and returns quickly. Mail from senders who are not members is held, not filed. | #10 |
+| Email-in | An inbound email provider **(open)** posts each message to a webhook in the web app. The webhook stores the raw email and attachments as documents of that boat and returns quickly. Mail from senders who are not members is held, not filed. Senders are matched against each person's verified sender addresses, not their login, since an Apple login can be a relay address. | #10, #27 |
 | Extraction | Claude classifies each document and proposes fields. `calc` parses and validates dates and amounts before anything is saved. Low-confidence results are flagged for review. | #11 |
 | Background work | Extraction and indexing run outside the webhook request, from a jobs table **(open: Supabase queue/cron or a hosted job runner)**. | #11, #13 |
 | Calculations | `packages/calc`: cost split, due dates. | #6, #7 |
@@ -142,7 +142,7 @@ packages/calc/       pure functions for every number (cloud and phone)
 packages/agent/      prompts, tool definitions, evals (proposed, when #11 starts)
 supabase/            migrations, RLS policies, seed from fixtures, RLS tests
 fixtures/            fake sample boat, documents, .eml files
-docs/decisions/      one short record per open decision
+docs/decisions/      one short record per decision
 ```
 
 ### Email-in to a filed record
@@ -271,7 +271,8 @@ who aren't us.
 
 ## Open decisions
 
-Each becomes a record in `docs/decisions/` when the issue that needs it starts.
+Each becomes a record in `docs/decisions/` when the issue that needs it starts. Decided so far:
+[0001 Auth](decisions/0001-auth.md).
 
 | Decision | Needed by | Notes |
 | --- | --- | --- |
