@@ -34,7 +34,7 @@ export default function Home() {
         <section className="flex flex-col items-start gap-6">
           <Image src="/icon.svg" alt="Hey Newton logo" width={72} height={72} priority />
           <h1 className="max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
-            The assistant that knows your boat inside out.
+            The AI assistant that knows your boat inside out.
           </h1>
           <p className="max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
             On the water, say &ldquo;Hey Newton&rdquo; and get answers out loud. At home,
