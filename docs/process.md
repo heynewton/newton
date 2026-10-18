@@ -29,6 +29,16 @@ The [Newton project board](https://github.com/orgs/heynewton/projects/1) has fiv
 - **In review**: a PR is open and waiting for review.
 - **Done**: merged.
 
+### Ideas before issues
+
+Feature ideas start in the **Feature ideas** section of the spec ("Newton — Product & Architecture
+Spec" in the team Google Drive), grouped by phase, with their open questions next to them. They
+are not filed as issues yet, so the board only holds work we expect to start soon.
+
+At weekly planning, when a phase is getting close, its ideas are split into PR-sized issues
+(after checking for duplicates). Each new issue links back to the idea, and the idea names its
+issue.
+
 ### Definition of Ready
 
 An issue moves to Ready when it has:
@@ -51,7 +61,7 @@ An issue moves to Ready when it has:
 
 | When | What | Who |
 | --- | --- | --- |
-| Weekly, ~15 min | **Planning**: order the top of Ready; refine those issues. | Maintainer, Claude |
+| Weekly, ~15 min | **Planning**: order the top of Ready; refine those issues; turn ideas for the next phase into issues. | Maintainer, Claude |
 | Continuously | **Flow**: take the top unblocked Ready issue, ship it with the `ship-change` skill. | Claude, contributors |
 | Weekly | **Review**: demo what merged, on real boat data kept locally. A short update to contributors, based on the build log. | Maintainer, contributors |
 | Monthly | **Retro**: what slowed us down, what broke, what to change. Changes go into CLAUDE.md or the skill. | Everyone |
