@@ -83,6 +83,6 @@ Then follow these conventions for this setup change too: make a branch, commit, 
 **What changed along the way**
 
 - `CLAUDE.md` only existed on the still-open [#1](https://github.com/heynewton/newton/pull/1), not on `main`. Instead of creating a second copy that would conflict, Claude branched from #1 and opened this PR stacked on it.
-- The labels and milestones are written down but not yet created on GitHub.
+- Claude asked whether to create the labels and milestones on GitHub. *Choice:* Yes, create them. Claude then created the seven area labels and the four phase milestones, and left GitHub's default labels as they were.
 
 **Pull request:** [#2](https://github.com/heynewton/newton/pull/2)
