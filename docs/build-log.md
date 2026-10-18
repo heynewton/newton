@@ -656,6 +656,89 @@ instead of "Newton supports the skipper; it doesn't replace them. Every answer s
 
 **Pull request:** [#34](https://github.com/heynewton/newton/pull/34)
 
+## heynewton.app serves the homepage
+
+**Prompt**
+
+````text
+let start 35. I can do the vercel setup to start
+````
+
+**What Claude did**
+
+- Checked that #35 was unblocked: the homepage (#31) had merged in #34.
+- Split the work: the maintainer adds the domain in Vercel and the DNS records in Cloudflare
+  (account access), Claude does the repo side.
+- Opened #37 to move heynewton.app to a production Vercel and Supabase project before sign-in (#5)
+  opens to anyone outside the team, so the domain never serves real boat data from the dev setup.
+- Noted in `docs/process.md` (Previews) that heynewton.app currently serves the dev site and why
+  that changes, and in `docs/architecture.md` where the domain points (Today, the Phase 1 Hosting
+  row, and the Phase 3 dev/prod split).
+
+**Pull request:** [#38](https://github.com/heynewton/newton/pull/38)
+
+---
+
+## Fake sample boat in fixtures/
+
+**Prompt**
+
+````text
+items in progress are almost done. what is next
+````
+
+Claude read the board: the top of Ready was #4, the sample boat. *Choice:* "Start #4 once #30 and #34 are merged: branch from an up-to-date main and build the fake sample boat in fixtures/." #30 was merged, but #34 (the homepage) was still waiting for review. *Choice:* "Don't wait for #34. Start #4 from main now, and rebase it later if the build log conflicts."
+
+**What Claude did**
+
+- Added `fixtures/sample-boat/` with an invented boat, Kittiwake, in `boat.json`: three co-owners at 40/35/25, a crew member, and each person's verified sender addresses, shaped like the planned `boats`, `people` and `memberships` tables.
+- Wrote four fake documents as plain text (insurance certificate, registration, yard invoice, engine manual excerpt), plus five inbound `.eml` files with them attached as PDFs. One email comes from a non-member, so email-in can test holding mail.
+- Added `build.mjs`, a script with no dependencies that turns the text into one-page PDFs and builds the emails. It gives the same bytes on every run.
+- Chose numbers that are useful in tests: an invoice total that doesn't split evenly, a registration that expires soon, and an oil change due by hours or date, whichever comes first.
+- Updated the Fixtures row in `docs/architecture.md`.
+
+**What changed along the way**
+
+- Claude first planned text-only attachments. It switched to generated PDFs so the emails look like real inbound mail, while keeping the text sources easy to review.
+- Rendering the invoice PDF showed the totals sitting two characters right of the amount column, so the text source was realigned.
+- `npm run check` failed at first on `apps/web/.next` types left over from the homepage branch. Those are generated and git-ignored, so Claude deleted the folder and the checks passed.
+
+**Pull request:** [#36](https://github.com/heynewton/newton/pull/36)
+
+---
+
+## Due dates: what's overdue and what's coming up, by date or engine hours
+
+**Prompt**
+
+````text
+start 6 and 7
+````
+
+*Choice* when asked where #7 should go, since the session could only push to the branch holding
+#6: **Separate branch** (its own PR, one issue per PR).
+
+**What Claude did**
+
+- Wrote `nextDue` for the three kinds of due date the issue named: a renewal's expiry date, a
+  yearly renewal one year after it was last done, and maintenance every N months and/or N engine
+  hours.
+- Wrote `findDue`, which splits items into overdue and due soon within a window of days (and
+  optionally engine hours). Maintenance is due on whichever of date and hours comes first, and
+  each result says which one triggered it, so a reminder can give its reason.
+- Kept dates as plain `YYYY-MM-DD` with no time zone. Adding months moves to the month's last day
+  when the day doesn't exist (31 January + 1 month is 28 or 29 February).
+- Tests cover month ends, leap years (including a yearly renewal done on 29 February), the
+  boundaries of the due day and the window, both ways "whichever comes first" can go, and bad input.
+- Listed the functions in the Today section of `docs/architecture.md`.
+
+**What changed along the way**
+
+- #6 and #7 were built in the same session but shipped as two PRs, one issue per PR.
+- Results keep their input order; sorting the digest by urgency is left to the reminders job (#12).
+
+**Pull request:** [#40](https://github.com/heynewton/newton/pull/40)
+
 ---
 
 ## Co-owner cost split: who owes what, from tested code
