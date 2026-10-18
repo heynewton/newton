@@ -473,3 +473,63 @@ push to repo which is public and link in gdoc from there.
   refused on its revision check and redone against a fresh read.
 
 **Pull request:** [#29](https://github.com/heynewton/newton/pull/29)
+
+---
+
+## Homepage: what Hey Newton is, how to get started, and a footer on every page
+
+**Prompt**
+
+````text
+let's start phase 1 with a homepage for new boat / new user.
+is there an issue for that? if not, create it. and define a plan for it
+````
+
+Follow-ups, in order (the later ones sent while Claude was working):
+
+````text
+Move #31 to In progress and build it on a new branch from main.
+````
+
+````text
+Homepage should explain what is "Hey Newton".
+And offer to "Get started for free", or offer to existing users to access their account.
+````
+
+````text
+Every page should have a privacy and terms footer, maybe that should be design as one common element for all pages.
+````
+
+````text
+how many screensize should we optimize for? 2 (phone, laptop) or 3 (phone, tablet, laptop)?
+devices used are are typically:
+
+* everywhere: phones: iphone 15 or similar
+
+* on board the boat small tablets at nav station or outside: 9" screens
+* on boat larger tablets ipad pro or laptops
+* at home: laptops and desktop with large monitors
+````
+
+**What Claude did**
+
+- Found no existing issue. #15 (records screen) and #27 (Google and Apple sign-in) were close but
+  assume a boat already exists. Split the first run into two flat issues: #31, the signed-out
+  homepage (blocked by nothing), and #32, adding your first boat after signing in (blocked by #5
+  and #31). Both went on the board with the Phase 1 milestone.
+- Moved #31 to In progress and built it: a homepage that explains Hey Newton at home and on the
+  water (on the water marked "Coming soon"), **Get started for free** and **Sign in**, and
+  placeholder `/get-started` and `/sign-in` pages until the magic link lands in #5.
+- Added one footer in the root layout, so every page has Privacy, Terms, licence and repo links.
+  `/privacy` and `/terms` are placeholders. Opened #33 to write the real texts before sign-up
+  opens to anyone outside the team.
+- Checked the pages in the browser at phone, tablet and desktop widths, in light and dark mode.
+  The tablet check showed some links were shorter than 44px, so they were made taller for touch.
+
+**What changed along the way**
+
+- The first plan had a single **Sign in** button. It became "Get started for free" plus a way in
+  for existing users, and #31 was rewritten to match.
+- The footer started on the homepage only, then moved into the layout as a shared component.
+
+**Pull request:** [#34](https://github.com/heynewton/newton/pull/34)
