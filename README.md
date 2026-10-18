@@ -71,6 +71,9 @@ npm run db:types  # regenerate apps/web/src/lib/db/database.types.ts after a mig
 
 Copy `apps/web/.env.example` to `apps/web/.env.local` and fill in the publishable key. Sign-in
 emails don't leave your machine: open the mail catcher at http://127.0.0.1:54324 to click the link.
+The seed loads the made-up sample boat Kittiwake (`fixtures/sample-boat`), so signing in as
+`alex@example.com` (owner), `sam@example.net` or `jordan@example.com` (co-owners) or
+`riley@example.org` (crew) shows it on `/boats`.
 
 | Folder | What it is |
 | --- | --- |
