@@ -815,4 +815,4 @@ updated on gh, reflect in /docs/
 - The main folder had another session's branch checked out, so Claude made this change in a
   separate git worktree.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#44](https://github.com/heynewton/newton/pull/44)
