@@ -90,7 +90,7 @@ the first `calc` functions. There is no database, auth, agent or email yet.
 flowchart LR
   subgraph Repo["npm workspaces (Node 22)"]
     Web["apps/web<br/>Next.js 16, App Router,<br/>Tailwind 4, TypeScript"]
-    Calc["packages/calc<br/>TypeScript, Vitest<br/>toCents, formatCents"]
+    Calc["packages/calc<br/>TypeScript, Vitest<br/>money, cost split"]
   end
   CI["GitHub Actions<br/>lint, typecheck, test, build"]
   CI --> Web
@@ -100,7 +100,7 @@ flowchart LR
 | Part | Where | State |
 | --- | --- | --- |
 | Web app | `apps/web` | Homepage, placeholder `/get-started`, `/sign-in`, `/privacy` and `/terms`, and a shared footer from the root layout (#31). No auth, no data. Previews per PR (#19). |
-| Calc | `packages/calc` | Money helpers (`toCents`, `formatCents`) with tests. Imported as source (`main: src/index.ts`), no build step. |
+| Calc | `packages/calc` | Money helpers (`toCents`, `formatCents`) and the co-owner cost split (`splitCosts`, #6), with tests. Imported as source (`main: src/index.ts`), no build step. |
 | Brand | `assets/brand` | Logo, favicon, monochrome marks. |
 | CI | `.github/workflows/ci.yml` | `npm ci`, lint, typecheck, test, build on every PR and on `main`. |
 | Fixtures | `fixtures/` | Planned (#4); not created yet. |
