@@ -530,4 +530,4 @@ preview with option b
 - The production URL handling was simplified to "report the URL Vercel prints", because it couldn't
   be checked until the token exists.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#30](https://github.com/heynewton/newton/pull/30)
