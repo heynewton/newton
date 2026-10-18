@@ -611,6 +611,8 @@ add weather and add idea to spec
 instead of "Newton supports the skipper; it doesn't replace them. Every answer says where it came from and how fresh the data is." just "Newton supports the skipper; it doesn't replace them."
 ````
 
+*Choice:* Yes, make the page description match the intro: answers out loud on the water, maintenance, documents and navigation planning at home.
+
 **What Claude did**
 
 - Found no existing issue. #15 (records screen) and #27 (Google and Apple sign-in) were close but
@@ -637,6 +639,7 @@ instead of "Newton supports the skipper; it doesn't replace them. Every answer s
   source is still open, under "Data we don't have yet".
 - Shortened the safety line under "What is Hey Newton?" to "Newton supports the skipper; it
   doesn't replace them."
+- Made the page description (search results and link previews) match the new intro line.
 
 **What changed along the way**
 
