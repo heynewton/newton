@@ -900,4 +900,4 @@ can you improve the gh project workflow so that the cards move when the PR is cr
 - Claude tested the script locally against the real board on cases that shouldn't move anything
   (#49 assigned while already In progress, #4 closed while already Done).
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#50](https://github.com/heynewton/newton/pull/50)
