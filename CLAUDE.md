@@ -57,3 +57,35 @@ We are in **Phase 1**.
 - **No secrets in the repo.** Keys go in `.env` (git-ignored). Secret scanning and push
   protection are on.
 - The repo is public and AGPL-3.0: assume anything committed is visible to everyone.
+
+## Workflow
+
+- One branch and one PR per change, from an up-to-date `main`. Never commit to `main` directly.
+- If a change belongs to an open PR on the same topic, add it there instead of opening a new one.
+- When a PR grows, update its title and description to match.
+- PR descriptions list what was tested and what wasn't.
+- Commit messages say what changed and why.
+- After each PR, add an entry to `docs/build-log.md`, lightly cleaning the prompt where privacy
+  needs it (no real boat data or personal info, per the repo rules above).
+- The `ship-change` skill (`.claude/skills/ship-change/SKILL.md`) is the checklist for landing a change.
+
+### Issues are the todo list
+
+- One issue = one PR-sized change. A bigger job is split into flat issues, not parents and
+  sub-issues. Each issue has a short "Done when" checklist, and the PR says `Closes #N`.
+  Blockers are a "Blocked by: #N" line above "Done when".
+- Labels say where it belongs, not how urgent it is, plus `bug` and `documentation`. No priority
+  labels. Area labels:
+  - `backend`: Supabase schema, row-level security, auth, storage
+  - `email-in`: per-boat inbound email and filing
+  - `agent`: Claude tool use, routing, document Q&A
+  - `calc`: deterministic functions (tides, bearings, target angles, dates, cost splits)
+  - `mobile`: the Expo / React Native app
+  - `boat-data`: Signal K, NMEA 2000, NOAA tides
+  - `repo`: tooling, CI, repo setup
+- Milestones are the goals: one per build phase (`Phase 1: Home side`, `Phase 2: Friends' boats`,
+  `Phase 3: On-water voice`, `Phase 4: Paid product`). Every open issue has one.
+- Priority is the order of work: first what is blocked by nothing, then what unblocks other work,
+  then small steps toward users. Keep at most two issues in progress.
+- Before creating an issue, search the open ones for a duplicate (`gh issue list --search "<words>"`).
+  New ideas that come up mid-task become an issue, and the current task carries on.
