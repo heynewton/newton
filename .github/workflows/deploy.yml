@@ -27,9 +27,6 @@ jobs:
     environment:
       name: ${{ github.event_name == 'push' && 'dev' || 'preview' }}
       url: ${{ steps.deploy.outputs.url }}
-    defaults:
-      run:
-        working-directory: apps/web
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       # main deploys to Vercel's "production" target, which has the stable URL; it is our dev site.
@@ -45,14 +42,15 @@ jobs:
       - name: Link the Vercel project
         run: vercel link --yes --project "$VERCEL_PROJECT" --token "$VERCEL_TOKEN"
 
-      # Previews only ever hold fake data, so anyone with the link can open them
-      # (turns off Vercel Authentication on the project).
-      - name: Make previews public
+      # The app lives in apps/web of an npm workspace, so Vercel builds from the repo root with
+      # apps/web as the project's root directory. Previews only ever hold fake data, so anyone
+      # with the link can open them (Vercel Authentication off).
+      - name: Configure the Vercel project
         run: |
           project_id=$(jq -r .projectId .vercel/project.json)
           curl --fail --silent --show-error -X PATCH \
             -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
-            -d '{"ssoProtection":null}' \
+            -d '{"rootDirectory":"apps/web","ssoProtection":null}' \
             "https://api.vercel.com/v9/projects/$project_id" > /dev/null
 
       - run: vercel pull --yes --environment "$VERCEL_TARGET" --token "$VERCEL_TOKEN"
