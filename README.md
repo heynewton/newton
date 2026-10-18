@@ -46,6 +46,23 @@ Website: [heynewton.app](https://heynewton.app)
 3. **On-water voice**: tide and course-to-mark first (phone GPS only), then target angles via Signal K.
 4. **Paid product.**
 
+## Development
+
+You need Node.js 22 (see `.nvmrc`).
+
+```bash
+npm install      # install every workspace
+npm run dev      # web app on http://localhost:3000
+npm run check    # lint, type check and tests
+npm run build    # production build
+```
+
+| Folder | What it is |
+| --- | --- |
+| `apps/web` | The web app (Next.js): the Phase 1 screen |
+| `packages/calc` | Deterministic, tested functions for every number Newton reports |
+| `fixtures` | Fake sample data (no real boat data) |
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
