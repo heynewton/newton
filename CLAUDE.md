@@ -40,6 +40,9 @@ assumes it may become a paid product, so it is multi-boat and multi-owner from d
 | Boat data | Signal K (Raspberry Pi + NMEA 2000 gateway) |
 | Tides | NOAA predictions, cached |
 
+The current architecture and the target for each phase are in `docs/architecture.md`. A change
+that alters the architecture (a new component, service or decision) updates that page in the same PR.
+
 ## Build phases
 
 1. Home side for our own boat: email-in filing, maintenance and renewal reminders,

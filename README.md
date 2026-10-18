@@ -38,6 +38,8 @@ Website: [heynewton.app](https://heynewton.app)
 | Boat data | Signal K (Raspberry Pi + NMEA 2000 gateway) |
 | Tides | NOAA predictions, cached |
 
+How the parts fit together, today and in each phase: [docs/architecture.md](docs/architecture.md).
+
 ## Build phases
 
 1. **Home side for our own boat** *(current)*: email-in filing, maintenance and renewal
