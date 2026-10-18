@@ -93,4 +93,5 @@ We are in **Phase 1**.
   then small steps toward users. Keep at most two issues in progress.
 - Issues a contributor could pick up on their own get `help wanted` (or `good first issue` if small).
 - Before creating an issue, search the open ones for a duplicate (`gh issue list --search "<words>"`).
-  New ideas that come up mid-task become an issue, and the current task carries on.
+  New ideas that come up mid-task become an issue if they belong to the current or next phase, and
+  otherwise go in the spec's "Feature ideas" section (see `docs/process.md`). The current task carries on.
