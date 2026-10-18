@@ -35,6 +35,7 @@ assumes it may become a paid product, so it is multi-boat and multi-owner from d
 | Document search | pgvector |
 | Agent | Claude API with tool use |
 | Email-in | Inbound email to a per-boat address |
+| Web app | Phase 1 screen; framework chosen in #3 |
 | Mobile app | Expo / React Native |
 | Boat data | Signal K (Raspberry Pi + NMEA 2000 gateway) |
 | Tides | NOAA predictions, cached |
@@ -68,6 +69,8 @@ We are in **Phase 1**.
 - After each PR, add an entry to `docs/build-log.md`, lightly cleaning the prompt where privacy
   needs it (no real boat data or personal info, per the repo rules above).
 - The `ship-change` skill (`.claude/skills/ship-change/SKILL.md`) is the checklist for landing a change.
+- Roles, the project board and the weekly rhythm are in `docs/process.md`. Ready issues are worked
+  top-down in board order; move issues across the board as they progress.
 
 ### Issues are the todo list
 
@@ -80,6 +83,7 @@ We are in **Phase 1**.
   - `email-in`: per-boat inbound email and filing
   - `agent`: Claude tool use, routing, document Q&A
   - `calc`: deterministic functions (tides, bearings, target angles, dates, cost splits)
+  - `web`: the web app (the Phase 1 screen)
   - `mobile`: the Expo / React Native app
   - `boat-data`: Signal K, NMEA 2000, NOAA tides
   - `repo`: tooling, CI, repo setup
@@ -87,5 +91,6 @@ We are in **Phase 1**.
   `Phase 3: On-water voice`, `Phase 4: Paid product`). Every open issue has one.
 - Priority is the order of work: first what is blocked by nothing, then what unblocks other work,
   then small steps toward users. Keep at most two issues in progress.
+- Issues a contributor could pick up on their own get `help wanted` (or `good first issue` if small).
 - Before creating an issue, search the open ones for a duplicate (`gh issue list --search "<words>"`).
   New ideas that come up mid-task become an issue, and the current task carries on.
