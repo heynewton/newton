@@ -18,7 +18,7 @@ explicit "what was not tested" notes.
 
 ## The board
 
-The [Newton project board](https://github.com/orgs/heynewton/projects) has five columns:
+The [Newton project board](https://github.com/orgs/heynewton/projects/1) has five columns:
 
 **Inbox → Ready → In progress → In review → Done**
 
