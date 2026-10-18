@@ -1,0 +1,36 @@
+EXAMPLE MUTUAL MARINE INSURANCE CO.  (fictional company - sample data)
+100 Placeholder Avenue, Suite 5, Port Example, XX 00000
+Phone (555) 010-0100   claims@insurer.example.com
+
+CERTIFICATE OF INSURANCE - PLEASURE CRAFT
+
+Policy number:      SAMPLE-POL-000123
+Policy period:      2026-05-01 to 2027-04-30 (12:01 a.m. local time)
+Named insured:      Alex Sample, Sam Placeholder, Jordan Fictional
+Mailing address:    1 Imaginary Lane, Port Example, XX 00000
+
+INSURED VESSEL
+Name:               Kittiwake
+Year / make / model: 2009 Example Yachts EY 34 (sloop)
+Hull ID:            XXX00001A909
+Length:             34 ft
+Engine:             Sample Marine SM-30 diesel, inboard
+Home port:          Sample Harbor Marina, Port Example
+
+COVERAGE                              LIMIT              DEDUCTIBLE
+Hull and machinery (agreed value)     $85,000.00         $1,700.00
+Protection and indemnity (liability)  $500,000.00        none
+Medical payments                      $10,000.00         none
+Uninsured boater                      $100,000.00        none
+Personal effects                      $2,500.00          $250.00
+
+NAVIGATION LIMITS
+Coastal waters within 25 nautical miles of shore, between Cape Sample
+and Example Point. Lay-up ashore 2026-12-01 to 2027-03-31.
+
+ANNUAL PREMIUM:     $1,284.00 (paid in full)
+
+Renewal notice is sent 45 days before the end of the policy period.
+This certificate is evidence of insurance only and does not amend the policy.
+
+Issued 2026-04-14 by Example Mutual Marine, agent no. 0000-SAMPLE

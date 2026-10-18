@@ -1,0 +1,73 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+5 0 obj
+<< /Length 1789 >>
+stream
+BT
+/F1 9.5 Tf
+13 TL
+48 750 Td
+(SAMPLE MARINE SM-30 MARINE DIESEL - OWNER'S MANUAL   \(fictional - sample data\)) Tj
+T* (Section 6: Periodic maintenance \(excerpt, pages 41-42\)) Tj
+T* () Tj
+T* (6.1 General) Tj
+T* (Do maintenance at the engine-hour interval or the calendar interval,) Tj
+T* (whichever comes first. An engine used little still needs its yearly) Tj
+T* (service, because oil and coolant age even when the engine does not run.) Tj
+T* () Tj
+T* (6.2 Maintenance schedule) Tj
+T* () Tj
+T* (ITEM                                 HOURS      CALENDAR) Tj
+T* (Engine oil and oil filter            100 h      12 months) Tj
+T* (Fuel filter element                  200 h      12 months) Tj
+T* (Raw-water pump impeller              250 h      24 months) Tj
+T* (Coolant \(replace\)                    1,000 h    24 months) Tj
+T* (Valve clearance \(check and adjust\)   500 h      -) Tj
+T* (Drive belt \(inspect / replace\)       250 h      24 months) Tj
+T* (Zinc anodes in heat exchanger        100 h      6 months) Tj
+T* (Air intake filter \(clean\)            100 h      12 months) Tj
+T* () Tj
+T* (6.3 Engine oil) Tj
+T* (Capacity with filter: 4.8 quarts \(4.5 liters\).) Tj
+T* (Use oil rated API CH-4 or better, SAE 15W-40 above 5 C.) Tj
+T* (Check the level every day of use, with the engine stopped and level.) Tj
+T* () Tj
+T* (6.4 Raw-water impeller) Tj
+T* (Close the seacock before opening the pump cover. Replace the impeller if) Tj
+T* (any vane is cracked, set or missing, and always carry a spare on board.) Tj
+T* (Running the pump dry for more than 30 seconds damages the impeller.) Tj
+T* () Tj
+T* (6.5 Winter lay-up) Tj
+T* (Change the oil before lay-up, not after, so acidic used oil does not sit) Tj
+T* (in the engine. Flush the raw-water circuit with non-toxic antifreeze.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Title (Sample Marine SM-30 owner's manual, maintenance section) /Producer (Newton sample fixtures) >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000309 00000 n 
+0000002150 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R /Info 6 0 R >>
+startxref
+2271
+%%EOF

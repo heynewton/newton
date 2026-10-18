@@ -1,0 +1,33 @@
+EXAMPLE POINT BOATYARD   (fictional business - sample data)
+22 Slipway Road, Example Point, XX 00000
+Phone (555) 010-0142   office@boatyard.example.net
+
+INVOICE                             Invoice no.:  EPB-2026-0917
+                                    Date:         2026-10-02
+                                    Due:          2026-11-01
+Bill to:   Kittiwake owners, c/o Sam Placeholder
+           1 Imaginary Lane, Port Example, XX 00000
+Vessel:    Kittiwake, 2009 Example Yachts EY 34, hull ID XXX00001A909
+Work done: 2026-09-28 to 2026-10-02.  Engine hours at service: 1,412
+
+DESCRIPTION                              QTY   UNIT PRICE      AMOUNT
+Haul-out and launch, per ft               34        9.50       323.00
+Pressure wash hull, per ft                34        3.25       110.50
+Antifouling paint, gallon *                2      189.99       379.98
+Labor: bottom paint, hours               4.5       95.00       427.50
+Labor: engine service, hours             2.0       95.00       190.00
+Engine oil filter *                        1       18.45        18.45
+Fuel filter element *                      1       32.10        32.10
+Engine oil 15W-40, quart *                 5        9.80        49.00
+Raw-water pump impeller *                  1       54.75        54.75
+Shaft zinc anode *                         2       27.40        54.80
+
+                                         Subtotal            1,640.08
+                       Sales tax 6.25% on * items (589.08)      36.82
+                                         TOTAL DUE       USD 1,676.90
+
+Paid 2026-10-03 by card ending 0000, Sam Placeholder.   Balance: 0.00
+
+Notes: Engine oil and filters changed, impeller replaced. Next oil change
+due at 1,512 hours or 2027-10-02, whichever comes first. Cutless bearing
+shows light wear; check again at next haul-out.
