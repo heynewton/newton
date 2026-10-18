@@ -590,6 +590,23 @@ do you recommend 2 or screen sizes? given that tablets are small, I would think 
 yes write in docs the decision for 2 screen sizes
 ````
 
+````text
+not "The assistant that knows your boat inside out."
+but "The AI assistant that knows your boat inside out."
+````
+
+````text
+"On the water, say “Hey Newton” and get answers out loud. At home, Newton help owners with maintenance, documents and navigation planning."
+````
+
+````text
+wdyt of "Ask out loud, hands on the helm. Newton answers using data from your instruments, weather forecast, charts, and your specific boat files."
+````
+
+````text
+add weather and add idea to spec
+````
+
 **What Claude did**
 
 - Found no existing issue. #15 (records screen) and #27 (Google and Apple sign-in) were close but
@@ -608,6 +625,12 @@ yes write in docs the decision for 2 screen sizes
   below 640px, wide from 640px up for tablets and laptops), touch targets of at least 44px on both,
   and checks at 390px, 800px and 1280px. Linked it from the architecture page and added the three
   widths to the `ship-change` checklist.
+- Rewrote the homepage copy as asked: "The AI assistant…" headline (also in the page
+  description), the new intro line, and the on-water card, which now lists instruments, tides,
+  weather, charts and the boat's own documents, and keeps "even without signal".
+- Added "Weather on request" to the spec's Phase 2 feature ideas, next to the storm alert: a marine
+  forecast downloaded before leaving, always stated with its source and issue time. The forecast
+  source is still open, under "Data we don't have yet".
 
 **What changed along the way**
 
@@ -616,5 +639,10 @@ yes write in docs the decision for 2 screen sizes
 - The footer started on the homepage only, then moved into the layout as a shared component.
 - Claude first recommended three screen sizes (phone, tablet, laptop). The maintainer pointed out
   that the on-board tablets are small, and it became two layouts, still tested at three widths.
+- For the on-water line, Claude suggested keeping "even without signal", saying "your boat's own
+  documents" rather than "files", and leaving weather out until it had a phase in the spec. The
+  maintainer chose to add weather and the spec idea together.
+- One commit was pushed after a failed check: the shell had switched to Node 18 and the `&&`
+  chain only tested `grep`. The code was fine on Node 22; checks now run with their real exit code.
 
 **Pull request:** [#34](https://github.com/heynewton/newton/pull/34)

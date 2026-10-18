@@ -80,8 +80,8 @@ export default function Home() {
                 </span>
               </h3>
               <p className="mt-4 text-zinc-700 dark:text-zinc-300">
-                Ask out loud, hands on the helm. Newton answers from your phone&apos;s GPS,
-                cached tides and, later, your instruments, even without signal.
+                Ask out loud, hands on the helm. Newton answers from your instruments, tides,
+                weather, charts and your boat&apos;s own documents, even without signal.
               </p>
               <ul className="mt-4 flex flex-col gap-2 font-medium">
                 {onTheWater.map((item) => (
