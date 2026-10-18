@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="672" height="238" viewBox="0 0 672 238">
+  <style>
+    text { font-family: "SF Pro Text", "SF Pro", Inter, "Helvetica Neue", Arial, sans-serif; fill: #1f1f1f; }
+    .title { font-size: 12.5px; font-weight: 600; }
+    .num { font-size: 9.5px; fill: #6b6b6b; text-anchor: middle; }
+    .name { font-size: 11px; font-weight: 600; text-anchor: middle; }
+    .item { font-size: 9.5px; fill: #3a3a3a; text-anchor: middle; }
+    .label { font-size: 9.5px; fill: #6b6b6b; }
+    .gate { font-size: 9.5px; fill: #2a2a2a; text-anchor: middle; }
+    .box { fill: #ffffff; stroke: #c9c7bf; stroke-width: 1; }
+    .box.now { fill: #e6eff9; stroke: #2f7de0; stroke-width: 1.6; }
+  </style>
+  <rect width="672" height="238" fill="#ffffff"/>
+
+  <text class="title" x="21.5" y="30">Each phase earns the next: prove it on our boat before asking friends</text>
+
+  <!-- Phase boxes -->
+  <rect class="box now" x="21.5" y="49.5" width="146" height="98" rx="5"/>
+  <text class="num" x="84.5" y="69">Phase 1</text>
+  <text class="name" x="84.5" y="86">Our boat, home side</text>
+  <text class="item" x="84.5" y="106">Email-in and filing</text>
+  <text class="item" x="84.5" y="120">Reminders, cost split</text>
+  <text class="item" x="84.5" y="134">Q&amp;A over manuals</text>
+
+  <rect class="box" x="182.5" y="49.5" width="146" height="98" rx="5"/>
+  <text class="num" x="255.5" y="69">Phase 2</text>
+  <text class="name" x="255.5" y="86">On-water voice</text>
+  <text class="item" x="255.5" y="106">Tide, course to mark</text>
+  <text class="item" x="255.5" y="120">Then target angles</text>
+  <text class="item" x="255.5" y="134">Signal K on one boat</text>
+
+  <rect class="box" x="343.5" y="49.5" width="146" height="98" rx="5"/>
+  <text class="num" x="416.5" y="69">Phase 3</text>
+  <text class="name" x="416.5" y="86">Friends’ boats</text>
+  <text class="item" x="416.5" y="106">3 to 5 friends’ boats</text>
+  <text class="item" x="416.5" y="120">Self-serve onboarding</text>
+  <text class="item" x="416.5" y="134">Measure time to useful</text>
+
+  <rect class="box" x="504.5" y="49.5" width="146" height="98" rx="5"/>
+  <text class="num" x="577.5" y="69">Phase 4</text>
+  <text class="name" x="577.5" y="86">Paid product</text>
+  <text class="item" x="577.5" y="106">Per-boat pricing</text>
+  <text class="item" x="577.5" y="120">Billing and support</text>
+  <text class="item" x="577.5" y="134">Fleets and clubs</text>
+
+  <!-- Gate line and diamonds -->
+  <line x1="21.5" y1="170" x2="650.5" y2="170" stroke="#c9c7bf" stroke-width="1"/>
+  <g fill="#ffffff" stroke="#c9c7bf" stroke-width="1">
+    <path d="M175 162 L183 170 L175 178 L167 170 Z"/>
+    <path d="M336 162 L344 170 L336 178 L328 170 Z"/>
+    <path d="M497 162 L505 170 L497 178 L489 170 Z"/>
+  </g>
+
+  <text class="label" x="21.5" y="196">Gates</text>
+  <text class="gate" x="175" y="196">Co-owners use it instead</text>
+  <text class="gate" x="175" y="210">of our folders and emails</text>
+  <text class="gate" x="336" y="196">Answers trusted</text>
+  <text class="gate" x="336" y="210">in a real race</text>
+  <text class="gate" x="497" y="196">Friends keep using it</text>
+  <text class="gate" x="497" y="210">without our help</text>
+</svg>
