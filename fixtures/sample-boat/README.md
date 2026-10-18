@@ -20,6 +20,10 @@ fictional 555-01xx range. Never add real boat data here (see the repo rules in `
 Kittiwake is a 2009 Example Yachts EY 34 sloop with a Sample Marine SM-30 diesel (1,412 engine
 hours on 2026-10-02). Its inbound address is `kittiwake@in.heynewton.test`.
 
+`supabase/seed.sql` is generated from `boat.json`, so `npm run db:reset` loads the boat, its people
+and their memberships into the local database. Each person signs in with their first verified
+sender address. Ownership shares aren't seeded yet: they wait for the cost-split tables (#9).
+
 ## Documents
 
 Each document has a text source (`documents/*.txt`) and a generated one-page PDF next to it.
@@ -50,6 +54,12 @@ Edit `documents/*.txt` (plain ASCII, one page of at most 56 lines) or the email 
 
 ```bash
 node fixtures/sample-boat/build.mjs
+```
+
+After changing `boat.json`, also regenerate the database seed (CI fails if it is out of date):
+
+```bash
+node fixtures/sample-boat/build-seed.mjs
 ```
 
 The output is deterministic, so a rebuild without changes leaves the files untouched.
