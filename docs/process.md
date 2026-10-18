@@ -18,14 +18,14 @@ explicit "what was not tested" notes.
 
 ## The board
 
-The [Newton project board](https://github.com/orgs/heynewton/projects/1) has five columns:
+The [Newton project board](https://github.com/orgs/heynewton/projects/1/views/4) (Kanban view) has five columns:
 
 **Inbox → Ready → In progress → In review → Done**
 
 - **Inbox**: new issues nobody has looked at yet.
 - **Ready**: issues ready to start, **in priority order**. The top one is next. There are no
   priority labels; the order is the priority.
-- **In progress**: at most two issues at a time.
+- **In progress**: at most four issues at a time (the column limit on the board).
 - **In review**: a PR is open and waiting for review.
 - **Done**: merged.
 

@@ -93,7 +93,7 @@ We are in **Phase 1**.
 - Milestones are the goals: one per build phase (`Phase 1: Home side`, `Phase 2: On-water voice`,
   `Phase 3: Friends' boats`, `Phase 4: Paid product`). Every open issue has one.
 - Priority is the order of work: first what is blocked by nothing, then what unblocks other work,
-  then small steps toward users. Keep at most two issues in progress.
+  then small steps toward users. Keep at most four issues in progress.
 - Issues a contributor could pick up on their own get `help wanted` (or `good first issue` if small).
 - Before creating an issue, search the open ones for a duplicate (`gh issue list --search "<words>"`).
   New ideas that come up mid-task become an issue if they belong to the current or next phase, and

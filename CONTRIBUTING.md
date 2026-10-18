@@ -16,7 +16,7 @@ Thanks for helping out. Newton is early (Phase 1), so the rules are short.
 - How we plan and who decides what is in [docs/process.md](docs/process.md).
 - Open issues are the todo list. Issues labelled `help wanted` or `good first issue` are a good
   place to start. Each one has a "Done when" checklist; check its "Blocked by" line first.
-- Assign yourself before you start, so two people don't build the same thing. At most two
+- Assign yourself before you start, so two people don't build the same thing. At most four
   issues are in progress across the team.
 - The PR says `Closes #N`, and lists what you tested and what you didn't.
 
