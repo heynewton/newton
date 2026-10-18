@@ -809,8 +809,8 @@ updated on gh, reflect in /docs/
 
 - The API can create views but can't edit or delete them. A first board view came out without
   labels or phase on its cards, so Claude created a corrected "Kanban" view. The maintainer
-  deleted the first one, renamed the original table to "All items" and set the column limit in the
-  GitHub UI.
+  deleted the first one, renamed the original table to "All items", moved Kanban to the first tab
+  and set the column limit in the GitHub UI.
 - The limit also appeared in `CLAUDE.md` and `CONTRIBUTING.md`, outside `docs/`, so Claude updated
   them in the same PR so the rules don't contradict each other.
 - The main folder had another session's branch checked out, so Claude made this change in a
