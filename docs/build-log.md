@@ -314,6 +314,12 @@ Is there a description of newton technical architecture somewhere? The current s
 If not produced it
 ````
 
+Follow-up, after the PR was up:
+
+````text
+Invert order for phase 2 and 3. I’d like to start working on voice quickly
+````
+
 **What Claude did**
 
 - Looked in the repo and the Drive spec. The spec has a short architecture section with a diagram,
@@ -330,5 +336,10 @@ If not produced it
 - Choices not yet made (email provider, job runner, embeddings, voice engines, offline store,
   tides outside the US) are marked as open instead of decided, each pointing to the issue
   that will need it.
+- Some sentences read as if the target already existed, so the page got a dated status line,
+  and the overview says it shows the target.
+- On-water voice moved to Phase 2 and friends' boats to Phase 3, in the README, `CLAUDE.md` (including
+  the milestone names) and the architecture page. The voice section now says what it needs from
+  Phase 1 (only sign-in, boats and memberships) and that its `calc` and tide work can start early.
 
 **Pull request:** [#23](https://github.com/heynewton/newton/pull/23)

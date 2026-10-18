@@ -44,8 +44,8 @@ How the parts fit together, today and in each phase: [docs/architecture.md](docs
 
 1. **Home side for our own boat** *(current)*: email-in filing, maintenance and renewal
    reminders, co-owner cost split, Q&A over manuals.
-2. **Three to five friends' boats**: self-serve onboarding; measure time until a new boat is useful.
-3. **On-water voice**: tide and course-to-mark first (phone GPS only), then target angles via Signal K.
+2. **On-water voice**: tide and course-to-mark first (phone GPS only), then target angles via Signal K.
+3. **Three to five friends' boats**: self-serve onboarding; measure time until a new boat is useful.
 4. **Paid product.**
 
 ## Development
