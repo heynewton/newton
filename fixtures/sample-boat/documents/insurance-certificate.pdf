@@ -1,0 +1,76 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+5 0 obj
+<< /Length 1853 >>
+stream
+BT
+/F1 9.5 Tf
+13 TL
+48 750 Td
+(EXAMPLE MUTUAL MARINE INSURANCE CO.  \(fictional company - sample data\)) Tj
+T* (100 Placeholder Avenue, Suite 5, Port Example, XX 00000) Tj
+T* (Phone \(555\) 010-0100   claims@insurer.example.com) Tj
+T* () Tj
+T* (CERTIFICATE OF INSURANCE - PLEASURE CRAFT) Tj
+T* () Tj
+T* (Policy number:      SAMPLE-POL-000123) Tj
+T* (Policy period:      2026-05-01 to 2027-04-30 \(12:01 a.m. local time\)) Tj
+T* (Named insured:      Alex Sample, Sam Placeholder, Jordan Fictional) Tj
+T* (Mailing address:    1 Imaginary Lane, Port Example, XX 00000) Tj
+T* () Tj
+T* (INSURED VESSEL) Tj
+T* (Name:               Kittiwake) Tj
+T* (Year / make / model: 2009 Example Yachts EY 34 \(sloop\)) Tj
+T* (Hull ID:            XXX00001A909) Tj
+T* (Length:             34 ft) Tj
+T* (Engine:             Sample Marine SM-30 diesel, inboard) Tj
+T* (Home port:          Sample Harbor Marina, Port Example) Tj
+T* () Tj
+T* (COVERAGE                              LIMIT              DEDUCTIBLE) Tj
+T* (Hull and machinery \(agreed value\)     $85,000.00         $1,700.00) Tj
+T* (Protection and indemnity \(liability\)  $500,000.00        none) Tj
+T* (Medical payments                      $10,000.00         none) Tj
+T* (Uninsured boater                      $100,000.00        none) Tj
+T* (Personal effects                      $2,500.00          $250.00) Tj
+T* () Tj
+T* (NAVIGATION LIMITS) Tj
+T* (Coastal waters within 25 nautical miles of shore, between Cape Sample) Tj
+T* (and Example Point. Lay-up ashore 2026-12-01 to 2027-03-31.) Tj
+T* () Tj
+T* (ANNUAL PREMIUM:     $1,284.00 \(paid in full\)) Tj
+T* () Tj
+T* (Renewal notice is sent 45 days before the end of the policy period.) Tj
+T* (This certificate is evidence of insurance only and does not amend the policy.) Tj
+T* () Tj
+T* (Issued 2026-04-14 by Example Mutual Marine, agent no. 0000-SAMPLE) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Title (Kittiwake insurance certificate 2026-27) /Producer (Newton sample fixtures) >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000309 00000 n 
+0000002214 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R /Info 6 0 R >>
+startxref
+2319
+%%EOF

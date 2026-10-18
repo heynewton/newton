@@ -1,0 +1,24 @@
+STATE OF EXAMPLE - DEPARTMENT OF SAMPLE WATERWAYS   (fictional - sample data)
+
+VESSEL REGISTRATION CERTIFICATE
+
+Registration number:  XX 0000 ZZ
+Valid from:           2025-01-01
+Expires:              2026-12-31
+Hull ID:              XXX00001A909
+Vessel name:          Kittiwake
+Year / make:          2009 Example Yachts
+Length:               34 ft 0 in
+Hull material:        Fiberglass
+Propulsion:           Sail with auxiliary inboard diesel
+Use:                  Pleasure
+
+Registered owners:    Alex Sample
+                      Sam Placeholder
+                      Jordan Fictional
+Address:              1 Imaginary Lane, Port Example, XX 00000
+
+Fee paid:             $98.00 (two-year registration)
+
+Display the registration number on both sides of the bow and keep this
+certificate on board. Renew online up to 60 days before expiry.

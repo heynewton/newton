@@ -1,0 +1,69 @@
+{
+  "_note": "Invented sample data. Every name, number and address here is made up. See README.md.",
+  "boat": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "name": "Kittiwake",
+    "type": "sailboat",
+    "rig": "sloop",
+    "lengthFeet": 34,
+    "builder": "Example Yachts",
+    "model": "EY 34",
+    "year": 2009,
+    "hullId": "XXX00001A909",
+    "registration": "XX 0000 ZZ",
+    "homePort": "Sample Harbor Marina, Port Example",
+    "currency": "USD",
+    "inboundAddress": "kittiwake@in.heynewton.test",
+    "engine": {
+      "make": "Sample Marine",
+      "model": "SM-30",
+      "fuel": "diesel",
+      "hours": 1412,
+      "hoursReadOn": "2026-10-02"
+    }
+  },
+  "people": [
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "name": "Alex Sample",
+      "verifiedSenders": ["alex@example.com", "alex.sample@example.org"]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "name": "Sam Placeholder",
+      "verifiedSenders": ["sam@example.net"]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "name": "Jordan Fictional",
+      "verifiedSenders": ["jordan@example.com"]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000104",
+      "name": "Riley Testcase",
+      "verifiedSenders": ["riley@example.org"]
+    }
+  ],
+  "memberships": [
+    {
+      "personId": "00000000-0000-4000-8000-000000000101",
+      "role": "owner",
+      "ownershipPercent": 40
+    },
+    {
+      "personId": "00000000-0000-4000-8000-000000000102",
+      "role": "co-owner",
+      "ownershipPercent": 35
+    },
+    {
+      "personId": "00000000-0000-4000-8000-000000000103",
+      "role": "co-owner",
+      "ownershipPercent": 25
+    },
+    {
+      "personId": "00000000-0000-4000-8000-000000000104",
+      "role": "crew",
+      "ownershipPercent": 0
+    }
+  ]
+}

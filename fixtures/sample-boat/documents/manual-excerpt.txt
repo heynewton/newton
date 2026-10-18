@@ -1,0 +1,33 @@
+SAMPLE MARINE SM-30 MARINE DIESEL - OWNER'S MANUAL   (fictional - sample data)
+Section 6: Periodic maintenance (excerpt, pages 41-42)
+
+6.1 General
+Do maintenance at the engine-hour interval or the calendar interval,
+whichever comes first. An engine used little still needs its yearly
+service, because oil and coolant age even when the engine does not run.
+
+6.2 Maintenance schedule
+
+ITEM                                 HOURS      CALENDAR
+Engine oil and oil filter            100 h      12 months
+Fuel filter element                  200 h      12 months
+Raw-water pump impeller              250 h      24 months
+Coolant (replace)                    1,000 h    24 months
+Valve clearance (check and adjust)   500 h      -
+Drive belt (inspect / replace)       250 h      24 months
+Zinc anodes in heat exchanger        100 h      6 months
+Air intake filter (clean)            100 h      12 months
+
+6.3 Engine oil
+Capacity with filter: 4.8 quarts (4.5 liters).
+Use oil rated API CH-4 or better, SAE 15W-40 above 5 C.
+Check the level every day of use, with the engine stopped and level.
+
+6.4 Raw-water impeller
+Close the seacock before opening the pump cover. Replace the impeller if
+any vane is cracked, set or missing, and always carry a spare on board.
+Running the pump dry for more than 30 seconds damages the impeller.
+
+6.5 Winter lay-up
+Change the oil before lay-up, not after, so acidic used oil does not sit
+in the engine. Flush the raw-water circuit with non-toxic antifreeze.
