@@ -529,5 +529,14 @@ preview with option b
   Hobby plan and moves to a team before Phase 4 (commercial use).
 - The production URL handling was simplified to "report the URL Vercel prints", because it couldn't
   be checked until the token exists.
+- The maintainer created the Vercel account and set `VERCEL_TOKEN` with `gh secret set`, so the
+  token never went through the chat.
+- The first deploy failed: npm workspaces put packages in the root `node_modules`, which a deploy
+  run from `apps/web` can't see. Claude switched to Vercel's monorepo setup: run from the repo root,
+  with the project's root directory set to `apps/web`.
+- The project's very first deploy went to Vercel's production target even though it came from a PR.
+  A re-run confirmed that later PR deploys are previews.
+- While fixing this, Claude found another branch checked out in the main folder, so it did the fix in
+  a separate git worktree.
 
 **Pull request:** [#30](https://github.com/heynewton/newton/pull/30)
