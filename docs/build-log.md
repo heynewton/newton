@@ -212,3 +212,33 @@ make sure to have monochrome version
   rather than `main`.
 
 **Pull request:** [#20](https://github.com/heynewton/newton/pull/20)
+
+---
+
+## Architecture doc: the scaffold today and the target for each phase
+
+**Prompt**
+
+````text
+Is there a description of newton technical architecture somewhere? The current scaffold one and the target one for each phases?
+If not produced it
+````
+
+**What Claude did**
+
+- Looked in the repo and the Drive spec. The spec has a short architecture section with a diagram,
+  but nothing described the current code or what each phase adds technically.
+- Wrote `docs/architecture.md`: an overview diagram, the six principles turned into technical
+  rules, what is actually built today, the Phase 1 to 4 targets (components, planned layout,
+  data flows, matching issues) and the open decisions.
+- Linked it from `README.md` and `CLAUDE.md`, and added a rule that PRs which change the
+  architecture update the page.
+- Rendered the five Mermaid diagrams with mermaid-cli to check they parse.
+
+**What changed along the way**
+
+- Choices not yet made (email provider, job runner, embeddings, voice engines, offline store,
+  tides outside the US) are marked as open instead of decided, each pointing to the issue
+  that will need it.
+
+**Pull request:** [#23](https://github.com/heynewton/newton/pull/23)
