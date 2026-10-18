@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="Hey Newton" fill="currentColor">
+<mask id="bubble"><rect width="180" height="180" fill="#FFFFFF"/><path d="M54,28 H126 A24,24 0 0 1 150,52 V108 A24,24 0 0 1 126,132 H66 L42,156 L47,128 A24,24 0 0 1 30,108 V52 A24,24 0 0 1 54,28 Z" fill="#000000"/></mask>
+<rect width="180" height="180" rx="36" mask="url(#bubble)"/>
+<path d="M88,38 Q74,80 40,106 L88,106 Z"/><path d="M96,38 C136,36 154,70 142,108 Q128,102 116,106 Q120,72 96,38 Z"/><path d="M38,112 H146 Q134,124 112,124 H54 Q43,122 38,112 Z"/>
+<line x1="92" y1="36" x2="92" y2="112" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+</svg>
