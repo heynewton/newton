@@ -1,0 +1,73 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+5 0 obj
+<< /Length 2127 >>
+stream
+BT
+/F1 9.5 Tf
+13 TL
+48 750 Td
+(EXAMPLE POINT BOATYARD   \(fictional business - sample data\)) Tj
+T* (22 Slipway Road, Example Point, XX 00000) Tj
+T* (Phone \(555\) 010-0142   office@boatyard.example.net) Tj
+T* () Tj
+T* (INVOICE                             Invoice no.:  EPB-2026-0917) Tj
+T* (                                    Date:         2026-10-02) Tj
+T* (                                    Due:          2026-11-01) Tj
+T* (Bill to:   Kittiwake owners, c/o Sam Placeholder) Tj
+T* (           1 Imaginary Lane, Port Example, XX 00000) Tj
+T* (Vessel:    Kittiwake, 2009 Example Yachts EY 34, hull ID XXX00001A909) Tj
+T* (Work done: 2026-09-28 to 2026-10-02.  Engine hours at service: 1,412) Tj
+T* () Tj
+T* (DESCRIPTION                              QTY   UNIT PRICE      AMOUNT) Tj
+T* (Haul-out and launch, per ft               34        9.50       323.00) Tj
+T* (Pressure wash hull, per ft                34        3.25       110.50) Tj
+T* (Antifouling paint, gallon *                2      189.99       379.98) Tj
+T* (Labor: bottom paint, hours               4.5       95.00       427.50) Tj
+T* (Labor: engine service, hours             2.0       95.00       190.00) Tj
+T* (Engine oil filter *                        1       18.45        18.45) Tj
+T* (Fuel filter element *                      1       32.10        32.10) Tj
+T* (Engine oil 15W-40, quart *                 5        9.80        49.00) Tj
+T* (Raw-water pump impeller *                  1       54.75        54.75) Tj
+T* (Shaft zinc anode *                         2       27.40        54.80) Tj
+T* () Tj
+T* (                                         Subtotal            1,640.08) Tj
+T* (                       Sales tax 6.25% on * items \(589.08\)      36.82) Tj
+T* (                                         TOTAL DUE       USD 1,676.90) Tj
+T* () Tj
+T* (Paid 2026-10-03 by card ending 0000, Sam Placeholder.   Balance: 0.00) Tj
+T* () Tj
+T* (Notes: Engine oil and filters changed, impeller replaced. Next oil change) Tj
+T* (due at 1,512 hours or 2027-10-02, whichever comes first. Cutless bearing) Tj
+T* (shows light wear; check again at next haul-out.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Title (Example Point Boatyard invoice EPB-2026-0917) /Producer (Newton sample fixtures) >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000309 00000 n 
+0000002488 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R /Info 6 0 R >>
+startxref
+2598
+%%EOF
