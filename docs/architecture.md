@@ -4,10 +4,14 @@ How Newton is built today, and what each build phase adds. The product view (use
 model, agent tools, risks) is in the "Newton — Product & Architecture Spec" in the team Google
 Drive; this page is the engineering view and stays in step with the code.
 
+**Status (last updated 2026-10-18):** Phase 1, scaffold only. What exists today is in
+[Today: the scaffold](#today-the-scaffold); every other section describes a target, not running
+code. Update this line when a phase's components land.
+
 Anything marked **(open)** has not been decided yet. Each open choice gets a short decision record
 in `docs/decisions/` when an issue needs it.
 
-- [The shape in one picture](#the-shape-in-one-picture)
+- [The target shape in one picture](#the-target-shape-in-one-picture)
 - [Rules every part follows](#rules-every-part-follows)
 - [Today: the scaffold](#today-the-scaffold)
 - [Phase 1 target: home side for our own boat](#phase-1-target-home-side-for-our-own-boat)
@@ -16,9 +20,9 @@ in `docs/decisions/` when an issue needs it.
 - [Phase 4 target: paid product](#phase-4-target-paid-product)
 - [Open decisions](#open-decisions)
 
-## The shape in one picture
+## The target shape in one picture
 
-One cloud service holds every boat's record. The web app (Phase 1) and the mobile app (Phase 3)
+This is where the phases lead, not what runs today. One cloud service holds every boat's record. The web app (Phase 1) and the mobile app (Phase 3)
 read and write it; on the boat, the mobile app works from a cached copy and syncs when it has
 signal. Every number comes from `packages/calc`, which runs both in the cloud and on the phone.
 
@@ -67,12 +71,12 @@ flowchart LR
 
 These are the [principles](../README.md#principles) turned into technical rules.
 
-| Principle | Technical rule |
+| Principle | Technical rule (applies as each part is built) |
 | --- | --- |
 | 1. The boat is the tenant | Every table has a `boat_id`. Access is enforced by Postgres row-level security (RLS) from a person's membership on that boat, not by app code. User requests run with the user's own token, so RLS applies. The service role (which bypasses RLS) is only used by server jobs and webhooks, which always filter by an explicit `boat_id`. |
 | 2. Numbers from code | Tides, bearings, target angles, dates and cost splits live in `packages/calc` as pure, unit-tested functions. The agent gets numbers only as tool results; values extracted from documents are parsed and validated by `calc` before saving. Money is integer cents. |
 | 3. Zero data entry | Email-in and upload are the main input paths. Forms are only for correcting what extraction proposed. |
-| 4. Offline first on the boat | `packages/calc` has no Node, browser or network dependencies, so the phone can run it offline. Anything the on-water assistant needs is cached on the phone. |
+| 4. Offline first on the boat | `packages/calc` has no Node, browser or network dependencies, so the phone will be able to run it offline in Phase 3. Anything the on-water assistant needs is cached on the phone. |
 | 5. Owners own their data | Every record and file can be exported per boat. Nothing about a boat lives outside the boat's rows and its storage folder, so a record can move to a new owner. |
 | 6. Safety framing | Every fact carries its source (document, page, station) and its timestamp, so answers can say where a number came from and how old it is. Records keep an audit trail: who added or changed them, and from which email or file. |
 
