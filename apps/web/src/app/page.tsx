@@ -38,8 +38,7 @@ export default function Home() {
           </h1>
           <p className="max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
             On the water, say &ldquo;Hey Newton&rdquo; and get answers out loud. At home,
-            Newton keeps the boat&apos;s documents, maintenance and shared costs in order, so
-            every owner and crew member sees the same thing.
+            Newton helps owners with maintenance, documents and navigation planning.
           </p>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <Link
