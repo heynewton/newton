@@ -1,0 +1,1 @@
+-- Local seed data. The fake sample boat from fixtures/ is loaded here once it lands (#4).

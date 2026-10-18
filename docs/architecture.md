@@ -4,7 +4,8 @@ How Newton is built today, and what each build phase adds. The product view (use
 model, agent tools, risks) is in the "Newton — Product & Architecture Spec" in the team Google
 Drive; this page is the engineering view and stays in step with the code.
 
-**Status (last updated 2026-10-18):** Phase 1, scaffold only. What exists today is in
+**Status (last updated 2026-10-18):** Phase 1: scaffold, plus boats, people, memberships and
+magic-link sign-in on a local Supabase stack. What exists today is in
 [Today: the scaffold](#today-the-scaffold); every other section describes a target, not running
 code. Update this line when a phase's components land.
 
@@ -83,8 +84,10 @@ These are the [principles](../README.md#principles) turned into technical rules.
 ## Today: the scaffold
 
 What is in `main` now (after [#18](https://github.com/heynewton/newton/pull/18) and
-[#20](https://github.com/heynewton/newton/pull/20)): a monorepo with a placeholder web page and
-the first `calc` functions. There is no database, auth, agent or email yet.
+[#20](https://github.com/heynewton/newton/pull/20)): a monorepo with a homepage and the first `calc`
+functions. Since #5: a local Supabase stack with boats, people and memberships under row-level
+security, and email magic-link sign-in in the web app. There is no hosted Supabase project, agent
+or email-in yet.
 
 ```mermaid
 flowchart LR
@@ -92,22 +95,32 @@ flowchart LR
     Web["apps/web<br/>Next.js 16, App Router,<br/>Tailwind 4, TypeScript"]
     Calc["packages/calc<br/>TypeScript, Vitest<br/>toCents, formatCents"]
   end
-  CI["GitHub Actions<br/>lint, typecheck, test, build"]
+  subgraph Local["supabase/ (local, Docker)"]
+    DB[("Postgres + RLS<br/>boats, people, memberships")]
+    Auth["Supabase Auth<br/>magic link"]
+  end
+  Web -->|"src/lib/db only"| DB
+  Web --> Auth
+  CI["GitHub Actions<br/>lint, typecheck, test, build,<br/>RLS tests"]
   CI --> Web
   CI --> Calc
+  CI --> DB
 ```
 
 | Part | Where | State |
 | --- | --- | --- |
-| Web app | `apps/web` | Homepage, placeholder `/get-started`, `/sign-in`, `/privacy` and `/terms`, and a shared footer from the root layout (#31). No auth, no data. Previews per PR (#19). |
+| Web app | `apps/web` | Homepage, placeholder `/get-started`, `/privacy` and `/terms`, and a shared footer from the root layout (#31). Previews per PR (#19). |
+| Sign-in | `apps/web/src/app/sign-in`, `auth/callback`, `boats` | Email magic link (#5). `/boats` lists the signed-in person's boats and role. A proxy (`src/proxy.ts`) refreshes the session cookie. Without `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (as on previews today), `/sign-in` stays a placeholder. |
+| Data access | `apps/web/src/lib/db` | The web app's only way into the database and auth; a lint rule blocks `@supabase/*` imports elsewhere. Types generated from the schema (`npm run db:types`). |
 | Calc | `packages/calc` | Money helpers (`toCents`, `formatCents`) with tests. Imported as source (`main: src/index.ts`), no build step. |
 | Brand | `assets/brand` | Logo, favicon, monochrome marks. |
-| CI | `.github/workflows/ci.yml` | `npm ci`, lint, typecheck, test, build on every PR and on `main`. |
+| CI | `.github/workflows/ci.yml` | `npm ci`, lint, typecheck, test, build on every PR and on `main`; a second job starts Postgres and runs the RLS tests. |
 | Fixtures | `fixtures/` | Planned (#4); not created yet. |
-| Database, auth, storage | — | Not started (#5). |
+| Database and auth | `supabase/` | Local stack via the Supabase CLI (`npm run db:start`). Migration: `boats`, `people` (Newton's own `id`; the provider's user ID only in `auth_subject`, not readable through the API), `memberships` with role (owner, co-owner, crew, read-only). Policies go through `current_person_id()`; record tables will use `can_write_boat()`. pgTAP tests in `supabase/tests` (`npm run db:test`). No hosted project yet. |
+| Storage | — | Not started (#8). |
 | Agent, email-in | — | Not started (#10, #11). |
 
-Commands: `npm run dev`, `npm run check`, `npm run build` (see the
+Commands: `npm run dev`, `npm run check`, `npm run build`, `npm run db:start`, `npm run db:test` (see the
 [README](../README.md#development)).
 
 ## Phase 1 target: home side for our own boat
