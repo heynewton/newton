@@ -472,4 +472,4 @@ push to repo which is public and link in gdoc from there.
 - The spec was edited by someone else between the read and the first write, so the first insert was
   refused on its revision check and redone against a fresh read.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#29](https://github.com/heynewton/newton/pull/29)
