@@ -511,6 +511,18 @@ devices used are are typically:
 * at home: laptops and desktop with large monitors
 ````
 
+````text
+do you recommend 2 or screen sizes? given that tablets are small, I would think 2 is fine
+````
+
+````text
+2 or 3
+````
+
+````text
+yes write in docs the decision for 2 screen sizes
+````
+
 **What Claude did**
 
 - Found no existing issue. #15 (records screen) and #27 (Google and Apple sign-in) were close but
@@ -525,11 +537,17 @@ devices used are are typically:
   opens to anyone outside the team.
 - Checked the pages in the browser at phone, tablet and desktop widths, in light and dark mode.
   The tablet check showed some links were shorter than 44px, so they were made taller for touch.
+- Recorded the screen-size decision in `docs/decisions/0002-screen-sizes.md`: two layouts (phone
+  below 640px, wide from 640px up for tablets and laptops), touch targets of at least 44px on both,
+  and checks at 390px, 800px and 1280px. Linked it from the architecture page and added the three
+  widths to the `ship-change` checklist.
 
 **What changed along the way**
 
 - The first plan had a single **Sign in** button. It became "Get started for free" plus a way in
   for existing users, and #31 was rewritten to match.
 - The footer started on the homepage only, then moved into the layout as a shared component.
+- Claude first recommended three screen sizes (phone, tablet, laptop). The maintainer pointed out
+  that the on-board tablets are small, and it became two layouts, still tested at three widths.
 
 **Pull request:** [#34](https://github.com/heynewton/newton/pull/34)

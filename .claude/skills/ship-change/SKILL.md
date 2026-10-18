@@ -20,6 +20,8 @@ allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(gh pr vi
 - Any number Newton reports (tides, bearings, angles, dates, cost splits) needs a unit test.
 - Check the change in the running app, not just in the tests. For docs-only changes, check the
   Markdown renders on GitHub.
+- For a change to a screen, check it at 390px, 800px and 1280px wide, in light and dark mode
+  (see `docs/decisions/0002-screen-sizes.md`).
 - Check the diff for real boat data, personal info and secrets: the repo is public.
 
 ## 3. Commit

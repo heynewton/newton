@@ -119,7 +119,7 @@ co-owners see who owes whom; questions about the manuals are answered with sourc
 
 | Component | Choice | Issues |
 | --- | --- | --- |
-| Web app and API | Next.js in `apps/web`: pages for people, route handlers for webhooks and the API. One deployable. | #15 |
+| Web app and API | Next.js in `apps/web`: pages for people, route handlers for webhooks and the API. One deployable. Two layouts, phone and wide, tested at three widths ([decision](decisions/0002-screen-sizes.md)). | #15, #31 |
 | Hosting | Vercel, with a preview link on every PR (proposed in #19). | #19 |
 | Database and auth | Supabase Postgres with RLS. Migrations checked in under `supabase/`, local stack via the Supabase CLI. Supabase Auth: email magic link first, then Google and Apple ([decision](decisions/0001-auth.md)). RLS policies go through a `current_person_id()` function, so the auth provider can change without rewriting them. | #5, #27 |
 | Records | Tables: `boats`, `people` (Newton's own ID; the auth provider's ID only in `auth_subject`; verified sender addresses for email-in), `memberships` (role, ownership share), `documents`, `renewals`, `maintenance_items`, `expenses`. Each record can link to its source document. | #5, #8, #9, #27 |
@@ -272,7 +272,7 @@ who aren't us.
 ## Open decisions
 
 Each becomes a record in `docs/decisions/` when the issue that needs it starts. Decided so far:
-[0001 Auth](decisions/0001-auth.md).
+[0001 Auth](decisions/0001-auth.md), [0002 Screen sizes](decisions/0002-screen-sizes.md).
 
 | Decision | Needed by | Notes |
 | --- | --- | --- |
