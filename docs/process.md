@@ -29,6 +29,26 @@ The [Newton project board](https://github.com/orgs/heynewton/projects/1) has fiv
 - **In review**: a PR is open and waiting for review.
 - **Done**: merged.
 
+### Cards move by themselves
+
+A GitHub Actions workflow (`.github/workflows/board.yml`) moves cards when issues and PRs change:
+
+| When | The card moves to |
+| --- | --- |
+| An issue is opened | the board, in **Inbox** |
+| An issue in Inbox or Ready is assigned | **In progress** |
+| A draft PR is opened, or a PR goes back to draft | its issues: **In progress** |
+| A PR is opened or marked ready for review | the PR and the issues it closes (`Closes #N`): **In review** |
+| A PR is merged, or an issue is closed | **Done** |
+| A PR is closed without merging | its open issues: back to **Ready** |
+| An issue is reopened | **Ready** |
+
+Two moves stay manual, because they are product decisions: Inbox → Ready (triage), and the order
+of the Ready column. PRs from forks don't move cards, because forks can't read the
+`PROJECT_TOKEN` repo secret the workflow uses. That secret is a fine-grained token with
+Projects read and write on `heynewton` and read access to this repo's issues and PRs. It expires,
+so renew it before the date on the token.
+
 ### Ideas before issues
 
 Feature ideas start in the **Feature ideas** section of the spec ("Newton — Product & Architecture

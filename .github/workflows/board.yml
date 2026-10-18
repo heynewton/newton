@@ -1,0 +1,39 @@
+# Keeps the project board current: moves cards when issues and pull requests change.
+# The rules are in docs/process.md; the logic is in .github/scripts/board.sh.
+name: Board
+
+on:
+  issues:
+    types: [opened, assigned, closed, reopened]
+  pull_request:
+    types: [opened, reopened, ready_for_review, converted_to_draft, edited, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: board-${{ github.event.issue.number || github.event.pull_request.number }}
+
+jobs:
+  move:
+    # Forks can't read repo secrets; their cards are moved by hand.
+    if: github.event_name == 'issues' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/scripts
+      - name: Move cards
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+          MERGED: ${{ github.event.pull_request.merged }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::PROJECT_TOKEN is not set, so board cards were not moved."
+            exit 0
+          fi
+          bash .github/scripts/board.sh
