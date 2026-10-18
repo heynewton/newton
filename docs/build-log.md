@@ -297,7 +297,8 @@ Go ahead with all 3
 
 - The plan was to file every idea as an issue. It changed to keeping ideas in the spec and filing
   issues only for the current and next phase, so the board stays short.
-- The session couldn't reach the project board, and GitHub refused to create issues from it, so
-  the procedures issue was drafted for the maintainer to file by hand.
+- At first the Claude GitHub App had no access to the repo, so issue creation and the push were
+  refused. Once the maintainer installed it, Claude pushed and filed #21 (owner-written
+  procedures). The project board still isn't reachable from the session, so cards move by hand.
 
-**Pull request:** not opened yet
+**Pull request:** [#22](https://github.com/heynewton/newton/pull/22)
