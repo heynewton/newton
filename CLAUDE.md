@@ -35,7 +35,7 @@ assumes it may become a paid product, so it is multi-boat and multi-owner from d
 | Document search | pgvector |
 | Agent | Claude API with tool use |
 | Email-in | Inbound email to a per-boat address |
-| Web app | Phase 1 screen; framework chosen in #3 |
+| Web app | Next.js (App Router) + Tailwind, in `apps/web` |
 | Mobile app | Expo / React Native |
 | Boat data | Signal K (Raspberry Pi + NMEA 2000 gateway) |
 | Tides | NOAA predictions, cached |

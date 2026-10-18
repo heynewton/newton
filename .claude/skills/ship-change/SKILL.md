@@ -1,7 +1,7 @@
 ---
 name: ship-change
 description: The checklist for landing any change in this repo, from branch to PR to build-log entry. Use when finishing a change, before opening or updating a pull request.
-allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(gh pr view *) Bash(gh pr list *) Bash(gh issue list *)
+allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(gh pr view *) Bash(gh pr list *) Bash(gh issue list *) Bash(npm run *) Bash(npm test *)
 ---
 
 # Ship a change
@@ -13,9 +13,10 @@ allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(gh pr vi
 - Never commit to `main` directly. It is protected; every change lands through a PR.
 
 ## 2. Build and check
-- There is no app code yet (Phase 1 is just starting), so there are no build or test commands.
-  When the project is scaffolded, replace this step with the real ones (for example
-  `npm test`, `npm run lint`, `npx tsc --noEmit`, `npx expo start`).
+- From the repo root: `npm run check` (lint, type check, tests in every workspace), then
+  `npm run build`. CI runs the same steps on every PR.
+- New workspace packages go under `apps/` or `packages/` and define the `lint`, `typecheck`
+  and `test` scripts they need, so the root commands pick them up.
 - Any number Newton reports (tides, bearings, angles, dates, cost splits) needs a unit test.
 - Check the change in the running app, not just in the tests. For docs-only changes, check the
   Markdown renders on GitHub.
