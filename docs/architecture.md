@@ -93,7 +93,7 @@ or email-in yet.
 flowchart LR
   subgraph Repo["npm workspaces (Node 22)"]
     Web["apps/web<br/>Next.js 16, App Router,<br/>Tailwind 4, TypeScript"]
-    Calc["packages/calc<br/>TypeScript, Vitest<br/>toCents, formatCents"]
+    Calc["packages/calc<br/>TypeScript, Vitest<br/>money, cost split, due dates"]
   end
   subgraph Local["supabase/ (local, Docker)"]
     DB[("Postgres + RLS<br/>boats, people, memberships")]
@@ -112,7 +112,7 @@ flowchart LR
 | Web app | `apps/web` | Homepage, placeholder `/get-started`, `/privacy` and `/terms`, and a shared footer from the root layout (#31). Previews per PR (#19). |
 | Sign-in | `apps/web/src/app/sign-in`, `auth/callback`, `boats` | Email magic link (#5). `/boats` lists the signed-in person's boats and role. A proxy (`src/proxy.ts`) refreshes the session cookie. Without `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (as on previews today), `/sign-in` stays a placeholder. |
 | Data access | `apps/web/src/lib/db` | The web app's only way into the database and auth; a lint rule blocks `@supabase/*` imports elsewhere. Types generated from the schema (`npm run db:types`). |
-| Calc | `packages/calc` | Money helpers (`toCents`, `formatCents`) with tests. Imported as source (`main: src/index.ts`), no build step. |
+| Calc | `packages/calc` | Money helpers (`toCents`, `formatCents`), the co-owner cost split (`splitCosts`, #6) and due dates for renewals and maintenance (`nextDue`, `findDue`, #7), with tests. Imported as source (`main: src/index.ts`), no build step. |
 | Brand | `assets/brand` | Logo, favicon, monochrome marks. |
 | CI | `.github/workflows/ci.yml` | `npm ci`, lint, typecheck, test, build on every PR and on `main`; a second job starts Postgres and runs the RLS tests. |
 | Hosting | Vercel project `heynewton-web` | `main` deploys to the dev site, https://heynewton-web.vercel.app, which [heynewton.app](https://heynewton.app) also points at (DNS on Cloudflare, `www` redirects to the apex). Static pages only, so this is harmless until sign-in; #37 moves the domain to a production project first (#35). |
