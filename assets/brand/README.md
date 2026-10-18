@@ -6,6 +6,7 @@ spinnaker inside it. It stands for both halves of Newton, the voice assistant an
 | File | Use |
 | --- | --- |
 | `icon.svg` | Primary mark: app icon, social avatar, anything 96 px and up |
+| `avatar.png` | 512 × 512 PNG of `icon.svg` with square navy corners, for account avatars (Vercel, GitHub) that crop to a circle |
 | `icon-small.svg` | 32 to 96 px: drops the spinnaker seam, thicker mast |
 | `favicon.svg` | Under 32 px: sails and hull only (also used as `apps/web/src/app/icon.svg`) |
 | `mark-light.svg` | Bubble without the tile, for light backgrounds (navy outline) |
