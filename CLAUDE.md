@@ -40,12 +40,15 @@ assumes it may become a paid product, so it is multi-boat and multi-owner from d
 | Boat data | Signal K (Raspberry Pi + NMEA 2000 gateway) |
 | Tides | NOAA predictions, cached |
 
+The current architecture and the target for each phase are in `docs/architecture.md`. A change
+that alters the architecture (a new component, service or decision) updates that page in the same PR.
+
 ## Build phases
 
 1. Home side for our own boat: email-in filing, maintenance and renewal reminders,
    co-owner cost split, Q&A over manuals.
-2. Three to five friends' boats: self-serve onboarding; measure time until a new boat is useful.
-3. On-water voice: tide and course-to-mark first (phone GPS only), then target angles via Signal K.
+2. On-water voice: tide and course-to-mark first (phone GPS only), then target angles via Signal K.
+3. Three to five friends' boats: self-serve onboarding; measure time until a new boat is useful.
 4. Paid product.
 
 We are in **Phase 1**.
@@ -87,8 +90,8 @@ We are in **Phase 1**.
   - `mobile`: the Expo / React Native app
   - `boat-data`: Signal K, NMEA 2000, NOAA tides
   - `repo`: tooling, CI, repo setup
-- Milestones are the goals: one per build phase (`Phase 1: Home side`, `Phase 2: Friends' boats`,
-  `Phase 3: On-water voice`, `Phase 4: Paid product`). Every open issue has one.
+- Milestones are the goals: one per build phase (`Phase 1: Home side`, `Phase 2: On-water voice`,
+  `Phase 3: Friends' boats`, `Phase 4: Paid product`). Every open issue has one.
 - Priority is the order of work: first what is blocked by nothing, then what unblocks other work,
   then small steps toward users. Keep at most two issues in progress.
 - Issues a contributor could pick up on their own get `help wanted` (or `good first issue` if small).
