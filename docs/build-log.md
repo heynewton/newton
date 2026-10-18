@@ -894,7 +894,11 @@ can you improve the gh project workflow so that the cards move when the PR is cr
 - The built-in workflows can only be switched on in the GitHub UI and can't move an issue when its
   PR opens, so the workflow handles every move itself. It doesn't depend on the built-ins.
 - `GITHUB_TOKEN` can't write to an organisation's project, so the workflow needs a `PROJECT_TOKEN`
-  secret. It's the same kind of token #24 asks for, so one token can serve both.
+  secret.
+- Claude first said the same token could go in the cloud environment for #24. The Claude Code docs
+  say the cloud sessions' GitHub proxy blocks GraphQL (which Projects v2 needs) whatever the token,
+  so that can't work. This workflow is how cards move when a cloud session opens or merges a PR.
+  Claude noted this on #24.
 - The workflow uses `pull_request`, not `pull_request_target`, so it runs from the PR's own branch
   and could be tested on this PR before merging. Forks don't get secrets, so their cards stay manual.
 - Claude tested the script locally against the real board on cases that shouldn't move anything
