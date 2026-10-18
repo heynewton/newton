@@ -99,7 +99,7 @@ flowchart LR
 
 | Part | Where | State |
 | --- | --- | --- |
-| Web app | `apps/web` | Placeholder page with the Newton name and icon. No routes, no data. Not deployed yet (#19). |
+| Web app | `apps/web` | Homepage, placeholder `/get-started`, `/sign-in`, `/privacy` and `/terms`, and a shared footer from the root layout (#31). No auth, no data. Previews per PR (#19). |
 | Calc | `packages/calc` | Money helpers (`toCents`, `formatCents`) with tests. Imported as source (`main: src/index.ts`), no build step. |
 | Brand | `assets/brand` | Logo, favicon, monochrome marks. |
 | CI | `.github/workflows/ci.yml` | `npm ci`, lint, typecheck, test, build on every PR and on `main`. |
