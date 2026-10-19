@@ -49,6 +49,24 @@ go
 resolve conflict on pr87
 ````
 
+Then, for real retrieval:
+
+````text
+should I get a Voyage key.
+````
+
+````text
+where do I opt out
+````
+
+````text
+key saved. go
+````
+
+````text
+I've added a payment method on Voyage and opted out of training. Rerun the eval with Voyage.
+````
+
 **What Claude did**
 
 - Wrote the steps for the key: an account on the project address (`dev@heynewton.app`), not a
@@ -64,14 +82,17 @@ resolve conflict on pr87
 - Updated `docs/tokens.md`: the `heynewton` Console org, one workspace per environment, and how
   to load `.env` for the eval. Moved the misplaced "Supabase project settings" heading back
   above its table.
-- Ran `npm run check` (all pass) and the live eval: **10/10** on `claude-opus-5-5`, with the
-  fake embedder since there's no Voyage key yet.
+- Ran `npm run check` (all pass) and the live eval: **10/10** on `claude-opus-5-5`, first with
+  the fake embedder, then with real retrieval on `voyage-4` once the Voyage key was set up.
 
 **What changed along the way**
 
 - The plan was an individual Console account; it became a `heynewton` organization.
 - Vitest doesn't read `.env`, and without a key the eval is skipped rather than failed, so a run
   can look green without calling Claude. `docs/tokens.md` gives the command that loads `.env`.
+- The first Voyage run hit a 429: without a payment method the account is held to 3 requests a
+  minute. Adding a card lifted it after a few minutes, and is also what allows the training
+  opt-out (now in Atlas organization settings or the Voyage dashboard, and permanent).
 - The machine's default Node was 18; the repo needs 22 (`.nvmrc`), so the checks ran on Node 22.
 
 **Pull request:** [#87](https://github.com/heynewton/newton/pull/87)

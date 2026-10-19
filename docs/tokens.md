@@ -134,16 +134,19 @@ as Read where possible, and update this table in the same PR.
 
 ## `VOYAGE_API_KEY`
 
-Embeddings for manual search ([decision 0004](decisions/0004-embeddings.md)). Not created yet:
-nothing calls Voyage until the indexing job (#11) or Q&A (#14) runs against a real database.
-Tests and CI use a fake embedder and need no key.
+Embeddings for manual search ([decision 0004](decisions/0004-embeddings.md)). Only the live
+manual Q&A eval uses it until the indexing job (#11) runs against a real database. Tests and CI
+use a fake embedder and need no key.
 
 - **Where:** Voyage AI dashboard (dashboard.voyageai.com) → API keys, signed in as the project
   account (`dev@heynewton.app`).
-- **Name:** `newton-dev`, and a separate `newton-prod` key for prod, so one can be revoked
-  without the other.
-- **Before first use:** opt out of training on our content in the dashboard. It only covers
-  content sent after opting out.
+- **Name:** `newton-dev` exists; a separate `newton-prod` key comes with the indexing job in
+  prod, so one can be revoked without the other.
+- **Payment method:** add one under Billing before using the key. Without it the account is held
+  to 3 requests a minute, too few for the eval, and can't opt out of training. The free tokens
+  still apply, so the eval costs nothing.
+- **Before first real use:** opt out of training on our content. The opt-out is permanent and
+  only covers content sent after it. Done for the project account.
 - **Expiry:** Voyage keys don't expire; revoke and replace them yearly, with a calendar reminder.
 - **Stored in:** `.env` locally (`VOYAGE_API_KEY=…`, git-ignored), and the environment of
   whatever runs the indexing job. Prod's key only in the `production` environment.
