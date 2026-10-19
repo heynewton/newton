@@ -25,6 +25,7 @@ Rules for all of them:
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
+| `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY` | secrets | Resend, Supabase | Project Resend account; that Supabase project | Email-in webhook (#10) | Vercel env vars of that deployment |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
@@ -140,8 +141,22 @@ key per Supabase project, so revoking one doesn't break the other.
 - **Stored in:** pasted straight into Supabase → that project → Authentication → Emails → SMTP
   Settings (password field), with host `smtp.resend.com`, port `465`, user `resend`. Not saved
   anywhere else: a lost key is replaced, not recovered.
-- **Later (#10):** the inbound webhook adds a key that can read received mail, and the webhook
-  signing secret, both in Vercel's environment variables. Add them here then.
+
+## Email-in (`RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`)
+
+The `/api/email-in` webhook (#10) reads received mail from Resend and writes to the database
+without a signed-in person. Setup steps are in [decision 0003](decisions/0003-email-provider.md#3b-email-in-webhook-10).
+
+| Variable | Issued by | Permission | Stored in |
+| --- | --- | --- | --- |
+| `RESEND_API_KEY` | Resend, key `email-in-newton-dev` (`email-in-newton-prod` for #63) | Must read received emails, which "Sending access" can't; the narrowest that can (not confirmed yet) | Vercel env vars of the deployment it belongs to, marked Sensitive |
+| `RESEND_WEBHOOK_SECRET` | Resend, per webhook endpoint (`whsec_…`) | Checks that a request comes from Resend | Same |
+| `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/email-in.ts` uses it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
+| `INBOUND_EMAIL_DOMAIN` | — (not secret) | `boats.heynewton.app` | Same |
+
+- **Expiry:** none of them expire on their own. Rotate yearly with the other Resend keys; a new
+  webhook secret is made with Resend's rotate button.
+- **Locally:** `apps/web/.env.local`, with the local stack's secret key from `npm run db:start`.
 
 
 Use the same choices for `newton-prod`:
