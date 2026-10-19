@@ -34,7 +34,8 @@ document row gives, so the records' "From …pdf" links open. `build-seed.mjs` w
 `[storage.buckets.documents]` in `supabase/config.toml` makes the Supabase CLI upload that folder on
 `npm run db:start` and `npm run db:reset`. If a reset stops at "Restarting containers" because
 Storage was slow to come back, `npx supabase seed buckets` uploads the files on their own. The hosted
-dev database gets the rows but not the files yet.
+dev database gets both: the Dev database workflow loads `seed.sql`, then uploads the same folder
+with `npx supabase seed buckets --linked` on every push to `main`.
 
 ## Records
 
