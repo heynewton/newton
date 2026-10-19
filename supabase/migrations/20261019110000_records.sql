@@ -15,8 +15,12 @@
 -- Dates are calendar dates (`date`, YYYY-MM-DD), like calc's. Money is integer cents with an
 -- ISO 4217 currency code.
 --
--- `document_id` is the document a record came from. It becomes a foreign key to `documents`
--- once that table exists (#8).
+-- `document_id` is the document a record came from (#8). The foreign key includes `boat_id`, so a
+-- record can only point at a document of its own boat. Deleting the document keeps the record and
+-- clears the link.
+
+-- Lets the record tables' foreign keys check the document is on the same boat.
+alter table public.documents add constraint documents_id_boat_id_key unique (id, boat_id);
 
 -- Ownership shares --------------------------------------------------------------------------
 -- The cost split divides expenses by these. Only the ratio matters (40/35/25 = 8/7/5). Crew and
@@ -39,7 +43,9 @@ create table public.renewals (
   expires_on date not null,
   notes text,
   document_id uuid,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  foreign key (document_id, boat_id) references public.documents (id, boat_id)
+    on delete set null (document_id)
 );
 
 create index renewals_boat_id_idx on public.renewals (boat_id);
@@ -60,6 +66,8 @@ create table public.maintenance_items (
   notes text,
   document_id uuid,
   created_at timestamptz not null default now(),
+  foreign key (document_id, boat_id) references public.documents (id, boat_id)
+    on delete set null (document_id),
   constraint maintenance_items_has_interval
     check (every_months is not null or every_engine_hours is not null),
   constraint maintenance_items_hours_interval_needs_reading
@@ -84,7 +92,9 @@ create table public.expenses (
   paid_by uuid not null references public.people (id),
   notes text,
   document_id uuid,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  foreign key (document_id, boat_id) references public.documents (id, boat_id)
+    on delete set null (document_id)
 );
 
 create index expenses_boat_id_idx on public.expenses (boat_id);

@@ -1,7 +1,7 @@
 -- Row-level security and checks for renewals, maintenance items and expenses (#9).
 -- Run with `npm run db:test`.
 --
--- The same four made-up people as rls.test.sql:
+-- The people and boats come from setup/tenancy.psql:
 --   Ada:  owner of Kestrel, read-only on Petrel
 --   Ben:  owner of Petrel, co-owner of Kestrel
 --   Cleo: crew on Kestrel
@@ -9,35 +9,18 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(43);
+select plan(48);
 
 -- Setup, as the database owner -------------------------------------------------------------
 
-insert into auth.users (id, email) values
-  ('00000000-0000-0000-0000-00000000000a', 'ada@example.test'),
-  ('00000000-0000-0000-0000-00000000000b', 'ben@example.test'),
-  ('00000000-0000-0000-0000-00000000000c', 'cleo@example.test'),
-  ('00000000-0000-0000-0000-00000000000d', 'dev@example.test');
+\ir setup/tenancy.psql
 
-insert into public.boats (id, name) values
-  ('10000000-0000-0000-0000-000000000001', 'Kestrel'),
-  ('10000000-0000-0000-0000-000000000002', 'Petrel');
-
-insert into public.memberships (boat_id, person_id, role)
-select b.id, p.id, m.role::public.membership_role
-from (values
-  ('Kestrel', 'ada@example.test', 'owner'),
-  ('Kestrel', 'ben@example.test', 'co_owner'),
-  ('Kestrel', 'cleo@example.test', 'crew'),
-  ('Petrel', 'ben@example.test', 'owner'),
-  ('Petrel', 'ada@example.test', 'read_only')
-) as m (boat, email, role)
-join public.boats b on b.name = m.boat
-join public.people p on p.email = m.email;
-
--- People's IDs, readable whatever the signed-in person can see.
-create temp table person_ids as select email, id from public.people;
-grant select on person_ids to authenticated;
+-- A document on each boat, for linking records to their source.
+insert into public.documents (id, boat_id, storage_path, type, source, filename) values
+  ('50000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001',
+   '10000000-0000-0000-0000-000000000001/yard-invoice.pdf', 'unsorted', 'email', 'yard-invoice.pdf'),
+  ('50000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002',
+   '10000000-0000-0000-0000-000000000002/insurance.pdf', 'unsorted', 'email', 'insurance.pdf');
 
 -- One record of each kind on Petrel, where Ada is read-only.
 insert into public.renewals (id, boat_id, kind, title, expires_on) values
@@ -50,22 +33,6 @@ insert into public.expenses (id, boat_id, description, amount_cents, currency, s
 select '40000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002',
   'Petrel mooring', 120000, 'USD', '2026-04-01', id
 from person_ids where email = 'ben@example.test';
-
--- Switch to a signed-in person, the way PostgREST does for a request with their token.
-create function pg_temp.sign_in_as(email text) returns void language plpgsql as $$
-begin
-  reset role;
-  perform set_config(
-    'request.jwt.claims',
-    json_build_object(
-      'sub', (select id from auth.users u where u.email = sign_in_as.email),
-      'role', 'authenticated'
-    )::text,
-    true
-  );
-  perform set_config('role', 'authenticated', true);
-end;
-$$;
 
 -- Ada: owner of Kestrel, read-only on Petrel -----------------------------------------------
 
@@ -201,6 +168,32 @@ select lives_ok(
   'maintenance can be due by engine hours only'
 );
 
+-- Links to source documents.
+
+select lives_ok(
+  $$ insert into public.expenses
+       (id, boat_id, description, amount_cents, currency, spent_on, paid_by, document_id)
+     values ('40000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001',
+       'Antifouling paint', 37998, 'USD', '2026-10-02', public.current_person_id(),
+       '50000000-0000-0000-0000-000000000001') $$,
+  'a record can link to a document of its own boat'
+);
+select lives_ok(
+  $$ update public.maintenance_items set document_id = '50000000-0000-0000-0000-000000000001'
+     where id = '30000000-0000-0000-0000-000000000001' $$,
+  'a record''s source document can be set later'
+);
+select throws_ok(
+  $$ update public.renewals set document_id = '50000000-0000-0000-0000-000000000002'
+     where id = '20000000-0000-0000-0000-000000000001' $$,
+  '23503', null, 'a record cannot link to another boat''s document'
+);
+select throws_ok(
+  $$ update public.renewals set document_id = gen_random_uuid()
+     where id = '20000000-0000-0000-0000-000000000001' $$,
+  '23503', null, 'a record cannot link to a document that doesn''t exist'
+);
+
 -- Ownership shares: owners set them.
 
 update public.memberships set ownership_share = 60 where boat_id = '10000000-0000-0000-0000-000000000001'
@@ -332,6 +325,14 @@ select is(
   (select count(*)::int from public.expenses where id = '40000000-0000-0000-0000-000000000001'),
   1,
   'an expense stays when its payer leaves the boat'
+);
+
+delete from public.documents where id = '50000000-0000-0000-0000-000000000001';
+select results_eq(
+  $$ select (select document_id from public.expenses where id = '40000000-0000-0000-0000-000000000003'),
+            (select document_id from public.maintenance_items where id = '30000000-0000-0000-0000-000000000001') $$,
+  $$ values (null::uuid, null::uuid) $$,
+  'deleting a document keeps the records that came from it and clears their link'
 );
 
 delete from public.boats where id = '10000000-0000-0000-0000-000000000002';

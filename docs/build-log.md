@@ -1042,9 +1042,11 @@ working next to #8: #8 owns the `documents` table and the earlier migration time
   Claude ran its database from a scratch copy of `supabase/` with its own project name and ports.
 - The payer is checked by a trigger rather than a foreign key to `memberships`, so an expense stays
   when its payer later leaves the boat and past splits don't change.
-- #8's PR (#52) moved the shared test people and boats into `setup/tenancy.psql`. It hadn't merged
-  yet, so this PR keeps its own copy of the setup and switches over, along with adding the
-  `document_id` foreign key, after rebasing on #52.
+- #8's PR (#52) hadn't merged when this PR opened, so `document_id` started as a plain column.
+  After #52 merged, Claude rebased, made `document_id` a foreign key and switched the tests to #52's
+  shared `setup/tenancy.psql`. The foreign key covers `(document_id, boat_id)`, so a record can't
+  point at another boat's document, and deleting a document clears only `document_id`
+  (`on delete set null (document_id)`, Postgres 15 and later) and keeps the record.
 - The seed leaves `document_id` null: the sample documents aren't seeded yet.
 
 **Pull request:** [#54](https://github.com/heynewton/newton/pull/54)
