@@ -25,6 +25,7 @@ Workflow, board and process: how changes land, how issues are picked up, and how
 - [#57](https://github.com/heynewton/newton/pull/57) · 2026-10-19 · Contributor guide no longer mentions the in-progress limit
 - [#58](https://github.com/heynewton/newton/pull/58) · 2026-10-19 · README links to every page in `docs/`
 - [#67](https://github.com/heynewton/newton/pull/67) · 2026-10-19 · No limit on issues in progress
+- [#90](https://github.com/heynewton/newton/pull/90) · 2026-10-19 · Build log and history are one file per entry, so open PRs stop conflicting · closes [#89](https://github.com/heynewton/newton/issues/89)
 
 ### Architecture and decisions
 
