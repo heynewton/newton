@@ -4,11 +4,14 @@ import { supabaseSettings } from "./client";
 import type { Database } from "./database.types";
 
 // Called from the proxy on every page request: refreshes the sign-in session cookie before
-// it expires, since Server Components can't write cookies themselves.
-export async function refreshSession(request: NextRequest) {
+// it expires, since Server Components can't write cookies themselves. Also says whether
+// someone is signed in, so the proxy can route them.
+export async function refreshSession(
+  request: NextRequest,
+): Promise<{ response: NextResponse; signedIn: boolean }> {
   let response = NextResponse.next({ request });
   const settings = supabaseSettings();
-  if (!settings) return response;
+  if (!settings) return { response, signedIn: false };
 
   const supabase = createServerClient<Database>(settings.url, settings.key, {
     cookies: {
@@ -25,6 +28,6 @@ export async function refreshSession(request: NextRequest) {
   });
 
   // Validates the token and refreshes it if needed. Must run before the response is returned.
-  await supabase.auth.getClaims();
-  return response;
+  const { data } = await supabase.auth.getClaims();
+  return { response, signedIn: Boolean(data?.claims) };
 }
