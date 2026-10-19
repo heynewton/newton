@@ -1591,4 +1591,4 @@ Ok with the 6 and the order you defined.
 - 4 tests for `src/lib/db/session.ts`: no settings, no claims, claims read from the request's
   cookies, and refreshed cookies and cache headers copied onto the response.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#85](https://github.com/heynewton/newton/pull/85)
