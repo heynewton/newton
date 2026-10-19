@@ -3,11 +3,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { getCurrentPerson, getMyBoat, listMyBoats } from "@/lib/db";
+import { getBoatRecords, getCurrentPerson, getMyBoat, listMyBoats } from "@/lib/db";
+import { costSplit, schedule, todayUtc } from "@/lib/records";
 import { roleNames } from "../roles";
 import { SignOut } from "../sign-out";
+import { CoOwnerBalance, ComingUp, Documents } from "./records";
 
 export const metadata: Metadata = { title: "Your boat · Hey Newton" };
+
+// Renewals and maintenance due within this many days, or this many engine hours, count as due soon.
+const DUE_SOON_DAYS = 60;
+const DUE_SOON_ENGINE_HOURS = 25;
 
 // What to do next with a new boat. Each one says "Coming soon" until it is built.
 const nextSteps = [
@@ -46,6 +52,19 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
   const [boat, boats] = await Promise.all([getMyBoat(person, boatId), listMyBoats(person)]);
   if (!boat) notFound();
 
+  const records = await getBoatRecords(boat.boatId);
+  const today = todayUtc(new Date());
+  const due = schedule(records.renewals, records.maintenance, {
+    today,
+    withinDays: DUE_SOON_DAYS,
+    withinEngineHours: DUE_SOON_ENGINE_HOURS,
+  });
+  const split = costSplit(
+    records.expenses,
+    records.members.map((m) => ({ person_id: m.personId, ownership_share: m.ownershipShare })),
+  );
+  const documents = new Map(records.documents.map((d) => [d.id, d]));
+
   return (
     <>
       <header className="flex flex-col gap-3">
@@ -53,6 +72,23 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
         <h1 className="text-3xl font-semibold break-words sm:text-4xl">{boat.boatName}</h1>
         <p className="text-zinc-600 dark:text-zinc-400">You&apos;re its {roleNames[boat.role].toLowerCase()}.</p>
       </header>
+
+      <ComingUp
+        schedule={due}
+        withinDays={DUE_SOON_DAYS}
+        today={today}
+        boatId={boat.boatId}
+        documents={documents}
+        maintenance={records.maintenance}
+      />
+      <CoOwnerBalance
+        split={split}
+        expenses={records.expenses}
+        members={records.members}
+        boatId={boat.boatId}
+        documents={documents}
+      />
+      <Documents documents={records.documents} boatId={boat.boatId} />
 
       <section aria-labelledby="next-steps" className="flex flex-col gap-4">
         <h2 id="next-steps" className="text-xl font-semibold">

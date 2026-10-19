@@ -75,6 +75,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
+- PR_LINE · A boat's page shows its renewals, maintenance, co-owner balance and documents
 - [#65](https://github.com/heynewton/newton/pull/65) · Every token written down, so prod gets exactly the same ones
 
 ### What's next
