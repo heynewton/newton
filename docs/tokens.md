@@ -62,9 +62,9 @@ Created in Supabase → Account preferences → Access Tokens → Generate new t
 project account. Supabase tokens are scoped to projects with per-capability permissions; everything
 starts at **None**.
 
-**Dev token** (created October 2026; settings confirmed from the creation screen)
+**Dev token** (created October 2026, recreated for #60 to add API keys read; settings confirmed from the creation screen)
 
-- **Name:** `github-actions-newton`
+- **Name:** `github-actions-newton-dev`
 - **Expiry:** 90 days. Renew before it lapses, or migrations stop reaching dev.
 - **Resource access:** `newton-dev` only.
 - **Capabilities** (everything not listed stays **None**):
@@ -76,9 +76,10 @@ starts at **None**.
 | Database | Connection Pooling | Read | GitHub's runners reach the database through the pooler |
 | Application services | Data API Config | Read | `supabase link` compares hosted settings with `supabase/config.toml` |
 | Application services | Storage Config | Read | Same comparison, for storage |
+| Project | API keys (`api_gateway_keys_read`) | Read | `supabase link` reads the project's API keys; without it, link fails with "Missing required permission(s): api_gateway_keys_read" (#60) |
 
 Supabase rates this "High risk" because a migration can run any SQL. That is what the workflow
-needs. The token can't read API keys, auth settings or signing keys, can't manage backups or
+needs. The token can read the project's API keys but not change them. It can't read auth settings or signing keys, can't manage backups or
 network settings, and can't see any other project.
 
 If a workflow run fails on a missing permission, the error names it: add only that capability,
