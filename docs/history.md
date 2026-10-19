@@ -35,6 +35,7 @@ The architecture page, the phase order and the recorded decisions.
 - [#29](https://github.com/heynewton/newton/pull/29) · 2026-10-18 · Spec diagram shows on-water voice as Phase 2 · closes [#26](https://github.com/heynewton/newton/issues/26)
 - [#48](https://github.com/heynewton/newton/pull/48) · 2026-10-19 · Plan for separate dev and prod databases in Phase 1, before real boat data
 - [#66](https://github.com/heynewton/newton/pull/66) · 2026-10-19 · Sign-in emails from heynewton.app: Resend chosen, with the setup steps
+- [#72](https://github.com/heynewton/newton/pull/72) · 2026-10-19 · History and architecture status catch up with what has merged
 
 ### Repo and infrastructure
 
@@ -81,7 +82,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#72](https://github.com/heynewton/newton/pull/72) · History and architecture status catch up with what has merged
+- [#81](https://github.com/heynewton/newton/pull/81) · Tide height at any time from the cached high and low waters (Phase 2)
 
 ### What's next
 
