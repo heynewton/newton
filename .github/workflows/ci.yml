@@ -48,6 +48,13 @@ jobs:
           name: indexing
           working-directory: packages/indexing
           comment-on: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'pr' || 'none' }}
+      - name: Coverage report (agent)
+        if: ${{ !cancelled() && hashFiles('packages/agent/coverage/coverage-summary.json') != '' }}
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: agent
+          working-directory: packages/agent
+          comment-on: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'pr' || 'none' }}
       - name: Coverage report (web)
         if: ${{ !cancelled() && hashFiles('apps/web/coverage/coverage-summary.json') != '' }}
         uses: davelosert/vitest-coverage-report-action@v2

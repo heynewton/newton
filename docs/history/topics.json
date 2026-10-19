@@ -38,5 +38,10 @@
     "phase": "Phase 1: Home side",
     "topic": "Web app features",
     "description": "What a signed-in person can do in the app."
+  },
+  {
+    "phase": "Phase 1: Home side",
+    "topic": "Manual Q&A",
+    "description": "Answers from a boat's manuals through Claude, with the page they came from, and their evals."
   }
 ]
