@@ -24,6 +24,7 @@ Rules for all of them:
 | `SUPABASE_DEV_DB_PASSWORD` | secret | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo secrets, and the project password manager |
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
+| `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
 
@@ -92,6 +93,22 @@ as Read where possible, and update this table in the same PR.
   Environment secrets) as `SUPABASE_ACCESS_TOKEN`. The environment needs the maintainer's approval,
   so a dev workflow or a PR can never use it.
 - **Expiry:** the same, with its own calendar reminder.
+
+## `VOYAGE_API_KEY`
+
+Embeddings for manual search ([decision 0004](decisions/0004-embeddings.md)). Not created yet:
+nothing calls Voyage until the indexing job (#11) or Q&A (#14) runs against a real database.
+Tests and CI use a fake embedder and need no key.
+
+- **Where:** Voyage AI dashboard (dashboard.voyageai.com) → API keys, signed in as the project
+  account (`dev@heynewton.app`).
+- **Name:** `newton-dev`, and a separate `newton-prod` key for prod, so one can be revoked
+  without the other.
+- **Before first use:** opt out of training on our content in the dashboard. It only covers
+  content sent after opting out.
+- **Expiry:** Voyage keys don't expire; revoke and replace them yearly, with a calendar reminder.
+- **Stored in:** `.env` locally (`VOYAGE_API_KEY=…`, git-ignored), and the environment of
+  whatever runs the indexing job. Prod's key only in the `production` environment.
 
 ## Supabase database passwords
 
