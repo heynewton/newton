@@ -1589,4 +1589,4 @@ Ok with the 6 and the order you defined.
   fails, so the comment shows why.
 - `docs/process.md` (Definition of Done) and the `ship-change` skill mention the bar and the report.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#86](https://github.com/heynewton/newton/pull/86)
