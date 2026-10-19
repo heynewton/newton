@@ -29,4 +29,4 @@ yes tick box
 
 - The tick was meant for #100, which had already merged, so it went in a new PR.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#104](https://github.com/heynewton/newton/pull/104)
