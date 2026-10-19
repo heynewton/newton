@@ -50,6 +50,28 @@ clearly what couldn't be tested. Open the PR with Closes #62 and stop.
 - heynewton.app still serves the dev site, so its origin goes on the dev allow-list too, to be
   removed with #37.
 - Whether `--env` reaches a `--prebuilt` deployment at run time isn't spelled out in Vercel's
-  docs; this PR's preview will show it once the variables are set.
+  docs; this PR's preview will show it once the variables are set. It does: the preview showed
+  the sign-in form.
+
+Then, after the maintainer did the checklist, from the main session:
+
+````text
+Sign-in on PR #98's preview fails: the session cookie never gets set. [...] It lands on
+/sign-in, and opening /boats redirects to /sign-in again: no session. [...] Reproduce and fix
+in PR #98. [...] Tell me exactly what the maintainer should retest once it's redeployed.
+Don't merge.
+````
+
+- Read `newton-dev`'s API logs instead of guessing: the email link's code exchange succeeded
+  (`/auth/v1/token?grant_type=pkce` → 200) and the next requests carried the session. The cookie
+  was fine. Only `rpc/current_person_id` was called after it, never `people`, so it returned null.
+- In the database, one of five auth users had no person: the maintainer's, created at 04:13 UTC
+  while testing the Resend sign-in email (#61), before #60's first migration added the trigger
+  that gives every new auth user a person. With no person, every page treats a valid session as
+  signed out.
+- Added a migration that gives every auth user without a person one, the same way the trigger
+  does. Checked it on a local stack against a user created with the trigger off.
+- Left `newton-dev`'s data alone: the migration fixes it when the PR merges. Until then, the
+  preview can be tested with an email address that has never signed in to dev.
 
 **Pull request:** [#98](https://github.com/heynewton/newton/pull/98)
