@@ -1639,6 +1639,66 @@ Ok with calc phase 2
 
 **Pull request:** [#81](https://github.com/heynewton/newton/pull/81)
 
+## Phase 2 calculations: bearing, distance and time to a mark
+
+**Prompt**
+
+The overnight plan (see "History and architecture catch up with what has merged"), item 4:
+
+````text
+Ok with calc phase 2
+````
+
+**What Claude did**
+
+- `bearingAndDistance(from, to)` in `packages/calc`: initial great-circle bearing (degrees true)
+  and distance (nautical miles) by the haversine formula on the mean Earth radius. The same point
+  has no bearing (null) rather than a made-up 0°.
+- `timeToMark(distanceNm, speedKnots, now)`: minutes en route and the ETA to the second, or no
+  answer below 0.1 kn, since "infinity" isn't an ETA.
+- 12 tests: the published Land's End to John o' Groats example (968.9 km, 009°07′11″), one degree
+  along a meridian and the equator and back, the antimeridian, a mark 0.5 nm away at 045°, the
+  same point, invalid positions, and ETAs across time zones.
+
+**What changed along the way**
+
+- Spherical rather than ellipsoidal: over a day's sailing the difference is a fraction of a
+  percent, well under GPS and chart error. Rhumb lines were left out; a boat steers a course to a
+  mark it can usually see.
+
+**Pull request:** [#83](https://github.com/heynewton/newton/pull/83)
+
+## Phase 2 calculations: course to steer for tidal stream and leeway
+
+**Prompt**
+
+The overnight plan (see "History and architecture catch up with what has merged"), item 4:
+
+````text
+Ok with calc phase 2
+````
+
+**What Claude did**
+
+- `courseToSteer({ track, boatSpeed, tide, leeway })` in `packages/calc`: the vector triangle
+  navigators draw on the chart. It splits the stream into its parts across and along the track,
+  points the boat upstream just enough to cancel the cross-track part, then steers into the wind
+  by the leeway. It returns the heading, the expected speed over the ground, and each correction
+  separately, so the answer can say why ("23.6° to port for the stream").
+- When the stream across the track is faster than the boat, or the stream against it is, it says
+  the track can't be held instead of returning a number.
+- 11 tests: no stream, stream with and against, the classic example (track 090°, 5 kn, stream
+  180° at 2 kn: steer 066.4°, 4.58 kn over the ground), leeway on either tack and across north,
+  and an independent check that adding the boat's vector (less leeway) and the stream's lands
+  exactly on the track for four mixed cases.
+
+**What changed along the way**
+
+- The track is an input, so this didn't need #79 first; the issue's "Blocked by" line was taken
+  out.
+
+**Pull request:** [#84](https://github.com/heynewton/newton/pull/84)
+
 ## Test coverage on every PR
 
 **Prompt**
