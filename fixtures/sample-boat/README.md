@@ -7,9 +7,9 @@ fictional 555-01xx range. Never add real boat data here (see the repo rules in `
 
 ## The boat and its people
 
-`boat.json` holds the boat, who is on it and the boat's records, shaped like the `boats`, `people`,
-`memberships`, `renewals`, `maintenance_items` and `expenses` tables (see `docs/architecture.md`).
-Records filed from a fixture document name it in `sourceDocument`.
+`boat.json` holds the boat, who is on it, its documents and the boat's records, shaped like the
+`boats`, `people`, `memberships`, `documents`, `renewals`, `maintenance_items` and `expenses` tables
+(see `docs/architecture.md`). Records filed from a fixture document name it in `sourceDocument`.
 
 | Person | Role | Ownership | Verified sender addresses |
 | --- | --- | --- | --- |
@@ -22,9 +22,16 @@ Kittiwake is a 2009 Example Yachts EY 34 sloop with a Sample Marine SM-30 diesel
 hours on 2026-10-02). Its inbound address is `kittiwake@in.heynewton.test`.
 
 `supabase/seed.sql` is generated from `boat.json`, so `npm run db:reset` loads the boat, its people,
-their memberships with ownership shares, and its records into the local database. Each person signs
-in with their first verified sender address. Seeded records don't link to their documents yet,
-because the sample documents aren't seeded.
+their memberships with ownership shares, its documents and its records into the local database.
+Each person signs in with their first verified sender address.
+
+The document files go into the private `documents` bucket at `<boat_id>/<name>.pdf`, the path each
+document row gives, so the records' "From …pdf" links open. `build-seed.mjs` writes
+`supabase/storage/documents/<boat_id>/` as symlinks to the PDFs here, and
+`[storage.buckets.documents]` in `supabase/config.toml` makes the Supabase CLI upload that folder on
+`npm run db:start` and `npm run db:reset`. If a reset stops at "Restarting containers" because
+Storage was slow to come back, `npx supabase seed buckets` uploads the files on their own. The hosted
+dev database gets the rows but not the files yet.
 
 ## Records
 
@@ -68,7 +75,8 @@ Edit `documents/*.txt` (plain ASCII, one page of at most 56 lines) or the email 
 node fixtures/sample-boat/build.mjs
 ```
 
-After changing `boat.json`, also regenerate the database seed (CI fails if it is out of date):
+After changing `boat.json` or a PDF, also regenerate the database seed (CI fails if it is out of
+date, and the seed records each PDF's size):
 
 ```bash
 node fixtures/sample-boat/build-seed.mjs
