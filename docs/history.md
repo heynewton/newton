@@ -81,7 +81,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#PR](https://github.com/heynewton/newton/pull/PR) · History and architecture status catch up with what has merged
+- [#72](https://github.com/heynewton/newton/pull/72) · History and architecture status catch up with what has merged
 
 ### What's next
 

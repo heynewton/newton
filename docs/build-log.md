@@ -1604,4 +1604,4 @@ You have 6 hours so no need to do everything in parallel. You can sequence to av
 - Nothing: the inbound email provider had already been chosen in decision 0003 (Resend on
   `boats.heynewton.app`), so the maintainer's "Resend for inbound" confirms it.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#72](https://github.com/heynewton/newton/pull/72)
