@@ -47,6 +47,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#64](https://github.com/heynewton/newton/pull/64) · 2026-10-19 · Deploys upload one archive and skip docs-only changes, so previews keep working on busy days · closes [#59](https://github.com/heynewton/newton/issues/59)
 - [#65](https://github.com/heynewton/newton/pull/65) · 2026-10-19 · Every token written down, so prod gets exactly the same ones
 - [#68](https://github.com/heynewton/newton/pull/68) · 2026-10-19 · A hosted dev database, migrated and seeded from every merge to `main` · closes [#60](https://github.com/heynewton/newton/issues/60)
+- [#86](https://github.com/heynewton/newton/pull/86) · 2026-10-19 · Test coverage on every PR, with a 95% bar for calc · closes [#46](https://github.com/heynewton/newton/issues/46)
 
 ### Brand and website
 
@@ -62,6 +63,8 @@ Deterministic, tested functions in `calc` for the numbers Newton reports.
 - [#40](https://github.com/heynewton/newton/pull/40) · 2026-10-18 · Due dates for renewals and maintenance: what's overdue and coming up · closes [#7](https://github.com/heynewton/newton/issues/7)
 - [#39](https://github.com/heynewton/newton/pull/39) · 2026-10-18 · Co-owner cost split: who owes what · closes [#6](https://github.com/heynewton/newton/issues/6)
 - [#81](https://github.com/heynewton/newton/pull/81) · 2026-10-19 · Tide height at any time from the cached high and low waters (Phase 2) · closes [#78](https://github.com/heynewton/newton/issues/78)
+- [#83](https://github.com/heynewton/newton/pull/83) · 2026-10-19 · Bearing, distance and time to a mark from the boat's position (Phase 2) · closes [#79](https://github.com/heynewton/newton/issues/79)
+- [#84](https://github.com/heynewton/newton/pull/84) · 2026-10-19 · Course to steer, corrected for tidal stream and leeway (Phase 2) · closes [#80](https://github.com/heynewton/newton/issues/80)
 
 ### Data and security
 

@@ -18,6 +18,8 @@ allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(gh pr vi
 - New workspace packages go under `apps/` or `packages/` and define the `lint`, `typecheck`
   and `test` scripts they need, so the root commands pick them up.
 - Any number Newton reports (tides, bearings, angles, dates, cost splits) needs a unit test.
+- `npm run test:coverage` shows coverage per workspace. `packages/calc` fails below 95% of lines
+  or branches; CI posts the same report as a comment on the PR, so check it for new code.
 - Check the change in the running app, not just in the tests. For docs-only changes, check the
   Markdown renders on GitHub.
 - For a change to a screen, check it at 390px, 800px and 1280px wide, in light and dark mode
