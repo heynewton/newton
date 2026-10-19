@@ -190,7 +190,7 @@ where it runs, and the Supabase URL and keys from #62. Real boats' mail must onl
   - **Username:** `resend`
   - **Password:** the `supabase-newton-dev` key
 - [ ] Authentication → Rate Limits: keep **emails per hour** at the default 30 for now.
-- [ ] Authentication → URL Configuration: **Site URL** is the dev site, and the redirect URLs
+- [x] Authentication → URL Configuration: **Site URL** is the dev site, and the redirect URLs
       include the dev site's and previews' `/auth/callback` (#62 covers previews).
 - [ ] Test: on the dev site, sign in with an address that is **not** on the Supabase team (a
       personal Gmail is fine for the test). The email should arrive in the inbox, not spam, from
