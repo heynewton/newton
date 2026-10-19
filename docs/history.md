@@ -24,6 +24,7 @@ Workflow, board and process: how changes land, how issues are picked up, and how
 - [#55](https://github.com/heynewton/newton/pull/55) · 2026-10-19 · A brief for maintainers: merging, backlog, settings and working with Claude
 - [#57](https://github.com/heynewton/newton/pull/57) · 2026-10-19 · Contributor guide no longer mentions the in-progress limit
 - [#58](https://github.com/heynewton/newton/pull/58) · 2026-10-19 · README links to every page in `docs/`
+- [#67](https://github.com/heynewton/newton/pull/67) · 2026-10-19 · No limit on issues in progress
 
 ### Architecture and decisions
 
@@ -33,6 +34,7 @@ The architecture page, the phase order and the recorded decisions.
 - [#28](https://github.com/heynewton/newton/pull/28) · 2026-10-18 · Auth decision: Supabase Auth, with the provider kept swappable
 - [#29](https://github.com/heynewton/newton/pull/29) · 2026-10-18 · Spec diagram shows on-water voice as Phase 2 · closes [#26](https://github.com/heynewton/newton/issues/26)
 - [#48](https://github.com/heynewton/newton/pull/48) · 2026-10-19 · Plan for separate dev and prod databases in Phase 1, before real boat data
+- [#66](https://github.com/heynewton/newton/pull/66) · 2026-10-19 · Sign-in emails from heynewton.app: Resend chosen, with the setup steps
 
 ### Repo and infrastructure
 
@@ -43,6 +45,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#38](https://github.com/heynewton/newton/pull/38) · 2026-10-18 · heynewton.app serves the homepage · closes [#35](https://github.com/heynewton/newton/issues/35)
 - [#64](https://github.com/heynewton/newton/pull/64) · 2026-10-19 · Deploys upload one archive and skip docs-only changes, so previews keep working on busy days · closes [#59](https://github.com/heynewton/newton/issues/59)
 - [#65](https://github.com/heynewton/newton/pull/65) · 2026-10-19 · Every token written down, so prod gets exactly the same ones
+- [#68](https://github.com/heynewton/newton/pull/68) · 2026-10-19 · A hosted dev database, migrated and seeded from every merge to `main` · closes [#60](https://github.com/heynewton/newton/issues/60)
 
 ### Brand and website
 
@@ -67,20 +70,18 @@ The Supabase schema, row-level security, sign-in, storage and the sample boat.
 - [#43](https://github.com/heynewton/newton/pull/43) · 2026-10-18 · Sample boat Kittiwake ready to sign in to after `db:reset` · closes [#42](https://github.com/heynewton/newton/issues/42)
 - [#52](https://github.com/heynewton/newton/pull/52) · 2026-10-19 · Every boat gets its own private document store, locked to its members · closes [#8](https://github.com/heynewton/newton/issues/8)
 - [#54](https://github.com/heynewton/newton/pull/54) · 2026-10-19 · Renewals, maintenance and expenses stored per boat · closes [#9](https://github.com/heynewton/newton/issues/9)
+- [#69](https://github.com/heynewton/newton/pull/69) · 2026-10-19 · Manuals split into pages and chunks for search, locked to each boat, with Voyage AI chosen for embeddings · closes [#13](https://github.com/heynewton/newton/issues/13)
 
 ### Web app features
 
 What a signed-in person can do in the app.
 
 - [#53](https://github.com/heynewton/newton/pull/53) · 2026-10-19 · Add your first boat after signing in · closes [#32](https://github.com/heynewton/newton/issues/32)
+- [#70](https://github.com/heynewton/newton/pull/70) · 2026-10-19 · A boat's page shows its renewals, maintenance, co-owner balance and documents · closes [#15](https://github.com/heynewton/newton/issues/15)
 
 ### In progress
 
-- [#70](https://github.com/heynewton/newton/pull/70) · A boat's page shows its renewals, maintenance, co-owner balance and documents
-- [#65](https://github.com/heynewton/newton/pull/65) · Every token written down, so prod gets exactly the same ones
-- [#68](https://github.com/heynewton/newton/pull/68) · A hosted dev database, migrated and seeded from every merge to `main`
-- [#66](https://github.com/heynewton/newton/pull/66) · Sign-in emails from heynewton.app: Resend chosen, with the setup steps
-- [#69](https://github.com/heynewton/newton/pull/69) · Manuals split into pages and chunks for search, locked to each boat, with Voyage AI chosen for embeddings
+- [#PR](https://github.com/heynewton/newton/pull/PR) · History and architecture status catch up with what has merged
 
 ### What's next
 
@@ -88,8 +89,7 @@ The open Phase 1 issues, grouped by what they deliver. The board holds their ord
 
 - **Email-in and filing:** [#10](https://github.com/heynewton/newton/issues/10) per-boat inbound address, [#11](https://github.com/heynewton/newton/issues/11) classify and extract documents into records
 - **Reminders:** [#12](https://github.com/heynewton/newton/issues/12) email reminders for renewals and maintenance
-- **Q&A over manuals:** [#13](https://github.com/heynewton/newton/issues/13) index manuals with pgvector, [#14](https://github.com/heynewton/newton/issues/14) answer from manuals with sources, [#21](https://github.com/heynewton/newton/issues/21) owner-written procedures
-- **Web app:** [#15](https://github.com/heynewton/newton/issues/15) minimal screen for a boat's records
+- **Q&A over manuals:** [#14](https://github.com/heynewton/newton/issues/14) answer from manuals with sources, [#21](https://github.com/heynewton/newton/issues/21) owner-written procedures
 - **Owners own their data:** [#16](https://github.com/heynewton/newton/issues/16) export all of a boat's data
-- **Before sign-up opens:** [#27](https://github.com/heynewton/newton/issues/27) Google and Apple sign-in, [#37](https://github.com/heynewton/newton/issues/37) production project for heynewton.app, [#33](https://github.com/heynewton/newton/issues/33) privacy policy and terms
+- **Before sign-up opens:** [#27](https://github.com/heynewton/newton/issues/27) Google and Apple sign-in, [#62](https://github.com/heynewton/newton/issues/62) previews and the dev site sign in against dev, [#71](https://github.com/heynewton/newton/issues/71) sign-in emails land in the inbox, [#63](https://github.com/heynewton/newton/issues/63) production database and deployment, [#37](https://github.com/heynewton/newton/issues/37) switch heynewton.app to production, [#33](https://github.com/heynewton/newton/issues/33) privacy policy and terms
 - **Quality:** [#46](https://github.com/heynewton/newton/issues/46) test coverage on every PR, [#47](https://github.com/heynewton/newton/issues/47) unit tests for sign-in and the database layer
