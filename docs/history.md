@@ -41,6 +41,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#18](https://github.com/heynewton/newton/pull/18) · 2026-10-18 · Project scaffold: web app, calc package, one-command checks and CI · closes [#3](https://github.com/heynewton/newton/issues/3)
 - [#30](https://github.com/heynewton/newton/pull/30) · 2026-10-18 · Preview link on every PR, and a dev site from `main` · closes [#19](https://github.com/heynewton/newton/issues/19)
 - [#38](https://github.com/heynewton/newton/pull/38) · 2026-10-18 · heynewton.app serves the homepage · closes [#35](https://github.com/heynewton/newton/issues/35)
+- [#64](https://github.com/heynewton/newton/pull/64) · 2026-10-19 · Deploys upload one archive and skip docs-only changes, so previews keep working on busy days · closes [#59](https://github.com/heynewton/newton/issues/59)
 
 ### Brand and website
 
