@@ -94,6 +94,15 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
 - The deploy runs in GitHub Actions (`.github/workflows/deploy.yml`). Its only link to Vercel is
   the `VERCEL_TOKEN` repo secret, created on the project's Vercel account (not a personal one).
 - Previews only ever use fake data from `fixtures/`, so they are public to anyone with the link.
+- Previews and the dev site sign in against the dev database, `newton-dev` (#62). The workflow
+  passes its URL and publishable key from the repo variables `SUPABASE_DEV_URL` and
+  `SUPABASE_DEV_PUBLISHABLE_KEY` to the build and, with `vercel deploy --env`, to the running site;
+  nothing is set in the Vercel dashboard. It refuses any key that isn't `sb_publishable_…`. A team
+  member can sign in on a preview with an email link and make a test boat; it lands in `newton-dev`.
+- The email link comes back to the site it was asked from: the sign-in action sends that site's
+  origin, and `newton-dev`'s Auth URL configuration allows the dev site and every preview URL
+  (`https://heynewton-*-hey-newton.vercel.app/**`). A URL that isn't allowed falls back to the dev
+  site, where the link shows as expired. If a new kind of preview URL appears, add it there.
 - PRs from forks get no preview, because forks can't read repo secrets.
 - Only changes that can alter the site deploy: `apps/web/`, `packages/`, the root `package.json`,
   `package-lock.json`, `.nvmrc` and the workflow itself. A PR that only touches docs, `supabase/`

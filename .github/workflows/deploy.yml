@@ -46,7 +46,20 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       # main deploys to Vercel's "production" target, which has the stable URL; it is our dev site.
       VERCEL_TARGET: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+      # The dev site and every preview sign in against the hosted dev database, newton-dev (#62).
+      # Repo variables, not secrets: the publishable key is public by design and RLS protects the
+      # data. Unset, the site builds and deploys anyway and sign-in shows as unavailable.
+      SUPABASE_URL: ${{ vars.SUPABASE_DEV_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_DEV_PUBLISHABLE_KEY }}
     steps:
+      # Only a publishable key may reach a deployment. A secret key bypasses row-level security.
+      - name: Check the Supabase key is publishable
+        run: |
+          if [ -n "$SUPABASE_PUBLISHABLE_KEY" ] && [[ "$SUPABASE_PUBLISHABLE_KEY" != sb_publishable_* ]]; then
+            echo "::error::SUPABASE_DEV_PUBLISHABLE_KEY must be a publishable key (sb_publishable_...)."
+            exit 1
+          fi
+
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
@@ -69,10 +82,17 @@ jobs:
             "https://api.vercel.com/v9/projects/$project_id" > /dev/null
 
       - run: vercel pull --yes --environment "$VERCEL_TARGET" --token "$VERCEL_TOKEN"
+      # The build reads SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY from the job's environment.
       - run: vercel build --target "$VERCEL_TARGET" --token "$VERCEL_TOKEN"
 
+      # A prebuilt deployment doesn't keep the build's environment, so the server gets the same
+      # two values at run time with --env. Nothing is set in the Vercel dashboard.
       - name: Deploy
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --archive=tgz --target "$VERCEL_TARGET" --token "$VERCEL_TOKEN")
+          runtime_env=()
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            runtime_env=(--env "SUPABASE_URL=$SUPABASE_URL" --env "SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY")
+          fi
+          url=$(vercel deploy --prebuilt --archive=tgz --target "$VERCEL_TARGET" "${runtime_env[@]}" --token "$VERCEL_TOKEN")
           echo "url=$url" >> "$GITHUB_OUTPUT"

@@ -24,6 +24,7 @@ Rules for all of them:
 | `SUPABASE_DEV_ACCESS_TOKEN` | secret | Supabase | Project Supabase account | Dev database workflow (#60) | Repo secrets |
 | `SUPABASE_DEV_DB_PASSWORD` | secret | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo secrets, and the project password manager |
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
+| `SUPABASE_DEV_URL`, `SUPABASE_DEV_PUBLISHABLE_KEY` | variables | Supabase | `newton-dev` project | `.github/workflows/deploy.yml`: the dev site and previews (#62) | Repo variables (not secret) |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | Project Resend account; that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment |
@@ -150,6 +151,35 @@ use a fake embedder and need no key.
 - **Expiry:** Voyage keys don't expire; revoke and replace them yearly, with a calendar reminder.
 - **Stored in:** `.env` locally (`VOYAGE_API_KEY=…`, git-ignored), and the environment of
   whatever runs the indexing job. Prod's key only in the `production` environment.
+
+## Dev site and previews (`SUPABASE_DEV_URL`, `SUPABASE_DEV_PUBLISHABLE_KEY`)
+
+What the deployed web app needs to sign people in against `newton-dev` (#62). Both are public by
+design: the publishable key only reaches what row-level security allows. So they are repo
+variables, readable in workflow logs, and never a secret or service-role key; the Deploy
+workflow fails if the key doesn't start with `sb_publishable_`.
+
+- **Where:** Supabase → `newton-dev` → Project Settings → API Keys. `SUPABASE_DEV_URL` is the
+  project URL, `https://<project ref>.supabase.co` (the ref is `SUPABASE_DEV_PROJECT_REF`); the
+  key is the **Publishable key** (`sb_publishable_…`), not the Secret key.
+- **Saved as:** `gh variable set SUPABASE_DEV_URL --repo heynewton/newton` and
+  `gh variable set SUPABASE_DEV_PUBLISHABLE_KEY --repo heynewton/newton`, pasted at the prompt.
+- **Used as:** `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`, at build time from the job's
+  environment and at run time through `vercel deploy --env`. Nothing is set in Vercel.
+- **Expiry:** none. If the key is rotated in Supabase, update the variable and re-run Deploy.
+- **Prod:** never these. heynewton.app gets its own project and keys with #37.
+
+`newton-dev`'s Authentication → URL Configuration (set by hand; the access token can't write auth
+settings):
+
+| Setting | Value |
+| --- | --- |
+| Site URL | `https://heynewton-web.vercel.app` |
+| Redirect URLs | `https://heynewton-web.vercel.app/**`, `https://heynewton-*-hey-newton.vercel.app/**` (PR previews), `https://heynewton.app/**` (serves the dev site until #37; remove it then) |
+
+The preview pattern also matches any `*-hey-newton` Vercel team. A magic link sent somewhere else
+is useless without the PKCE cookie in the browser that asked for it, and dev holds only fixture
+data, so that is acceptable here; prod allows only its own domain.
 
 ## Supabase database passwords
 
