@@ -358,7 +358,7 @@ unless a step says otherwise; **never reuse a dev key or value**. Done on 19 Oct
       answers 200, and Vercel → `heynewton-prod` → Cron Jobs lists the daily job.
 - [x] List env vars on both Vercel projects: no `newton-prod` key on `heynewton-web`, no
       `newton-dev` key on `heynewton-prod`.
-- [ ] Delete the test boat from `newton-prod`: its rows with SQL (deleting the boat cascades to
+- [x] Delete the test boat from `newton-prod`: its rows with SQL (deleting the boat cascades to
       its documents, emails and memberships), its files in Supabase → Storage → `documents` →
       `<boat id>/`, since SQL can't delete storage objects. A team member's own account stays: it
       is their real prod login.
