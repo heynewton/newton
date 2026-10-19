@@ -1597,4 +1597,4 @@ Ok with calc phase 2
 
 - Nothing fetches NOAA predictions yet: that's a `boat-data` issue for when Phase 2 starts.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#81](https://github.com/heynewton/newton/pull/81)
