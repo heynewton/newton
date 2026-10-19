@@ -1,0 +1,74 @@
+# The hosted dev Supabase project (newton-dev) holds only fixture data.
+# On every push to main: apply the checked-in migrations, then load supabase/seed.sql (safe to
+# re-run). `db push --include-seed` is not used because it seeds only once and ignores later
+# changes to the seed. On pull requests that touch the database: the same link plus a dry run,
+# which changes nothing in dev. Forks get no secrets, so the check is skipped for them.
+name: Dev database
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "supabase/**"
+      - "fixtures/sample-boat/**"
+      - ".github/workflows/dev-database.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-database-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  dev-database:
+    name: ${{ github.event_name == 'pull_request' && 'Dry run against dev' || 'Migrate and seed dev' }}
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
+      PGPASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
+      PGSSLMODE: require
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Link newton-dev
+        run: npx supabase link --project-ref "${{ vars.SUPABASE_DEV_PROJECT_REF }}"
+      # supabase link saves the pooler URL (IPv4, which GitHub runners need) without the password.
+      - name: Point psql at the dev pooler
+        run: |
+          node -e '
+            const fs = require("fs");
+            const url = fs.readFileSync("supabase/.temp/pooler-url", "utf8").trim();
+            const m = url.match(/^postgres(?:ql)?:\/\/([^:@\/]+)(?::[^@]*)?@([^:\/]+):(\d+)\/([^?]+)/);
+            if (!m) { console.error("::error::Unexpected pooler URL format from supabase link"); process.exit(1); }
+            const [, user, host, port, db] = m;
+            fs.appendFileSync(process.env.GITHUB_ENV, `PGUSER=${user}\nPGHOST=${host}\nPGPORT=${port}\nPGDATABASE=${db}\n`);
+          '
+
+      - name: Migrations that would apply (dry run)
+        if: github.event_name == 'pull_request'
+        run: npx supabase db push --linked --dry-run --yes --agent no --output-format json > dry-run.json && cat dry-run.json
+      - name: Seed loads (rolled back)
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ "$(jq '.migrations | length' dry-run.json)" != "0" ]; then
+            echo "::notice::This PR has migrations dev doesn't have yet, so the seed is only checked after merge."
+            exit 0
+          fi
+          psql -v ON_ERROR_STOP=1 -q -c begin -f supabase/seed.sql -c rollback
+
+      - name: Apply migrations
+        if: github.event_name != 'pull_request'
+        run: npx supabase db push --linked --yes
+      - name: Load the sample boat
+        if: github.event_name != 'pull_request'
+        run: psql -v ON_ERROR_STOP=1 -q --single-transaction -f supabase/seed.sql

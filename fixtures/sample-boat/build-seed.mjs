@@ -1,6 +1,8 @@
 // Builds supabase/seed.sql from boat.json, so `npm run db:reset` loads the sample boat, its
 // people, their memberships and the boat's renewals, maintenance items and expenses into the
-// local database. Output is deterministic.
+// local database. The hosted dev project loads the same file on every push to main, so the SQL
+// is safe to re-run: existing rows are updated to match boat.json, never duplicated. Output is
+// deterministic.
 // Run from the repo root: node fixtures/sample-boat/build-seed.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -26,6 +28,10 @@ const loginEmail = (person) => person.verifiedSenders[0];
 
 const values = (rows) => rows.map((row) => `  (${row.join(", ")})`).join(",\n");
 
+// On a re-run, rows that already exist take boat.json's values.
+const upsert = (key, columns) =>
+  `on conflict (${key.join(", ")}) do update set\n${columns.map((c) => `  ${c} = excluded.${c}`).join(",\n")}`;
+
 const membershipRows = memberships.map((m) => {
   if (!roles[m.role]) throw new Error(`Unknown role in boat.json: ${m.role}`);
   return [sql(boat.id), sql(m.personId), `${sql(roles[m.role])}::public.membership_role`, String(m.ownershipPercent)];
@@ -46,6 +52,9 @@ ${people
   .join("\n")}
 --
 -- Records keep \`document_id\` null until the sample documents are seeded too.
+--
+-- Safe to re-run (the hosted dev project loads it on every push to main): sign-in rows that
+-- exist are left alone, and every other row is updated to match boat.json.
 
 -- Auth users. The create_person_for_auth_user trigger gives each one a person. Token columns
 -- are empty strings, not null, because Supabase Auth can't read nulls there.
@@ -71,7 +80,8 @@ ${values(
     "''",
     "''",
   ]),
-)};
+)}
+on conflict do nothing;
 
 -- The email identity magic-link sign-in looks up.
 insert into auth.identities (
@@ -88,7 +98,8 @@ ${values(
     "now()",
     "now()",
   ]),
-)};
+)}
+on conflict do nothing;
 
 -- Give the trigger-made people the fixture's IDs and names, so tests and demos can refer to them.
 update public.people p
@@ -96,14 +107,17 @@ set id = f.id::uuid, display_name = f.name
 from (values
 ${values(people.map((p) => [sql(p.id), sql(p.name), sql(authId(p.id))]))}
 ) as f (id, name, auth_subject)
-where p.auth_subject = f.auth_subject;
+where p.auth_subject = f.auth_subject
+  and (p.id, p.display_name) is distinct from (f.id::uuid, f.name);
 
 insert into public.boats (id, name) values
-${values([[sql(boat.id), sql(boat.name)]])};
+${values([[sql(boat.id), sql(boat.name)]])}
+${upsert(["id"], ["name"])};
 
 -- Ownership shares are the fixture's percentages; the cost split only uses their ratio.
 insert into public.memberships (boat_id, person_id, role, ownership_share) values
-${values(membershipRows)};
+${values(membershipRows)}
+${upsert(["boat_id", "person_id"], ["role", "ownership_share"])};
 
 insert into public.renewals (id, boat_id, kind, title, reference, expires_on) values
 ${values(
@@ -115,7 +129,8 @@ ${values(
     sqlOrNull(r.reference),
     sql(r.expiresOn),
   ]),
-)};
+)}
+${upsert(["id"], ["boat_id", "kind", "title", "reference", "expires_on"])};
 
 insert into public.maintenance_items (
   id, boat_id, title, every_months, every_engine_hours, last_done_on, last_done_engine_hours
@@ -130,7 +145,8 @@ ${values(
     sql(m.lastDoneOn),
     numOrNull(m.lastDoneEngineHours),
   ]),
-)};
+)}
+${upsert(["id"], ["boat_id", "title", "every_months", "every_engine_hours", "last_done_on", "last_done_engine_hours"])};
 
 insert into public.expenses (id, boat_id, description, amount_cents, currency, spent_on, paid_by) values
 ${values(
@@ -138,7 +154,8 @@ ${values(
     if (!Number.isSafeInteger(e.amountCents)) throw new Error(`Not whole cents in boat.json: ${e.amountCents}`);
     return [sql(e.id), sql(boat.id), sql(e.description), String(e.amountCents), sql(boat.currency), sql(e.spentOn), sql(e.paidBy)];
   }),
-)};
+)}
+${upsert(["id"], ["boat_id", "description", "amount_cents", "currency", "spent_on", "paid_by"])};
 `;
 
 writeFileSync(seedPath, out);

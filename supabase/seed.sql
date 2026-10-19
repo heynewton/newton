@@ -11,6 +11,9 @@
 --   riley@example.org    Riley Testcase, crew
 --
 -- Records keep `document_id` null until the sample documents are seeded too.
+--
+-- Safe to re-run (the hosted dev project loads it on every push to main): sign-in rows that
+-- exist are left alone, and every other row is updated to match boat.json.
 
 -- Auth users. The create_person_for_auth_user trigger gives each one a person. Token columns
 -- are empty strings, not null, because Supabase Auth can't read nulls there.
@@ -22,7 +25,8 @@ insert into auth.users (
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-4000-8000-000000000201', 'authenticated', 'authenticated', 'alex@example.com', now(), '{"provider": "email", "providers": ["email"]}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-4000-8000-000000000202', 'authenticated', 'authenticated', 'sam@example.net', now(), '{"provider": "email", "providers": ["email"]}', '{}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-4000-8000-000000000203', 'authenticated', 'authenticated', 'jordan@example.com', now(), '{"provider": "email", "providers": ["email"]}', '{}', now(), now(), '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000000', '00000000-0000-4000-8000-000000000204', 'authenticated', 'authenticated', 'riley@example.org', now(), '{"provider": "email", "providers": ["email"]}', '{}', now(), now(), '', '', '', '');
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-4000-8000-000000000204', 'authenticated', 'authenticated', 'riley@example.org', now(), '{"provider": "email", "providers": ["email"]}', '{}', now(), now(), '', '', '', '')
+on conflict do nothing;
 
 -- The email identity magic-link sign-in looks up.
 insert into auth.identities (
@@ -31,7 +35,8 @@ insert into auth.identities (
   ('00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000201', 'email', jsonb_build_object('sub', '00000000-0000-4000-8000-000000000201', 'email', 'alex@example.com', 'email_verified', true), now(), now(), now()),
   ('00000000-0000-4000-8000-000000000202', '00000000-0000-4000-8000-000000000202', '00000000-0000-4000-8000-000000000202', 'email', jsonb_build_object('sub', '00000000-0000-4000-8000-000000000202', 'email', 'sam@example.net', 'email_verified', true), now(), now(), now()),
   ('00000000-0000-4000-8000-000000000203', '00000000-0000-4000-8000-000000000203', '00000000-0000-4000-8000-000000000203', 'email', jsonb_build_object('sub', '00000000-0000-4000-8000-000000000203', 'email', 'jordan@example.com', 'email_verified', true), now(), now(), now()),
-  ('00000000-0000-4000-8000-000000000204', '00000000-0000-4000-8000-000000000204', '00000000-0000-4000-8000-000000000204', 'email', jsonb_build_object('sub', '00000000-0000-4000-8000-000000000204', 'email', 'riley@example.org', 'email_verified', true), now(), now(), now());
+  ('00000000-0000-4000-8000-000000000204', '00000000-0000-4000-8000-000000000204', '00000000-0000-4000-8000-000000000204', 'email', jsonb_build_object('sub', '00000000-0000-4000-8000-000000000204', 'email', 'riley@example.org', 'email_verified', true), now(), now(), now())
+on conflict do nothing;
 
 -- Give the trigger-made people the fixture's IDs and names, so tests and demos can refer to them.
 update public.people p
@@ -42,22 +47,34 @@ from (values
   ('00000000-0000-4000-8000-000000000103', 'Jordan Fictional', '00000000-0000-4000-8000-000000000203'),
   ('00000000-0000-4000-8000-000000000104', 'Riley Testcase', '00000000-0000-4000-8000-000000000204')
 ) as f (id, name, auth_subject)
-where p.auth_subject = f.auth_subject;
+where p.auth_subject = f.auth_subject
+  and (p.id, p.display_name) is distinct from (f.id::uuid, f.name);
 
 insert into public.boats (id, name) values
-  ('00000000-0000-4000-8000-000000000001', 'Kittiwake');
+  ('00000000-0000-4000-8000-000000000001', 'Kittiwake')
+on conflict (id) do update set
+  name = excluded.name;
 
 -- Ownership shares are the fixture's percentages; the cost split only uses their ratio.
 insert into public.memberships (boat_id, person_id, role, ownership_share) values
   ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000101', 'owner'::public.membership_role, 40),
   ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000102', 'co_owner'::public.membership_role, 35),
   ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000103', 'co_owner'::public.membership_role, 25),
-  ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000104', 'crew'::public.membership_role, 0);
+  ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000104', 'crew'::public.membership_role, 0)
+on conflict (boat_id, person_id) do update set
+  role = excluded.role,
+  ownership_share = excluded.ownership_share;
 
 insert into public.renewals (id, boat_id, kind, title, reference, expires_on) values
   ('00000000-0000-4000-8000-000000000301', '00000000-0000-4000-8000-000000000001', 'insurance'::public.renewal_kind, 'Hull and liability insurance', 'SAMPLE-POL-000123', '2027-04-30'),
   ('00000000-0000-4000-8000-000000000302', '00000000-0000-4000-8000-000000000001', 'registration'::public.renewal_kind, 'State vessel registration', 'XX 0000 ZZ', '2026-12-31'),
-  ('00000000-0000-4000-8000-000000000303', '00000000-0000-4000-8000-000000000001', 'licence'::public.renewal_kind, 'VHF radio station licence', 'SAMPLE-VHF-0042', '2028-03-15');
+  ('00000000-0000-4000-8000-000000000303', '00000000-0000-4000-8000-000000000001', 'licence'::public.renewal_kind, 'VHF radio station licence', 'SAMPLE-VHF-0042', '2028-03-15')
+on conflict (id) do update set
+  boat_id = excluded.boat_id,
+  kind = excluded.kind,
+  title = excluded.title,
+  reference = excluded.reference,
+  expires_on = excluded.expires_on;
 
 insert into public.maintenance_items (
   id, boat_id, title, every_months, every_engine_hours, last_done_on, last_done_engine_hours
@@ -67,10 +84,24 @@ insert into public.maintenance_items (
   ('00000000-0000-4000-8000-000000000403', '00000000-0000-4000-8000-000000000001', 'Raw-water pump impeller', 24, 250, '2026-10-02', 1412),
   ('00000000-0000-4000-8000-000000000404', '00000000-0000-4000-8000-000000000001', 'Zinc anodes in heat exchanger', 6, 100, '2026-04-18', 1371),
   ('00000000-0000-4000-8000-000000000405', '00000000-0000-4000-8000-000000000001', 'Coolant (replace)', 24, 1000, '2025-03-20', 1290),
-  ('00000000-0000-4000-8000-000000000406', '00000000-0000-4000-8000-000000000001', 'Valve clearance (check and adjust)', null, 500, '2025-03-20', 1290);
+  ('00000000-0000-4000-8000-000000000406', '00000000-0000-4000-8000-000000000001', 'Valve clearance (check and adjust)', null, 500, '2025-03-20', 1290)
+on conflict (id) do update set
+  boat_id = excluded.boat_id,
+  title = excluded.title,
+  every_months = excluded.every_months,
+  every_engine_hours = excluded.every_engine_hours,
+  last_done_on = excluded.last_done_on,
+  last_done_engine_hours = excluded.last_done_engine_hours;
 
 insert into public.expenses (id, boat_id, description, amount_cents, currency, spent_on, paid_by) values
   ('00000000-0000-4000-8000-000000000501', '00000000-0000-4000-8000-000000000001', 'Example Point Boatyard: haul-out, bottom paint, engine service', 167690, 'USD', '2026-10-02', '00000000-0000-4000-8000-000000000102'),
   ('00000000-0000-4000-8000-000000000502', '00000000-0000-4000-8000-000000000001', 'Insurance premium 2026-27', 128400, 'USD', '2026-04-14', '00000000-0000-4000-8000-000000000101'),
   ('00000000-0000-4000-8000-000000000503', '00000000-0000-4000-8000-000000000001', 'Registration fee, two years', 9800, 'USD', '2024-12-15', '00000000-0000-4000-8000-000000000103'),
-  ('00000000-0000-4000-8000-000000000504', '00000000-0000-4000-8000-000000000001', 'Mooring, October 2026', 42000, 'USD', '2026-10-01', '00000000-0000-4000-8000-000000000101');
+  ('00000000-0000-4000-8000-000000000504', '00000000-0000-4000-8000-000000000001', 'Mooring, October 2026', 42000, 'USD', '2026-10-01', '00000000-0000-4000-8000-000000000101')
+on conflict (id) do update set
+  boat_id = excluded.boat_id,
+  description = excluded.description,
+  amount_cents = excluded.amount_cents,
+  currency = excluded.currency,
+  spent_on = excluded.spent_on,
+  paid_by = excluded.paid_by;
