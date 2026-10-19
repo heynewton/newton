@@ -1566,14 +1566,6 @@ Start #13 and #15 in parallel sessions.
 
 **Pull request:** [#70](https://github.com/heynewton/newton/pull/70)
 
-## Test coverage on every PR
-
-**Prompt**
-
-The overnight plan (see "History and architecture catch up with what has merged"), item 5:
-
-````text
-Ok with the 6 and the order you defined.
 ## History and architecture catch up with what has merged
 
 **Prompt**
@@ -1596,18 +1588,6 @@ You have 6 hours so no need to do everything in parallel. You can sequence to av
 
 **What Claude did**
 
-- `@vitest/coverage-v8` (matching Vitest 5.0.5) in each workspace, and `npm run test:coverage`
-  at the root, which runs every workspace's tests with coverage.
-- `packages/calc/vitest.config.ts`: at least 95% of lines and branches, or the run fails
-  (today 98.4% and 97.0%). The other workspaces are reported, not gated, as the issue asks.
-- CI's `check` job runs `test:coverage` instead of `npm test`, then
-  `davelosert/vitest-coverage-report-action@v2` once per workspace: a PR comment per workspace that
-  is edited on later pushes, and the job summary. Fork PRs get a read-only token, so they skip the
-  comment (`comment-on: none`) and keep the summary. The report runs even when the threshold
-  fails, so the comment shows why.
-- `docs/process.md` (Definition of Done) and the `ship-change` skill mention the bar and the report.
-
-**Pull request:** [#86](https://github.com/heynewton/newton/pull/86)
 - Read the open issues, `docs/history.md`, `docs/architecture.md`, the build log and the spec's
   build phases and feature ideas, then proposed six changes for one night, run one after the
   other: this catch-up, email-in (#10), reminders (#12), three Phase 2 calc functions, web tests
@@ -1625,3 +1605,28 @@ You have 6 hours so no need to do everything in parallel. You can sequence to av
   `boats.heynewton.app`), so the maintainer's "Resend for inbound" confirms it.
 
 **Pull request:** [#72](https://github.com/heynewton/newton/pull/72)
+
+## Test coverage on every PR
+
+**Prompt**
+
+The overnight plan (see "History and architecture catch up with what has merged"), item 5:
+
+````text
+Ok with the 6 and the order you defined.
+````
+
+**What Claude did**
+
+- `@vitest/coverage-v8` (matching Vitest 5.0.5) in each workspace, and `npm run test:coverage`
+  at the root, which runs every workspace's tests with coverage.
+- `packages/calc/vitest.config.ts`: at least 95% of lines and branches, or the run fails
+  (today 98.4% and 97.0%). The other workspaces are reported, not gated, as the issue asks.
+- CI's `check` job runs `test:coverage` instead of `npm test`, then
+  `davelosert/vitest-coverage-report-action@v2` once per workspace: a PR comment per workspace that
+  is edited on later pushes, and the job summary. Fork PRs get a read-only token, so they skip the
+  comment (`comment-on: none`) and keep the summary. The report runs even when the threshold
+  fails, so the comment shows why.
+- `docs/process.md` (Definition of Done) and the `ship-change` skill mention the bar and the report.
+
+**Pull request:** [#86](https://github.com/heynewton/newton/pull/86)
