@@ -37,6 +37,32 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"documents": {
+                  Row: {
+                    "added_by": string | null,"boat_id": string,"content_type": string | null,"created_at": string,"filename": string | null,"id": string,"received_at": string,"size_bytes": number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type": Database["public"]['Enums']["document_type"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "added_by"?: string | null,"boat_id": string,"content_type"?: string | null,"created_at"?: string,"filename"?: string | null,"id"?: string,"received_at"?: string,"size_bytes"?: number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type"?: Database["public"]['Enums']["document_type"]
+                  }
+                  Update: {
+                    "added_by"?: string | null,"boat_id"?: string,"content_type"?: string | null,"created_at"?: string,"filename"?: string | null,"id"?: string,"received_at"?: string,"size_bytes"?: number | null,"source"?: Database["public"]['Enums']["document_source"],"storage_path"?: string,"type"?: Database["public"]['Enums']["document_type"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documents_added_by_fkey"
+      columns: ["added_by"]
+isOneToOne: false
+      referencedRelation: "people"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documents_boat_id_fkey"
+      columns: ["boat_id"]
+isOneToOne: false
+      referencedRelation: "boats"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"memberships": {
                   Row: {
                     "boat_id": string,"created_at": string,"person_id": string,"role": Database["public"]['Enums']["membership_role"]
@@ -83,7 +109,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "can_read_boat":
+            "boat_id_from_storage_path":
+{ Args: { "path": string }; Returns: string
+                           },
+"can_read_boat":
 { Args: { "boat": string }; Returns: boolean
                            },
 "can_write_boat":
@@ -103,7 +132,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "membership_role": "owner"|"co_owner"|"crew"|"read_only"
+            "document_source": "email"|"upload","document_type": "unsorted"|"email"|"invoice"|"receipt"|"insurance"|"registration"|"manual"|"contract"|"survey"|"other","membership_role": "owner"|"co_owner"|"crew"|"read_only"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -223,7 +252,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "membership_role": ["owner", "co_owner", "crew", "read_only"]
+            "document_source": ["email", "upload"],"document_type": ["unsorted", "email", "invoice", "receipt", "insurance", "registration", "manual", "contract", "survey", "other"],"membership_role": ["owner", "co_owner", "crew", "read_only"]
           }
         }
 } as const

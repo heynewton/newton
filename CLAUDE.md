@@ -73,7 +73,9 @@ We are in **Phase 1**.
   needs it (no real boat data or personal info, per the repo rules above).
 - The `ship-change` skill (`.claude/skills/ship-change/SKILL.md`) is the checklist for landing a change.
 - Roles, the project board and the weekly rhythm are in `docs/process.md`. Ready issues are worked
-  top-down in board order; move issues across the board as they progress.
+  top-down in board order; move issues across the board as they progress. The Board workflow moves
+  most cards: assign the issue when you start it, and open the PR with `Closes #N`. Cloud sessions
+  can't reach the board at all, so they rely on that (see "Cards move by themselves" in `docs/process.md`).
 
 ### Issues are the todo list
 

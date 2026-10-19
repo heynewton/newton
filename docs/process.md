@@ -46,8 +46,15 @@ A GitHub Actions workflow (`.github/workflows/board.yml`) moves cards when issue
 Two moves stay manual, because they are product decisions: Inbox → Ready (triage), and the order
 of the Ready column. PRs from forks don't move cards, because forks can't read the
 `PROJECT_TOKEN` repo secret the workflow uses. That secret is a fine-grained token with
-Projects read and write on `heynewton` and read access to this repo's issues and PRs. It expires,
-so renew it before the date on the token.
+Projects read and write on `heynewton` and read access to this repo's issues and PRs. It expires:
+regenerate it before the date on the token and update the secret, or cards stop moving.
+
+**Who can move cards by hand.** People can, on the board. Local Claude sessions (on the
+maintainer's machine) can too, with `gh project item-edit`. Cloud sessions can't: their GitHub
+proxy rejects GraphQL whatever the token, and Projects only has a GraphQL API (see
+[GitHub proxy](https://code.claude.com/docs/en/cloud-environments) in the Claude Code docs). A
+cloud session lets the workflow move cards: it assigns the issue to start it and opens the PR
+with `Closes #N`.
 
 ### Ideas before issues
 
@@ -89,9 +96,9 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
 - PRs from forks get no preview, because forks can't read repo secrets.
 - [heynewton.app](https://heynewton.app) currently serves the dev site: `www` redirects to it, and the
   DNS records on Cloudflare point at Vercel with the proxy off. That is fine while the site is static
-  pages with no data. Before sign-in (#5) opens to anyone outside the team, the domain moves to a
-  production project with its own Supabase, so previews and dev never share a URL or a database
-  with real boat data (#37).
+  pages with no data. Still in Phase 1, before the first real boat data arrives or anyone outside
+  the team signs in, the domain moves to a production project with its own Supabase, so previews
+  and dev never share a URL or a database with real boat data (#37).
 
 ## Rhythm
 

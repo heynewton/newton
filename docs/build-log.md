@@ -908,6 +908,108 @@ can you improve the gh project workflow so that the cards move when the PR is cr
 
 ---
 
+## Who can move board cards, now that cloud sessions can't
+
+**Prompt**
+
+````text
+start 24, 8 and 9 in 3 parallel sessions
+````
+
+**What Claude did**
+
+- Started one session per issue. This entry is the one for
+  [#24](https://github.com/heynewton/newton/issues/24) (giving Claude access to the board).
+- Rewrote #24's "Done when" for the approach that works: the Board workflow from #50 and its
+  `PROJECT_TOKEN` repo secret keep the board current, and the cloud `GH_TOKEN` items are gone.
+  Checked off what was already true (#21 and #24 are on the board, the token exists as the secret,
+  the workflow moves cards).
+- Added a "Who can move cards by hand" note to `docs/process.md`: people and local sessions can;
+  cloud sessions can't, because their GitHub proxy blocks GraphQL, so they assign the issue and
+  open the PR with `Closes #N` and let the workflow move the cards. It also says the token expires
+  and must be renewed.
+- Updated the board line in `CLAUDE.md` to say the same.
+
+**What changed along the way**
+
+- The plan in #24 was to put a token in the cloud environment as `GH_TOKEN`. The Claude Code docs
+  say that can't work whatever the token, so #24 now closes with docs instead of a token.
+
+**Pull request:** [#51](https://github.com/heynewton/newton/pull/51)
+
+---
+
+## Separate dev and prod databases move into Phase 1
+
+**Prompt**
+
+```text
+move dev/prod to phase 1
+```
+
+Context from the same session: asked when to work on hosted Supabase given PR #43, and whether to have a non-prod and a prod database. Claude recommended two hosted projects (dev for the dev site and previews, prod for real data), set up after #43 and before email-in (#10). It also noted that `docs/architecture.md` still listed the split under Phase 3.
+
+**What Claude did**
+
+- In `docs/architecture.md`, added a **Dev and prod** row to the Phase 1 components. Dev holds fixture data only and is seeded. Prod holds real data and is never seeded. Both get migrations from `main`, and the split lands before #10. Removed the split from the Phase 3 Operations row.
+- Updated the Previews section of `docs/process.md`. It still said the domain moves "before sign-in (#5)", and #5 has merged.
+- Moved issue #37 to the Phase 1 milestone. Rewrote its steps to cover both hosted projects and dropped "Blocked by: #5", since #5 is closed.
+
+**What changed along the way**
+
+- A first draft of #37's "Done when" said sign-in works on the hosted dev project with the fixture people. Hosted Supabase sends real email, and the fixture addresses are on `example.com`, so the line now only asks for the fixture boat to be loaded there.
+- #37 stays one issue. It wasn't split into separate dev and prod issues.
+
+**Pull request:** [#48](https://github.com/heynewton/newton/pull/48)
+
+---
+
+## A private document store for each boat
+
+**Prompt**
+
+````text
+start 24, 8 and 9 in 3 parallel sessions
+````
+
+**What Claude did**
+
+- Started one session per issue. This entry is the one for
+  [#8](https://github.com/heynewton/newton/issues/8) (the per-boat document store).
+- Added `supabase/migrations/20261019100000_documents.sql`:
+  - A private Storage bucket, `documents`, with one folder per boat (`<boat_id>/...`).
+  - A `documents` table: boat, storage path, type, source (email or upload), received date,
+    filename, content type, size and who added it.
+  - Row-level security on both, reusing the roles from #41: members read; owners, co-owners and
+    crew add; owners and co-owners delete; read-only members only read.
+- Added 32 database tests in `supabase/tests/database/documents.test.sql`, covering every role and
+  signed-out visitors, for both the table and the bucket.
+- Updated `docs/architecture.md` with the document store.
+
+**What changed along the way**
+
+- The issue asked the tests to reuse the existing tenancy setup, which lived inside
+  `rls.test.sql`. Claude moved it into `supabase/tests/database/setup/tenancy.psql` and both test
+  files include it. Claude first checked that `supabase test db` follows `\ir` includes and doesn't
+  run the `.psql` file as a test.
+- Files have no update policy, so a stored document can't be overwritten: a correction is a new
+  file. Only a document's type and filename can be changed after it's added.
+- The first test run failed because the test chose a document's `id`, which the column grants
+  didn't allow. Claude allowed it, so an upload path can include the document's id before the row
+  exists.
+- CI starts only Postgres, not the Storage API, so the storage policies are tested by writing
+  `storage.objects` rows as the signed-in person. No real upload went through the API yet. The PR
+  says so.
+- Deleting a boat removes its document rows but not its files, since files can only be removed
+  through the Storage API. Noted for export and transfer (#16).
+- The two parallel sessions agreed up front: #8 keeps the `documents` name and an `id uuid` key
+  for #9 to reference, uses the earlier migration timestamp, and leaves `supabase/seed.sql` to #9.
+  Seeding sample documents is a follow-up.
+
+**Pull request:** [#52](https://github.com/heynewton/newton/pull/52)
+
+---
+
 ## Add your first boat after signing in
 
 **Prompt**
