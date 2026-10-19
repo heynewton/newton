@@ -1419,4 +1419,4 @@ SUPABASE_ACCESS_TOKEN, SUPABASE_DEV_DB_PASSWORD and SUPABASE_DEV_PROJECT_REF are
   workflow runs the seed itself.
 - The session hit a usage limit halfway through and was resumed later.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#68](https://github.com/heynewton/newton/pull/68)
