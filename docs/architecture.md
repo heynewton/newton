@@ -134,7 +134,8 @@ co-owners see who owes whom; questions about the manuals are answered with sourc
 | Component | Choice | Issues |
 | --- | --- | --- |
 | Web app and API | Next.js in `apps/web`: pages for people, route handlers for webhooks and the API. One deployable. Two layouts, phone and wide, tested at three widths ([decision](decisions/0002-screen-sizes.md)). | #15, #31 |
-| Hosting | Vercel, with a preview link on every PR and a dev site from `main` (#30). heynewton.app points at the dev site for now; before sign-in opens to anyone outside the team it moves to a production project with its own Supabase. | #19, #35, #37 |
+| Hosting | Vercel, with a preview link on every PR and a dev site from `main` (#30). heynewton.app points at the dev site for now. | #19, #35 |
+| Dev and prod | Two hosted Supabase projects and two Vercel deployments. **Dev** backs the dev site and PR previews, holds only fixture data, and is loaded from `supabase/seed.sql`. **Prod** backs heynewton.app, holds our own boat's real data, and is never seeded. Both get the same checked-in migrations from `main`, and dev and previews have no prod keys. Lands before the first real boat data arrives (email-in, #10) or anyone outside the team signs in. | #37 |
 | Database and auth | Supabase Postgres with RLS. Migrations checked in under `supabase/`, local stack via the Supabase CLI. Supabase Auth: email magic link first, then Google and Apple ([decision](decisions/0001-auth.md)). RLS policies go through a `current_person_id()` function, so the auth provider can change without rewriting them. | #5, #27 |
 | Records | Tables: `boats`, `people` (Newton's own ID; the auth provider's ID only in `auth_subject`; verified sender addresses for email-in), `memberships` (role, ownership share), `documents`, `renewals`, `maintenance_items`, `expenses`. Each record can link to its source document. | #5, #8, #9, #27 |
 | File storage | Supabase Storage, one folder per boat (`<boat_id>/…`), protected by storage RLS policies. | #8 |
@@ -267,7 +268,7 @@ who aren't us.
 | Measuring | A small events table (boat created, first document filed, first reminder sent, first question answered, first voice answer on the water) to measure time to useful. No third-party analytics with boat data. |
 | Isolation | RLS tests for every table become a CI gate; a cross-boat leak test using two fixture boats. |
 | Cost per boat | Log model tokens and storage per boat, to know what a boat costs to run (a Phase 4 input). |
-| Operations | Error tracking **(open)**, database backups, and a dev/prod split of Supabase and Vercel projects, with heynewton.app on production (#37). |
+| Operations | Error tracking **(open)** and database backups. The dev/prod split already exists from Phase 1 (#37). |
 | Abuse | Rate limits on the inbound webhook and on Q&A per boat. |
 
 ## Phase 4 target: paid product
