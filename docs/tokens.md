@@ -298,8 +298,7 @@ it until the app asks questions. Tests and CI use a scripted stand-in.
 ## Production
 
 Everything prod needs, set up once by the maintainer for #63. Same names and settings as dev
-unless a step says otherwise; **never reuse a dev key or value**. Steps 1–4 were done on 19 October 2026;
-step 5 follows the first release.
+unless a step says otherwise; **never reuse a dev key or value**. Done on 19 October 2026 (results on #63).
 
 **1. Supabase `newton-prod`**
 
@@ -350,13 +349,16 @@ step 5 follows the first release.
 
 **5. First release and checks**
 
-- [ ] Merge the #63 PR, approve the Production run, and check it applied every migration and
+- [x] Merge the #63 PR, approve the Production run, and check it applied every migration and
       passed "Fixture sign-in answers 404".
-- [ ] Sign in on the prod URL with a team member's address (the email comes from
+- [x] Sign in on the prod URL with a team member's address (the email comes from
       `noreply@heynewton.app`), add a test boat, email it a PDF from that address: it appears on
       prod, and the dev webhook's delivery in Resend says `unknown_address`.
-- [ ] `curl -H "Authorization: Bearer <prod CRON_SECRET>" https://heynewton-prod.vercel.app/api/reminders`
+- [x] `curl -H "Authorization: Bearer <prod CRON_SECRET>" https://heynewton-prod.vercel.app/api/reminders`
       answers 200, and Vercel → `heynewton-prod` → Cron Jobs lists the daily job.
-- [ ] List env vars on both Vercel projects: no `newton-prod` key on `heynewton-web`, no
+- [x] List env vars on both Vercel projects: no `newton-prod` key on `heynewton-web`, no
       `newton-dev` key on `heynewton-prod`.
-- [ ] Delete the test boat and the test person from `newton-prod`.
+- [x] Delete the test boat from `newton-prod`: its rows with SQL (deleting the boat cascades to
+      its documents, emails and memberships), its files in Supabase → Storage → `documents` →
+      `<boat id>/`, since SQL can't delete storage objects. A team member's own account stays: it
+      is their real prod login.
