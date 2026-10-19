@@ -20,6 +20,7 @@ Rules for all of them:
 | --- | --- | --- | --- | --- | --- |
 | `VERCEL_TOKEN` | secret | Vercel | Project Vercel account (Hobby) | `.github/workflows/deploy.yml` | Repo secrets |
 | `PROJECT_TOKEN` | secret | GitHub | The maintainer's GitHub user (see below) | `.github/workflows/board.yml` | Repo secrets |
+| `HISTORY_APP_ID`, `HISTORY_APP_PRIVATE_KEY` | variable, secret | GitHub | The `heynewton` org (a GitHub App) | `.github/workflows/history.yml` | Repo variables; repo secrets |
 | `SUPABASE_DEV_ACCESS_TOKEN` | secret | Supabase | Project Supabase account | Dev database workflow (#60) | Repo secrets |
 | `SUPABASE_DEV_DB_PASSWORD` | secret | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo secrets, and the project password manager |
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
@@ -59,6 +60,32 @@ correct this section if they differ.
   owned by `heynewton` would remove that tie.
 - **Not for cloud sessions:** Claude cloud sessions can't use it. Their GitHub proxy blocks
   GraphQL, which Projects needs, whatever the token (see `docs/process.md`).
+
+## History App (`HISTORY_APP_ID`, `HISTORY_APP_PRIVATE_KEY`)
+
+The History workflow rebuilds `docs/history.md` after every merge and pushes it straight to
+`main`. The "Protect main" ruleset only takes PRs, so the push comes from a GitHub App that is
+the ruleset's one bypass. An App belongs to the org, not to a person, and the workflow turns its
+key into a token that lasts an hour.
+
+- **Where:** GitHub → `heynewton` org settings → Developer settings → GitHub Apps → New GitHub App.
+- **Name:** `heynewton-history` (App names are unique across GitHub). Homepage:
+  `https://github.com/heynewton/newton`. Webhook: off.
+- **Permissions:** Repository → Contents: read and write (Metadata: read comes with it).
+  Everything else: no access. Where can it be installed: only this account.
+- **Install:** on `heynewton`, only the `newton` repository.
+- **Bypass:** Repo settings → Rules → Rulesets → "Protect main" → Bypass list → add
+  `heynewton-history`, mode "Always allow". Nothing else is on the list.
+- **Saved as:** the App ID (on the App's page) with
+  `gh variable set HISTORY_APP_ID --repo heynewton/newton`; a private key (App page → Generate a
+  private key, a `.pem` download) with
+  `gh secret set HISTORY_APP_PRIVATE_KEY --repo heynewton/newton < key.pem`, then delete the file.
+- **Expiry:** App keys don't expire. Generate a new one and delete the old one on the App page if
+  it may have leaked.
+- **Before it's set up** the workflow skips itself (no `HISTORY_APP_ID`), and `docs/history.md`
+  only changes when someone runs `npm run history` in a PR.
+- **What it can do:** push to any branch of this repo, `main` included, without a PR. Only the
+  History workflow has the key, and it only commits `docs/history.md`.
 
 ## Supabase access tokens (`SUPABASE_DEV_ACCESS_TOKEN`, `SUPABASE_PROD_ACCESS_TOKEN`)
 
