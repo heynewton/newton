@@ -1,0 +1,60 @@
+# Rebuilds docs/history.md after every merge that adds or changes a history file, and commits it
+# straight to main. PRs only add docs/history/pr-NNNN.md, so they never conflict over the page.
+# main only takes PRs, so the commit is pushed as the heynewton-history GitHub App, which is the
+# one bypass on the "Protect main" ruleset. Setup and permissions: docs/tokens.md.
+name: History
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/history/**"
+      - "scripts/history.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One at a time, so two quick merges don't race to push.
+concurrency:
+  group: history
+  cancel-in-progress: false
+
+jobs:
+  regenerate:
+    name: Regenerate docs/history.md
+    # Skipped until the App is set up, instead of failing on every merge.
+    if: vars.HISTORY_APP_ID != ''
+    runs-on: ubuntu-latest
+    steps:
+      - id: app
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.HISTORY_APP_ID }}
+          private-key: ${{ secrets.HISTORY_APP_PRIVATE_KEY }}
+      # Full history: entries without a merged: line are dated by when their file landed on main.
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ steps.app.outputs.token }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      # The script only uses Node's built-ins, so no npm ci.
+      - run: node scripts/history.mjs
+      - name: Commit and push if it changed
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          SLUG: ${{ steps.app.outputs.app-slug }}
+        run: |
+          if git diff --quiet -- docs/history.md; then
+            echo "docs/history.md is already up to date"
+            exit 0
+          fi
+          id=$(gh api "/users/${SLUG}%5Bbot%5D" --jq .id)
+          git config user.name "${SLUG}[bot]"
+          git config user.email "${id}+${SLUG}[bot]@users.noreply.github.com"
+          git commit -m "Regenerate docs/history.md" -m "After ${GITHUB_SHA::7}, by the History workflow." -- docs/history.md
+          # If main moved since checkout, the next merge's run (or a manual run) catches up.
+          git push origin HEAD:main

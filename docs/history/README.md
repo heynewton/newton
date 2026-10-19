@@ -26,8 +26,11 @@ summary: Build log and history entries that don't conflict between open PRs
 - `merged` is optional: without it, the script uses the time the file landed on `main`, which is
   the PR's merge time with squash merges. The entries from before #89 have it filled in.
 
-PRs don't edit `docs/history.md`. Regenerate it with `npm run history` in a small PR now and then,
-for example at weekly planning; `npm run history -- --check` says whether it's up to date.
+PRs don't edit `docs/history.md`. After every merge that adds or changes a file here, the History
+workflow (`.github/workflows/history.yml`) runs the script and commits the page straight to `main`
+as the `heynewton-history` GitHub App, the only bypass on the "Protect main" ruleset (setup in
+[`docs/tokens.md`](../tokens.md)). To rebuild it by hand, run the workflow from the Actions tab.
+`npm run history` writes it locally to preview your entry; don't commit that.
 
 ## What's next
 

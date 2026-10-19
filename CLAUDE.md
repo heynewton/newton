@@ -77,7 +77,7 @@ We are in **Phase 1**.
   cleaning the prompt where privacy needs it (no real boat data or personal info, per the repo
   rules above).
 - Each PR also adds its own file in `docs/history/` (one per PR); `docs/history.md`, the history of
-  PRs by phase and topic, is generated from them by `npm run history`. PRs only add files, never
+  PRs by phase and topic, is rebuilt from them by the History workflow after every merge. PRs only add files, never
   edit shared logs, so open PRs don't conflict with each other.
 - The `ship-change` skill (`.claude/skills/ship-change/SKILL.md`) is the checklist for landing a change.
 - Roles, the project board and the weekly rhythm are in `docs/process.md`. Ready issues are worked
