@@ -24,4 +24,4 @@ Work on issue #37, "Switch heynewton.app to production". [...]
 - No DNS change is expected: both Vercel projects are in the same team and the records belong to the domain. The checklist says what to do if Vercel asks for new ones.
 - The prod email-in webhook stays on `heynewton-prod.vercel.app`, which remains prod's address, so Resend needs no change.
 
-**Pull request:** see `docs/history/` for this PR's number.
+**Pull request:** [#107](https://github.com/heynewton/newton/pull/107)
