@@ -47,6 +47,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#64](https://github.com/heynewton/newton/pull/64) · 2026-10-19 · Deploys upload one archive and skip docs-only changes, so previews keep working on busy days · closes [#59](https://github.com/heynewton/newton/issues/59)
 - [#65](https://github.com/heynewton/newton/pull/65) · 2026-10-19 · Every token written down, so prod gets exactly the same ones
 - [#68](https://github.com/heynewton/newton/pull/68) · 2026-10-19 · A hosted dev database, migrated and seeded from every merge to `main` · closes [#60](https://github.com/heynewton/newton/issues/60)
+- [#86](https://github.com/heynewton/newton/pull/86) · 2026-10-19 · Test coverage on every PR, with a 95% bar for calc · closes [#46](https://github.com/heynewton/newton/issues/46)
 
 ### Brand and website
 
@@ -85,7 +86,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#86](https://github.com/heynewton/newton/pull/86) · Test coverage on every PR, with a 95% bar for calc
+- [#85](https://github.com/heynewton/newton/pull/85) · Unit tests for the web app's sign-in and database layer
 
 ### What's next
 
