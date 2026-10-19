@@ -1611,4 +1611,4 @@ Ok with the 6 and the order you defined.
 - Nothing in the app calls it yet: manuals aren't indexed until the job runner (#11), and there's
   no Ask screen. Claude filed that as a follow-up.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#87](https://github.com/heynewton/newton/pull/87)
