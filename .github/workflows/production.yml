@@ -89,14 +89,14 @@ jobs:
       - run: npm install --global vercel@64.5.0
       - name: Link the Vercel project
         run: vercel link --yes --project "$VERCEL_PROJECT" --token "$VERCEL_TOKEN"
-      # Root directory as for the dev project. Vercel Authentication keeps its default (the
+      # Root directory and framework as for the dev project. Vercel Authentication keeps its default (the
       # production URL is public, other deployment URLs need a Vercel login).
       - name: Configure the Vercel project
         run: |
           project_id=$(jq -r .projectId .vercel/project.json)
           curl --fail --silent --show-error -X PATCH \
             -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
-            -d '{"rootDirectory":"apps/web"}' \
+            -d '{"rootDirectory":"apps/web","framework":"nextjs"}' \
             "https://api.vercel.com/v9/projects/$project_id" > /dev/null
 
       - run: vercel pull --yes --environment production --token "$VERCEL_TOKEN"
