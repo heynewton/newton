@@ -79,6 +79,12 @@ The Supabase schema, row-level security, sign-in, storage and the sample boat.
 - [#54](https://github.com/heynewton/newton/pull/54) · 2026-10-19 · Renewals, maintenance and expenses stored per boat · closes [#9](https://github.com/heynewton/newton/issues/9)
 - [#69](https://github.com/heynewton/newton/pull/69) · 2026-10-19 · Manuals split into pages and chunks for search, locked to each boat, with Voyage AI chosen for embeddings · closes [#13](https://github.com/heynewton/newton/issues/13)
 
+### Email-in and filing
+
+Mail forwarded to a boat's own address, filed as documents.
+
+- [#73](https://github.com/heynewton/newton/pull/73) · 2026-10-19 · Every boat gets its own email address, and mail from its members is filed as documents · closes [#10](https://github.com/heynewton/newton/issues/10)
+
 ### Web app features
 
 What a signed-in person can do in the app.

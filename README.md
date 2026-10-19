@@ -90,6 +90,9 @@ The seed loads the made-up sample boat Kittiwake (`fixtures/sample-boat`), so si
 `alex@example.com` (owner), `sam@example.net` or `jordan@example.com` (co-owners) or
 `riley@example.org` (crew) shows it on `/boats`.
 
+Email-in needs Resend, so locally the fixture emails go through the same filing code in the unit
+tests (`apps/web/src/lib/email-in`). The sample boat's address is `kittiwake@in.heynewton.test`.
+
 | Folder | What it is |
 | --- | --- |
 | `apps/web` | The web app (Next.js): the Phase 1 screen |

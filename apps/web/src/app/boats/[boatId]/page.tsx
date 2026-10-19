@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { getBoatRecords, getCurrentPerson, getMyBoat, listMyBoats } from "@/lib/db";
+import { boatEmailAddress } from "@/lib/email-in";
 import { costSplit, schedule, todayUtc } from "@/lib/records";
 import { roleNames } from "../roles";
 import { SignOut } from "../sign-out";
-import { CoOwnerBalance, ComingUp, Documents } from "./records";
+import { CoOwnerBalance, ComingUp, Documents, EmailAddress } from "./records";
 
 export const metadata: Metadata = { title: "Your boat · Hey Newton" };
 
@@ -16,24 +17,32 @@ const DUE_SOON_DAYS = 60;
 const DUE_SOON_ENGINE_HOURS = 25;
 
 // What to do next with a new boat. Each one says "Coming soon" until it is built.
-const nextSteps = [
-  {
-    title: "Forward documents to the boat",
-    description:
-      "Send invoices, insurance and manuals to the boat's own email address, and Newton files them.",
-    comingSoon: true, // #10
-  },
-  {
-    title: "Ask about the boat",
-    description: "Get answers from the boat's manuals, with the page they came from.",
-    comingSoon: true, // #14
-  },
-  {
-    title: "Invite co-owners and crew",
-    description: "Share the boat, its costs and its reminders with the people who sail it.",
-    comingSoon: true, // Phase 3 onboarding
-  },
-];
+function nextSteps(address: string | null): { title: string; description: ReactNode; comingSoon: boolean }[] {
+  return [
+    {
+      title: "Forward documents to the boat",
+      description: address ? (
+        <>
+          Send or forward invoices, insurance and manuals to <EmailAddress address={address} />, and Newton
+          keeps them with the boat.
+        </>
+      ) : (
+        "Send invoices, insurance and manuals to the boat's own email address, and Newton files them."
+      ),
+      comingSoon: !address, // #10: needs the inbound domain where this runs
+    },
+    {
+      title: "Ask about the boat",
+      description: "Get answers from the boat's manuals, with the page they came from.",
+      comingSoon: true, // #14
+    },
+    {
+      title: "Invite co-owners and crew",
+      description: "Share the boat, its costs and its reminders with the people who sail it.",
+      comingSoon: true, // Phase 3 onboarding
+    },
+  ];
+}
 
 export default function BoatHome({ params }: PageProps<"/boats/[boatId]">) {
   return (
@@ -64,6 +73,7 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
     records.members.map((m) => ({ person_id: m.personId, ownership_share: m.ownershipShare })),
   );
   const documents = new Map(records.documents.map((d) => [d.id, d]));
+  const address = boatEmailAddress(boat.emailAlias, process.env.INBOUND_EMAIL_DOMAIN);
 
   return (
     <>
@@ -88,14 +98,14 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
         boatId={boat.boatId}
         documents={documents}
       />
-      <Documents documents={records.documents} boatId={boat.boatId} />
+      <Documents documents={records.documents} boatId={boat.boatId} address={address} />
 
       <section aria-labelledby="next-steps" className="flex flex-col gap-4">
         <h2 id="next-steps" className="text-xl font-semibold">
           Next steps
         </h2>
         <ul className="grid gap-4 sm:grid-cols-3">
-          {nextSteps.map((step) => (
+          {nextSteps(address).map((step) => (
             <li
               key={step.title}
               className="flex flex-col gap-2 rounded-2xl border border-black/10 p-5 dark:border-white/15"

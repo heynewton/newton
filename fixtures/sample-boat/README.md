@@ -19,7 +19,10 @@ Records filed from a fixture document name it in `sourceDocument`.
 | Riley Testcase | crew | 0% | riley@example.org |
 
 Kittiwake is a 2009 Example Yachts EY 34 sloop with a Sample Marine SM-30 diesel (1,412 engine
-hours on 2026-10-02). Its inbound address is `kittiwake@in.heynewton.test`.
+hours on 2026-10-02). Its inbound address is `kittiwake@in.heynewton.test`: the seed gives the boat the
+alias `kittiwake`, and `INBOUND_EMAIL_DOMAIN=in.heynewton.test` locally (real boats get a random
+suffix). Each person's first verified sender address is the one they sign in with; the others are
+seeded as verified `sender_addresses`, so Alex's second address files mail too.
 
 `supabase/seed.sql` is generated from `boat.json`, so `npm run db:reset` loads the boat, its people,
 their memberships with ownership shares, and its records into the local database. Each person signs

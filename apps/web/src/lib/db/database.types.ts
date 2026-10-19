@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "boats": {
                   Row: {
-                    "created_at": string,"id": string,"name": string
+                    "created_at": string,"email_alias": string,"id": string,"name": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"name": string
+                    "created_at"?: string,"email_alias": string,"id"?: string,"name": string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"name"?: string
+                    "created_at"?: string,"email_alias"?: string,"id"?: string,"name"?: string
                   }
                   Relationships: [
                     
@@ -65,14 +65,14 @@ isOneToOne: false
                   ]
                 },"documents": {
                   Row: {
-                    "added_by": string | null,"boat_id": string,"content_type": string | null,"created_at": string,"filename": string | null,"id": string,"received_at": string,"size_bytes": number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type": Database["public"]['Enums']["document_type"]
+                    "added_by": string | null,"boat_id": string,"content_type": string | null,"created_at": string,"filename": string | null,"id": string,"inbound_email_id": string | null,"received_at": string,"size_bytes": number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type": Database["public"]['Enums']["document_type"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "added_by"?: string | null,"boat_id": string,"content_type"?: string | null,"created_at"?: string,"filename"?: string | null,"id"?: string,"received_at"?: string,"size_bytes"?: number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type"?: Database["public"]['Enums']["document_type"]
+                    "added_by"?: string | null,"boat_id": string,"content_type"?: string | null,"created_at"?: string,"filename"?: string | null,"id"?: string,"inbound_email_id"?: string | null,"received_at"?: string,"size_bytes"?: number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type"?: Database["public"]['Enums']["document_type"]
                   }
                   Update: {
-                    "added_by"?: string | null,"boat_id"?: string,"content_type"?: string | null,"created_at"?: string,"filename"?: string | null,"id"?: string,"received_at"?: string,"size_bytes"?: number | null,"source"?: Database["public"]['Enums']["document_source"],"storage_path"?: string,"type"?: Database["public"]['Enums']["document_type"]
+                    "added_by"?: string | null,"boat_id"?: string,"content_type"?: string | null,"created_at"?: string,"filename"?: string | null,"id"?: string,"inbound_email_id"?: string | null,"received_at"?: string,"size_bytes"?: number | null,"source"?: Database["public"]['Enums']["document_source"],"storage_path"?: string,"type"?: Database["public"]['Enums']["document_type"]
                   }
                   Relationships: [
                     {
@@ -86,6 +86,12 @@ isOneToOne: false
       columns: ["boat_id"]
 isOneToOne: false
       referencedRelation: "boats"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documents_inbound_email_id_fkey"
+      columns: ["inbound_email_id"]
+isOneToOne: false
+      referencedRelation: "inbound_emails"
       referencedColumns: ["id"]
     }
                   ]
@@ -116,6 +122,32 @@ isOneToOne: false
     },{
       foreignKeyName: "expenses_paid_by_fkey"
       columns: ["paid_by"]
+isOneToOne: false
+      referencedRelation: "people"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"inbound_emails": {
+                  Row: {
+                    "attachment_count": number,"boat_id": string,"completed_at": string | null,"created_at": string,"from_address": string,"from_name": string | null,"id": string,"message_id": string | null,"provider": string,"provider_email_id": string,"received_at": string,"sender_person_id": string | null,"status": Database["public"]['Enums']["inbound_email_status"],"subject": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attachment_count"?: number,"boat_id": string,"completed_at"?: string | null,"created_at"?: string,"from_address": string,"from_name"?: string | null,"id"?: string,"message_id"?: string | null,"provider"?: string,"provider_email_id": string,"received_at": string,"sender_person_id"?: string | null,"status": Database["public"]['Enums']["inbound_email_status"],"subject"?: string | null
+                  }
+                  Update: {
+                    "attachment_count"?: number,"boat_id"?: string,"completed_at"?: string | null,"created_at"?: string,"from_address"?: string,"from_name"?: string | null,"id"?: string,"message_id"?: string | null,"provider"?: string,"provider_email_id"?: string,"received_at"?: string,"sender_person_id"?: string | null,"status"?: Database["public"]['Enums']["inbound_email_status"],"subject"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "inbound_emails_boat_id_fkey"
+      columns: ["boat_id"]
+isOneToOne: false
+      referencedRelation: "boats"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "inbound_emails_sender_person_id_fkey"
+      columns: ["sender_person_id"]
 isOneToOne: false
       referencedRelation: "people"
       referencedColumns: ["id"]
@@ -213,6 +245,26 @@ isOneToOne: false
       referencedColumns: ["id","boat_id"]
     }
                   ]
+                },"sender_addresses": {
+                  Row: {
+                    "address": string,"created_at": string,"id": string,"person_id": string,"verified_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "address": string,"created_at"?: string,"id"?: string,"person_id": string,"verified_at"?: string | null
+                  }
+                  Update: {
+                    "address"?: string,"created_at"?: string,"id"?: string,"person_id"?: string,"verified_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sender_addresses_person_id_fkey"
+      columns: ["person_id"]
+isOneToOne: false
+      referencedRelation: "people"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -234,8 +286,16 @@ isOneToOne: false
 "current_person_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"match_inbound_email":
+{ Args: { "alias": string,"sender": string }; Returns: {
+              "boat_id": string,"person_id": string
+            }[]
+                           },
 "my_role_on":
 { Args: { "boat": string }; Returns: Database["public"]['Enums']["membership_role"]
+                           },
+"new_email_alias":
+{ Args: { "boat_name": string }; Returns: string
                            },
 "search_document_chunks":
 { Args: { "match_count"?: number,"model": string,"only_boat_id"?: string,"query_embedding": string }; Returns: {
@@ -247,7 +307,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "document_source": "email"|"upload","document_type": "unsorted"|"email"|"invoice"|"receipt"|"insurance"|"registration"|"manual"|"contract"|"survey"|"other","membership_role": "owner"|"co_owner"|"crew"|"read_only","renewal_kind": "insurance"|"registration"|"licence"|"other"
+            "document_source": "email"|"upload","document_type": "unsorted"|"email"|"invoice"|"receipt"|"insurance"|"registration"|"manual"|"contract"|"survey"|"other","inbound_email_status": "filed"|"held","membership_role": "owner"|"co_owner"|"crew"|"read_only","renewal_kind": "insurance"|"registration"|"licence"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -367,7 +427,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "document_source": ["email", "upload"],"document_type": ["unsorted", "email", "invoice", "receipt", "insurance", "registration", "manual", "contract", "survey", "other"],"membership_role": ["owner", "co_owner", "crew", "read_only"],"renewal_kind": ["insurance", "registration", "licence", "other"]
+            "document_source": ["email", "upload"],"document_type": ["unsorted", "email", "invoice", "receipt", "insurance", "registration", "manual", "contract", "survey", "other"],"inbound_email_status": ["filed", "held"],"membership_role": ["owner", "co_owner", "crew", "read_only"],"renewal_kind": ["insurance", "registration", "licence", "other"]
           }
         }
 } as const
