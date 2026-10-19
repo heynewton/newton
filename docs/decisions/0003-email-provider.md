@@ -146,7 +146,30 @@ Can wait until #10 starts, but doing it now proves the DNS in one go.
       It must be the only MX on `boats`.
 - [ ] Wait for the receiving record to show **Verified**. Send a test email to any address
       `@boats.heynewton.app` and check it appears under Emails → Receiving.
-- [ ] Leave the webhook for #10, which adds the endpoint and its signing secret.
+- [ ] Then the webhook, below.
+
+### 3b. Email-in webhook (#10)
+
+The web app's `/api/email-in` route files mail sent to boats' addresses. It needs four settings
+where it runs, and the Supabase URL and keys from #62. Real boats' mail must only ever reach prod
+(#63, #37), so on dev, send test mail to test boats only.
+
+- [ ] Resend → Webhooks → Add endpoint: `https://heynewton-web.vercel.app/api/email-in` (the dev
+      site), event `email.received` only. Copy its signing secret (`whsec_…`).
+- [ ] Resend → API Keys → Create API key `email-in-newton-dev`. Reading received mail needs more
+      than "Sending access"; pick the narrowest permission that can read received emails (at the
+      time of writing, "Full access") and write down which one in `docs/tokens.md`.
+- [ ] Vercel → `heynewton-web` → Settings → Environment Variables, for Preview and Production
+      (both are dev while #63 is open): `RESEND_WEBHOOK_SECRET`, `RESEND_API_KEY`,
+      `INBOUND_EMAIL_DOMAIN=boats.heynewton.app`, and `SUPABASE_SECRET_KEY` (newton-dev → Project
+      Settings → API Keys → secret key). Mark the secrets **Sensitive**. Redeploy.
+- [ ] Test: sign in on the dev site, add a test boat, copy its address from the boat's page and
+      email it a PDF from the address you signed in with. It appears under Documents within a
+      minute. Send another from an address that isn't on the boat: Resend shows it delivered to
+      the webhook (200, `held`), and nothing new appears on the page.
+- [ ] Prod (#63) gets its own endpoint, key and secret. Both webhooks receive every message on
+      `boats.heynewton.app`; each one ignores addresses that aren't its own boats' (it answers
+      200 `unknown_address` and downloads nothing).
 
 ### 4. SMTP key for `newton-dev`
 

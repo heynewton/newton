@@ -265,16 +265,36 @@ export function CoOwnerBalance({
   );
 }
 
-export function Documents({ documents, boatId }: { documents: BoatDocument[]; boatId: string }) {
+// The boat's email address, easy to select and copy on a phone.
+export function EmailAddress({ address }: { address: string }) {
+  return <strong className="font-semibold break-words select-all">{address}</strong>;
+}
+
+export function Documents({
+  documents,
+  boatId,
+  address,
+}: {
+  documents: BoatDocument[];
+  boatId: string;
+  address: string | null;
+}) {
   return (
     <section aria-labelledby="documents" className="flex flex-col gap-4">
       <h2 id="documents" className="text-xl font-semibold">
         Documents
       </h2>
+      {address && (
+        <p className="text-zinc-700 dark:text-zinc-300">
+          Forward emails with their attachments to <EmailAddress address={address} />. Mail from people who
+          aren&apos;t on the boat is held, not filed.
+        </p>
+      )}
       {documents.length === 0 ? (
         <p className={`${card} ${muted}`}>
-          No documents yet. Insurance certificates, invoices and manuals will be listed here once they are
-          forwarded to the boat&apos;s own email address (coming soon).
+          {address
+            ? "No documents yet. Insurance certificates, invoices and manuals will be listed here once they are forwarded to the boat."
+            : "No documents yet. Insurance certificates, invoices and manuals will be listed here once they are forwarded to the boat’s own email address (coming soon)."}
         </p>
       ) : (
         <ul className="flex flex-col divide-y divide-black/10 rounded-2xl border border-black/10 dark:divide-white/15 dark:border-white/15">
