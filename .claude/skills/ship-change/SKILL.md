@@ -38,3 +38,9 @@ allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(gh pr vi
 Add an entry to `docs/build-log.md` for the request, following the existing format: the prompt
 word for word (lightly cleaned where privacy needs it, with replaced text in [brackets]), what
 Claude did, what changed along the way, and the PR link. Commit it to the same PR.
+
+## 6. History
+Add the PR to `docs/history.md`, in the same PR: one line under **In progress** with the PR link
+and its title. When the PR merges, the next PR that touches the page moves the line to its phase
+and topic, adds the merge date and the issue it closed, and takes that issue off **What's next**.
+Add a topic only when no existing one fits.

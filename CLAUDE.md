@@ -75,6 +75,7 @@ We are in **Phase 1**.
 - Commit messages say what changed and why.
 - After each PR, add an entry to `docs/build-log.md`, lightly cleaning the prompt where privacy
   needs it (no real boat data or personal info, per the repo rules above).
+- Each PR also adds a line to `docs/history.md`, the history of PRs by phase and topic.
 - The `ship-change` skill (`.claude/skills/ship-change/SKILL.md`) is the checklist for landing a change.
 - Roles, the project board and the weekly rhythm are in `docs/process.md`. Ready issues are worked
   top-down in board order; move issues across the board as they progress. The Board workflow moves
