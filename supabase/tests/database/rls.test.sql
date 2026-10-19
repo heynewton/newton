@@ -1,6 +1,6 @@
--- Row-level security for boats, people and memberships (#5). Run with `npm run test:db`.
+-- Row-level security for boats, people and memberships (#5). Run with `npm run db:test`.
 --
--- Four made-up people:
+-- The people and boats come from setup/tenancy.psql:
 --   Ada:  owner of Kestrel, read-only on Petrel
 --   Ben:  owner of Petrel, co-owner of Kestrel
 --   Cleo: crew on Kestrel
@@ -12,11 +12,7 @@ select plan(26);
 
 -- Setup, as the database owner -------------------------------------------------------------
 
-insert into auth.users (id, email) values
-  ('00000000-0000-0000-0000-00000000000a', 'ada@example.test'),
-  ('00000000-0000-0000-0000-00000000000b', 'ben@example.test'),
-  ('00000000-0000-0000-0000-00000000000c', 'cleo@example.test'),
-  ('00000000-0000-0000-0000-00000000000d', 'dev@example.test');
+\ir setup/tenancy.psql
 
 select is(
   (select count(*)::int from public.people where auth_subject like '00000000-0000-0000-0000-00000000000_'),
@@ -29,42 +25,6 @@ select isnt(
   '00000000-0000-0000-0000-00000000000a',
   'people.id is Newton''s own ID, not the auth provider''s'
 );
-
-insert into public.boats (id, name) values
-  ('10000000-0000-0000-0000-000000000001', 'Kestrel'),
-  ('10000000-0000-0000-0000-000000000002', 'Petrel');
-
-insert into public.memberships (boat_id, person_id, role)
-select b.id, p.id, m.role::public.membership_role
-from (values
-  ('Kestrel', 'ada@example.test', 'owner'),
-  ('Kestrel', 'ben@example.test', 'co_owner'),
-  ('Kestrel', 'cleo@example.test', 'crew'),
-  ('Petrel', 'ben@example.test', 'owner'),
-  ('Petrel', 'ada@example.test', 'read_only')
-) as m (boat, email, role)
-join public.boats b on b.name = m.boat
-join public.people p on p.email = m.email;
-
--- People's IDs, readable whatever the signed-in person can see.
-create temp table person_ids as select email, id from public.people;
-grant select on person_ids to authenticated;
-
--- Switch to a signed-in person, the way PostgREST does for a request with their token.
-create function pg_temp.sign_in_as(email text) returns void language plpgsql as $$
-begin
-  reset role;
-  perform set_config(
-    'request.jwt.claims',
-    json_build_object(
-      'sub', (select id from auth.users u where u.email = sign_in_as.email),
-      'role', 'authenticated'
-    )::text,
-    true
-  );
-  perform set_config('role', 'authenticated', true);
-end;
-$$;
 
 -- Ada: on two boats, read-only on one ------------------------------------------------------
 
