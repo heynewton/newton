@@ -4,9 +4,10 @@ How Newton is built today, and what each build phase adds. The product view (use
 model, agent tools, risks) is in the [Newton — Product & Architecture Spec](https://docs.google.com/document/d/19byJe41PNjezQD93sBnIgbE90bdVzTzWd5ptSrVg5yU/edit) in the team Google
 Drive; this page is the engineering view and stays in step with the code.
 
-**Status (last updated 2026-10-18):** Phase 1: scaffold, plus boats, people, memberships,
-magic-link sign-in, adding your first boat and a per-boat document store on a local Supabase
-stack. What exists today is in
+**Status (last updated 2026-10-19):** Phase 1: scaffold, plus boats, people, memberships,
+magic-link sign-in, adding your first boat, a per-boat document store, renewals, maintenance and
+expenses with a boat page that shows them, and manuals split into searchable chunks; a hosted dev
+database migrated and seeded from `main`. What exists today is in
 [Today: the scaffold](#today-the-scaffold); every other section describes a target, not running
 code. Update this line when a phase's components land.
 
@@ -90,7 +91,8 @@ functions. Since #5: a local Supabase stack with boats, people and memberships u
 security, and email magic-link sign-in in the web app. Since #8: a per-boat document store (a
 `documents` table and a private Storage bucket, both under RLS). Since #32: a signed-in person adds
 a boat and becomes its owner. Since #60: a hosted Supabase **dev** project (`newton-dev`), migrated
-and seeded with the sample boat on every push to `main`. Since #13: manuals can be split into chunks
+and seeded with the sample boat on every push to `main`. Since #15: a boat's page shows its
+renewals and maintenance with due dates, the co-owner balance and its documents. Since #13: manuals can be split into chunks
 with page numbers, embedded and searched under RLS (`packages/indexing`, `document_chunks`), though
 nothing calls it yet. Since #10: each boat has its own email address, and Resend's webhook
 (`/api/email-in`) files mail from the boat's members as documents (the original message and its
@@ -149,7 +151,7 @@ co-owners see who owes whom; questions about the manuals are answered with sourc
 | Component | Choice | Issues |
 | --- | --- | --- |
 | Web app and API | Next.js in `apps/web`: pages for people, route handlers for webhooks and the API. One deployable. Two layouts, phone and wide, tested at three widths ([decision](decisions/0002-screen-sizes.md)). | #15, #31 |
-| Hosting | Vercel, with a preview link on every PR and a dev site from `main` (#30). heynewton.app points at the dev site for now. | #19, #35 |
+| Hosting | Vercel, with a preview link on every PR and a dev site from `main` (#30). heynewton.app points at the dev site for now. | #19, #35, #37 |
 | Dev and prod | Two hosted Supabase projects and two Vercel deployments. **Dev** (`newton-dev`, migrated and seeded from `main` since #60) backs the dev site and PR previews, holds only fixture data, and is loaded from `supabase/seed.sql`. **Prod** backs heynewton.app, holds our own boat's real data, and is never seeded. Both get the same checked-in migrations from `main`, and dev and previews have no prod keys. Lands before the first real boat data arrives (email-in, #10) or anyone outside the team signs in. | #37, #60 |
 | Database and auth | Supabase Postgres with RLS. Migrations checked in under `supabase/`, local stack via the Supabase CLI. Supabase Auth: email magic link first, then Google and Apple ([decision](decisions/0001-auth.md)). Sign-in emails go through Resend's SMTP from `noreply@heynewton.app` ([decision](decisions/0003-email-provider.md)). RLS policies go through a `current_person_id()` function, so the auth provider can change without rewriting them. | #5, #27, #61 |
 | Records | Tables: `boats`, `people` (Newton's own ID; the auth provider's ID only in `auth_subject`), `sender_addresses` (verified addresses a person forwards from, #10; confirming new ones in #27), `memberships` (role, ownership share), `documents`, `renewals`, `maintenance_items`, `expenses`. Each record can link to its source document. | #5, #8, #9, #27 |
@@ -308,7 +310,6 @@ Each becomes a record in `docs/decisions/` when the issue that needs it starts. 
 
 | Decision | Needed by | Notes |
 | --- | --- | --- |
-| Hosting for the web app | #19 | Vercel proposed. |
 | Where background jobs run | #11, #12 | Supabase (queues, cron, edge functions) or a job runner next to the web app. |
 | Tide source outside the US | Phase 2 | NOAA is US only. |
 | On-device voice engines | Phase 2 | Wake word, speech-to-text, text-to-speech, all offline. |
