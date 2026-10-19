@@ -1,6 +1,7 @@
 # The hosted dev Supabase project (newton-dev) holds only fixture data.
-# On every push to main: apply the checked-in migrations, then load supabase/seed.sql (safe to
-# re-run). `db push --include-seed` is not used because it seeds only once and ignores later
+# On every push to main: apply the checked-in migrations, load supabase/seed.sql (safe to
+# re-run), then upload the sample boat's PDFs into the documents bucket (overwritten, so also safe
+# to re-run). `db push --include-seed` is not used because it seeds only once and ignores later
 # changes to the seed. On pull requests that touch the database: the same link plus a dry run,
 # which changes nothing in dev. Forks get no secrets, so the check is skipped for them.
 name: Dev database
@@ -73,3 +74,9 @@ jobs:
       - name: Load the sample boat
         if: github.event_name != 'pull_request'
         run: psql -v ON_ERROR_STOP=1 -q --single-transaction -f supabase/seed.sql
+      # The files behind the seeded documents rows: supabase/storage/documents/<boat_id>/<name>.pdf
+      # (symlinks to the fixture PDFs, per objects_path in config.toml), uploaded with upsert. The
+      # CLI fetches the project's secret key with the access token's API Keys read permission.
+      - name: Upload the sample boat's documents
+        if: github.event_name != 'pull_request'
+        run: npx supabase seed buckets --linked --yes

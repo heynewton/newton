@@ -110,7 +110,7 @@ starts at **None**.
 | Database | Connection Pooling | Read | GitHub's runners reach the database through the pooler |
 | Application services | Data API Config | Read | `supabase link` compares hosted settings with `supabase/config.toml` |
 | Application services | Storage Config | Read | Same comparison, for storage |
-| Application services | API Keys | Read | `supabase link` reads the project's API keys; without it, link fails with "Missing required permission(s): api_gateway_keys_read" (#60) |
+| Application services | API Keys | Read | `supabase link` reads the project's API keys; without it, link fails with "Missing required permission(s): api_gateway_keys_read" (#60). `supabase seed buckets --linked` reads the secret key the same way to upload the sample boat's PDFs to Storage |
 | Application services | API Key Secrets | Read | Needed with API Keys for the same call; without it, link fails with "Your account does not have the necessary privileges to access this endpoint" on `GET /v1/projects/<ref>/api-keys` (#60) |
 
 Supabase rates this "High risk" because a migration can run any SQL. That is what the workflow
