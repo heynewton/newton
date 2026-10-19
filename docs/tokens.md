@@ -25,6 +25,7 @@ Rules for all of them:
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
+| `CRON_SECRET`, `RESEND_API_KEY`, `SUPABASE_SECRET_KEY` | secrets | Us, Resend, Supabase | Project accounts | Reminders job (#12) | Vercel env vars of that deployment |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
@@ -142,6 +143,23 @@ key per Supabase project, so revoking one doesn't break the other.
   anywhere else: a lost key is replaced, not recovered.
 - **Later (#10):** the inbound webhook adds a key that can read received mail, and the webhook
   signing secret, both in Vercel's environment variables. Add them here then.
+
+## Reminders (`CRON_SECRET`, `RESEND_API_KEY`, `SUPABASE_SECRET_KEY`)
+
+The daily reminders job (#12, [decision 0005](decisions/0005-scheduled-jobs.md)) is a route that
+Vercel Cron calls, reads every boat without a signed-in person, and sends email through Resend's
+API.
+
+| Variable | Issued by | Permission | Stored in |
+| --- | --- | --- | --- |
+| `CRON_SECRET` | Us: a random string of 32+ characters (`openssl rand -hex 32`) | Vercel sends it as `Authorization: Bearer …`; the route refuses calls without it | Vercel env vars of `heynewton-web` (Production target), marked Sensitive |
+| `RESEND_API_KEY` | Resend, key `app-newton-dev` (`app-newton-prod` for #63) | Sending access, domain `heynewton.app`. Email-in (#10) needs a key that can also read received mail; then one key with that permission serves both | Same |
+| `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/reminders.ts` (and email-in's store) use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
+| `SITE_URL` | — (not secret) | Links in the email: `https://heynewton-web.vercel.app` on dev | Same |
+
+- **Expiry:** none of them expire on their own. Rotate yearly with the other keys.
+- **Locally:** `apps/web/.env.local`; call the route with
+  `curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/reminders`.
 
 
 Use the same choices for `newton-prod`:
