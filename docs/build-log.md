@@ -1425,4 +1425,4 @@ Start #13 and #15 in parallel sessions.
 - The seed doesn't include the sample documents yet, so to check the links Claude added them to
   a private copy of the local database only. Seeding them for everyone is a follow-up.
 
-**Pull request:** PR_LINK
+**Pull request:** [#70](https://github.com/heynewton/newton/pull/70)
