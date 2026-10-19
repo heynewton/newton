@@ -16,8 +16,8 @@ Website: [heynewton.app](https://heynewton.app)
 | --- | --- |
 | [Architecture](docs/architecture.md) | How the parts fit together today, and the target for each phase |
 | [Decisions](docs/decisions/) | Recorded decisions, such as [auth](docs/decisions/0001-auth.md) and [screen sizes](docs/decisions/0002-screen-sizes.md) |
-| [History](docs/history.md) | Every merged PR by phase and topic, what's in progress and what's next |
-| [Build log](docs/build-log.md) | How each change was built with Claude Code, prompt by prompt |
+| [History](docs/history.md) | Every merged PR by phase and topic, and what's next |
+| [Build log](docs/build-log/) | How each change was built with Claude Code, prompt by prompt, one file per entry |
 | [How we work](docs/process.md) | Roles, the project board and the weekly rhythm |
 | [Contributing](CONTRIBUTING.md) | How to pick up an issue, open a PR and review |
 | [Maintainer brief](docs/maintainers.md) | What maintainers do on top of contributing: merging, backlog, settings |
@@ -89,6 +89,9 @@ emails don't leave your machine: open the mail catcher at http://127.0.0.1:54324
 The seed loads the made-up sample boat Kittiwake (`fixtures/sample-boat`), so signing in as
 `alex@example.com` (owner), `sam@example.net` or `jordan@example.com` (co-owners) or
 `riley@example.org` (crew) shows it on `/boats`.
+
+Email-in needs Resend, so locally the fixture emails go through the same filing code in the unit
+tests (`apps/web/src/lib/email-in`). The sample boat's address is `kittiwake@in.heynewton.test`.
 
 | Folder | What it is |
 | --- | --- |

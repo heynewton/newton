@@ -51,10 +51,17 @@ from (values
 where p.auth_subject = f.auth_subject
   and (p.id, p.display_name) is distinct from (f.id::uuid, f.name);
 
-insert into public.boats (id, name) values
-  ('00000000-0000-4000-8000-000000000001', 'Kittiwake')
+-- The boat's inbound address is its alias at the inbound domain: kittiwake@in.heynewton.test.
+insert into public.boats (id, name, email_alias) values
+  ('00000000-0000-4000-8000-000000000001', 'Kittiwake', 'kittiwake')
 on conflict (id) do update set
-  name = excluded.name;
+  name = excluded.name,
+  email_alias = excluded.email_alias;
+
+-- Every verified sender address after the first, which is the person's sign-in email.
+insert into public.sender_addresses (person_id, address, verified_at) values
+  ('00000000-0000-4000-8000-000000000101', 'alex.sample@example.org', now())
+on conflict (address) do update set person_id = excluded.person_id, verified_at = coalesce(sender_addresses.verified_at, excluded.verified_at);
 
 -- Ownership shares are the fixture's percentages; the cost split only uses their ratio.
 insert into public.memberships (boat_id, person_id, role, ownership_share) values

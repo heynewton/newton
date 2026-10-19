@@ -44,6 +44,9 @@ const documentId = (record) => {
   return sql(document.id);
 };
 
+// The part of the inbound address before the @. The domain is set per environment.
+const emailAlias = boat.inboundAddress.split("@")[0];
+
 const values = (rows) => rows.map((row) => `  (${row.join(", ")})`).join(",\n");
 
 // On a re-run, rows that already exist take boat.json's values.
@@ -129,9 +132,17 @@ ${values(people.map((p) => [sql(p.id), sql(p.name), sql(authId(p.id))]))}
 where p.auth_subject = f.auth_subject
   and (p.id, p.display_name) is distinct from (f.id::uuid, f.name);
 
-insert into public.boats (id, name) values
-${values([[sql(boat.id), sql(boat.name)]])}
-${upsert(["id"], ["name"])};
+-- The boat's inbound address is its alias at the inbound domain: ${boat.inboundAddress}.
+insert into public.boats (id, name, email_alias) values
+${values([[sql(boat.id), sql(boat.name), sql(emailAlias)]])}
+${upsert(["id"], ["name", "email_alias"])};
+
+-- Every verified sender address after the first, which is the person's sign-in email.
+insert into public.sender_addresses (person_id, address, verified_at) values
+${values(
+  people.flatMap((p) => p.verifiedSenders.slice(1).map((a) => [sql(p.id), sql(a.toLowerCase()), "now()"])),
+)}
+on conflict (address) do update set person_id = excluded.person_id, verified_at = coalesce(sender_addresses.verified_at, excluded.verified_at);
 
 -- Ownership shares are the fixture's percentages; the cost split only uses their ratio.
 insert into public.memberships (boat_id, person_id, role, ownership_share) values

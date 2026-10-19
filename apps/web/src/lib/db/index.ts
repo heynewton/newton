@@ -21,6 +21,12 @@ export type BoatMembership = {
   role: MembershipRole;
 };
 
+// A boat the signed-in person is on, with what its page needs beyond the list.
+export type MyBoat = BoatMembership & {
+  // The part of the boat's email address before the @ (#10).
+  emailAlias: string;
+};
+
 export type SignInLinkResult =
   | { ok: true }
   | { ok: false; reason: "invalid_email" | "unavailable" | "failed" };
@@ -117,18 +123,20 @@ export async function createBoat(name: string): Promise<CreateBoatResult> {
 
 // One of the signed-in person's boats, with their role on it. Null if the boat doesn't
 // exist or they are not on it (RLS can't tell the two apart, and neither should the page).
-export async function getMyBoat(person: Person, boatId: string): Promise<BoatMembership | null> {
+export async function getMyBoat(person: Person, boatId: string): Promise<MyBoat | null> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(boatId)) return null;
   const supabase = await createClient();
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("memberships")
-    .select("role, boats!inner(id, name)")
+    .select("role, boats!inner(id, name, email_alias)")
     .eq("person_id", person.id)
     .eq("boat_id", boatId)
     .maybeSingle();
   if (error) throw new Error(`Could not load the boat: ${error.message}`);
-  return data ? { boatId: data.boats.id, boatName: data.boats.name, role: data.role } : null;
+  return data
+    ? { boatId: data.boats.id, boatName: data.boats.name, role: data.role, emailAlias: data.boats.email_alias }
+    : null;
 }
 
 export type DocumentType = Database["public"]["Enums"]["document_type"];

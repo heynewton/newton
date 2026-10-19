@@ -78,10 +78,11 @@ An issue moves to Ready when it has:
 ### Definition of Done
 
 - Tests, lint and type checks pass in CI.
-- Any number Newton reports is covered by a unit test.
+- Any number Newton reports is covered by a unit test. `packages/calc` keeps at least 95% line
+  and branch coverage, or CI fails; each PR gets a coverage comment per workspace.
 - The PR says what was tested and what was not.
 - No real boat data, personal information or secrets in the diff.
-- An entry in [build-log.md](build-log.md).
+- A build-log entry in [build-log/](build-log/) and a history file in [history/](history/), both new files.
 - Merged into `main` (squash merge).
 
 ## Previews

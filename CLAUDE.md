@@ -73,9 +73,12 @@ We are in **Phase 1**.
 - When a PR grows, update its title and description to match.
 - PR descriptions list what was tested and what wasn't.
 - Commit messages say what changed and why.
-- After each PR, add an entry to `docs/build-log.md`, lightly cleaning the prompt where privacy
-  needs it (no real boat data or personal info, per the repo rules above).
-- Each PR also adds a line to `docs/history.md`, the history of PRs by phase and topic.
+- After each PR, add an entry to the build log as a new file in `docs/build-log/`, lightly
+  cleaning the prompt where privacy needs it (no real boat data or personal info, per the repo
+  rules above).
+- Each PR also adds its own file in `docs/history/` (one per PR); `docs/history.md`, the history of
+  PRs by phase and topic, is rebuilt from them by the History workflow after every merge. PRs only add files, never
+  edit shared logs, so open PRs don't conflict with each other.
 - The `ship-change` skill (`.claude/skills/ship-change/SKILL.md`) is the checklist for landing a change.
 - Roles, the project board and the weekly rhythm are in `docs/process.md`. Ready issues are worked
   top-down in board order; move issues across the board as they progress. The Board workflow moves

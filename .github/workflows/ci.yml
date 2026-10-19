@@ -15,6 +15,11 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The coverage report comments on the PR. Forks get a read-only token, so they skip the
+      # comment and only get the job summary.
+      pull-requests: write
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -24,7 +29,32 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      # The same tests as `npm test`, with coverage. packages/calc fails below its threshold
+      # (packages/calc/vitest.config.ts); the other workspaces are reported, not gated.
+      - run: npm run test:coverage
+      # One PR comment per workspace, edited on each push rather than added again, plus the
+      # job summary (the only place fork PRs get it).
+      - name: Coverage report (calc)
+        if: ${{ !cancelled() && hashFiles('packages/calc/coverage/coverage-summary.json') != '' }}
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: calc
+          working-directory: packages/calc
+          comment-on: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'pr' || 'none' }}
+      - name: Coverage report (indexing)
+        if: ${{ !cancelled() && hashFiles('packages/indexing/coverage/coverage-summary.json') != '' }}
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: indexing
+          working-directory: packages/indexing
+          comment-on: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'pr' || 'none' }}
+      - name: Coverage report (web)
+        if: ${{ !cancelled() && hashFiles('apps/web/coverage/coverage-summary.json') != '' }}
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: web
+          working-directory: apps/web
+          comment-on: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'pr' || 'none' }}
       - run: npm run build
 
   # Applies the migrations to a fresh local Postgres and runs the row-level security tests.

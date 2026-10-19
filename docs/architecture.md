@@ -4,9 +4,10 @@ How Newton is built today, and what each build phase adds. The product view (use
 model, agent tools, risks) is in the [Newton — Product & Architecture Spec](https://docs.google.com/document/d/19byJe41PNjezQD93sBnIgbE90bdVzTzWd5ptSrVg5yU/edit) in the team Google
 Drive; this page is the engineering view and stays in step with the code.
 
-**Status (last updated 2026-10-18):** Phase 1: scaffold, plus boats, people, memberships,
-magic-link sign-in, adding your first boat and a per-boat document store on a local Supabase
-stack. What exists today is in
+**Status (last updated 2026-10-19):** Phase 1: scaffold, plus boats, people, memberships,
+magic-link sign-in, adding your first boat, a per-boat document store, renewals, maintenance and
+expenses with a boat page that shows them, and manuals split into searchable chunks; a hosted dev
+database migrated and seeded from `main`. What exists today is in
 [Today: the scaffold](#today-the-scaffold); every other section describes a target, not running
 code. Update this line when a phase's components land.
 
@@ -90,9 +91,14 @@ functions. Since #5: a local Supabase stack with boats, people and memberships u
 security, and email magic-link sign-in in the web app. Since #8: a per-boat document store (a
 `documents` table and a private Storage bucket, both under RLS). Since #32: a signed-in person adds
 a boat and becomes its owner. Since #60: a hosted Supabase **dev** project (`newton-dev`), migrated
-and seeded with the sample boat on every push to `main`. Since #13: manuals can be split into chunks
+and seeded with the sample boat on every push to `main`. Since #15: a boat's page shows its
+renewals and maintenance with due dates, the co-owner balance and its documents. Since #13: manuals can be split into chunks
 with page numbers, embedded and searched under RLS (`packages/indexing`, `document_chunks`), though
-nothing calls it yet. There is no prod project, agent or email-in yet.
+nothing calls it yet. Since #10: each boat has its own email address, and Resend's webhook
+(`/api/email-in`) files mail from the boat's members as documents (the original message and its
+attachments) and holds mail from anyone else. Since #12: a daily job (Vercel Cron → `/api/reminders`)
+emails each owner and co-owner one digest of what is overdue or coming up on their boats. There is no
+prod project or agent yet.
 
 ```mermaid
 flowchart LR
@@ -122,16 +128,19 @@ flowchart LR
 | Web app | `apps/web` | Homepage, placeholder `/get-started`, `/privacy` and `/terms`, and a shared footer from the root layout (#31). Previews per PR (#19). |
 | Sign-in and boats | `apps/web/src/app/sign-in`, `auth/callback`, `boats` | Email magic link (#5). A proxy (`src/proxy.ts`) refreshes the session cookie and sends a signed-in person from `/` to `/boats`, which goes on to `/boats/new` (no boat), their one boat, or a picker (#32). `/boats/new` asks only for the name; `/boats/<id>` is the boat's home: renewals and maintenance with due dates, the co-owner balance and the documents, each record linking to its file through a short-lived signed URL (#15), then next steps. `src/lib/records` maps rows to `packages/calc` inputs. Without `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (as on previews today), `/sign-in` stays a placeholder. |
 | Data access | `apps/web/src/lib/db` | The web app's only way into the database and auth; a lint rule blocks `@supabase/*` imports elsewhere. Types generated from the schema (`npm run db:types`). |
-| Calc | `packages/calc` | Money helpers (`toCents`, `formatCents`), the co-owner cost split (`splitCosts`, #6) and due dates for renewals and maintenance (`nextDue`, `findDue`, #7), with tests. Imported as source (`main: src/index.ts`), no build step. |
+| Calc | `packages/calc` | Money helpers (`toCents`, `formatCents`), the co-owner cost split (`splitCosts`, #6), due dates for renewals and maintenance (`nextDue`, `findDue`, #7), and for Phase 2 the tide height between cached high and low waters (`tideHeightAt`, #78), the bearing, distance and time to a mark (`bearingAndDistance`, `timeToMark`, #79) and the course to steer for tidal stream and leeway (`courseToSteer`, #80), with tests. Imported as source (`main: src/index.ts`), no build step. |
 | Brand | `assets/brand` | Logo, favicon, monochrome marks. |
 | CI | `.github/workflows/ci.yml` | `npm ci`, lint, typecheck, test, build on every PR and on `main`; a second job starts Postgres and runs the RLS tests. |
+| History | `.github/workflows/history.yml`, `scripts/history.mjs` | After every merge that adds a `docs/history/` file, rebuilds `docs/history.md` and commits it to `main` as the `heynewton-history` GitHub App, the one bypass on the "Protect main" ruleset (#89). |
 | Dev database | Supabase project `newton-dev`, `.github/workflows/dev-database.yml` | Holds only fixture data. On every push to `main`, the workflow runs `supabase db push` with the checked-in migrations, then loads `supabase/seed.sql` with `psql` (the seed is safe to re-run, and resets the sample boat's rows to `boat.json`). PRs that touch `supabase/` or the sample boat get a dry run against dev that changes nothing. Nothing reads it yet: previews move to it in #62. Unlike the local stack, it doesn't expose new tables to the Data API roles, so every migration grants explicitly. |
 | Hosting | Vercel project `heynewton-web` | `main` deploys to the dev site, https://heynewton-web.vercel.app, which [heynewton.app](https://heynewton.app) also points at (DNS on Cloudflare, `www` redirects to the apex). Static pages only, so this is harmless until sign-in; #37 moves the domain to a production project first (#35). |
 | Fixtures | `fixtures/sample-boat` | One invented boat (Kittiwake): boat, people, memberships with ownership shares, renewals, maintenance items and expenses in `boat.json`, four fake documents as text and PDF, five inbound `.eml` files. PDFs and emails are generated by `build.mjs`. |
 | Database and auth | `supabase/` | Local stack via the Supabase CLI (`npm run db:start`). Migration: `boats`, `people` (Newton's own `id`; the provider's user ID only in `auth_subject`, not readable through the API), `memberships` with role (owner, co-owner, crew, read-only) and ownership share. Records migration (#9): `renewals` (kind, expiry date), `maintenance_items` (interval in months and/or engine hours, last done date and hours) and `expenses` (integer cents and currency, paid by a person on the boat), each with a `boat_id` and a `document_id` pointing at its source document (set to null if the document is deleted), shaped like `calc`'s inputs. Policies go through `current_person_id()`; record tables use `can_read_boat()` and `can_write_boat()`. Boats are created only through `create_boat(name)`, which inserts the boat and the caller's `owner` membership in one transaction (#32). `seed.sql` is generated from the sample boat, including its four documents, with the records linked to them; the CLI uploads the matching files into the `documents` bucket from `supabase/storage/documents` (symlinks to the fixture PDFs) on start and reset (#76). pgTAP tests in `supabase/tests`, sharing the people and boats in `setup/tenancy.psql` (`npm run db:test`). The same migrations run on the hosted dev project (see Dev database). |
 | Document store | `supabase/migrations/…_documents.sql` | A private `documents` bucket with one folder per boat (`<boat_id>/…`), and a `documents` table (boat, storage path, type, source email or upload, received date, filename, content type, size, who added it). The same roles apply to both: members read; owners, co-owners and crew add; owners and co-owners delete; read-only members only read. Files can't be overwritten (no update policy), and a row's path must be in its own boat's folder. Nothing uploads yet; email-in (#10) and upload (Phase 3) will. |
 | Document search | `packages/indexing`, `supabase/migrations/…_document_chunks.sql` | pgvector, and `document_chunks` (boat, document, page, chunk text, `vector(1024)` embedding, the model that made it), with the same roles as `documents`: members read, writers add and remove, no edits. `search_document_chunks()` returns the closest chunks with the document's name and dates, runs as the caller and only ever sees their own boats. The package extracts text per page from a PDF (`unpdf`), splits it into chunks that never span pages, embeds them through an `Embedder` interface (Voyage AI `voyage-4` in production, a deterministic fake in tests, so CI needs no key) and replaces the document's chunks. Manuals only ([decision](decisions/0004-embeddings.md)). Nothing calls it yet: the indexing job comes with the job runner (#11). |
-| Agent, email-in | — | Not started (#10, #11). |
+| Email-in | `apps/web/src/app/api/email-in`, `src/lib/email-in`, `src/lib/db/email-in.ts`, `supabase/migrations/…_email_in.sql` | Every boat has an `email_alias` (`<name>-<6 random characters>`, set when the boat is created, not editable), so its address is `<alias>@<INBOUND_EMAIL_DOMAIN>` (`boats.heynewton.app` hosted, `in.heynewton.test` for the sample boat), shown on the boat's page. Resend posts `email.received`; the route checks the Svix signature, then `match_inbound_email()` finds the boat and whether the From address is a member's sign-in address or one of their verified `sender_addresses`. A member's mail is recorded in `inbound_emails` and its original message (`.eml`, from Resend's raw download) and attachments are stored as documents (`source` email, type `email` or `unsorted`) under `<boat_id>/email/<inbound email>/`. Anyone else's mail is held: only sender, subject and attachment count are kept, nothing is downloaded. Retries are safe (unique provider ID, fixed storage paths). Uses the server's secret key, like the reminders job. Owners and co-owners see held mail through RLS; there is no screen for it yet. |
+| Reminders | `apps/web/src/app/api/reminders`, `src/lib/reminders`, `src/lib/db/reminders.ts`, `apps/web/vercel.json`, `supabase/migrations/…_reminders.sql` | Vercel Cron calls the route daily at 07:00 UTC with `CRON_SECRET` ([decision](decisions/0005-scheduled-jobs.md)). It reads every boat with the server's secret key, works out what is overdue or due within 30 days (or 25 engine hours) with the same `schedule()` the boat page uses, and sends each owner and co-owner one digest through Resend's API, with each item's due date, what it was worked out from and its source document. Each item is reminded once when it comes up and once more if it becomes overdue, recorded in `reminders_sent` (unique per person, item, due date and status). |
+| Agent | — | Not started (#11). |
 
 Commands: `npm run dev`, `npm run check`, `npm run build`, `npm run db:start`, `npm run db:test` (see the
 [README](../README.md#development)).
@@ -146,14 +155,14 @@ co-owners see who owes whom; questions about the manuals are answered with sourc
 | Component | Choice | Issues |
 | --- | --- | --- |
 | Web app and API | Next.js in `apps/web`: pages for people, route handlers for webhooks and the API. One deployable. Two layouts, phone and wide, tested at three widths ([decision](decisions/0002-screen-sizes.md)). | #15, #31 |
-| Hosting | Vercel, with a preview link on every PR and a dev site from `main` (#30). heynewton.app points at the dev site for now. | #19, #35 |
+| Hosting | Vercel, with a preview link on every PR and a dev site from `main` (#30). heynewton.app points at the dev site for now. | #19, #35, #37 |
 | Dev and prod | Two hosted Supabase projects and two Vercel deployments. **Dev** (`newton-dev`, migrated and seeded from `main` since #60) backs the dev site and PR previews, holds only fixture data, and is loaded from `supabase/seed.sql`. **Prod** backs heynewton.app, holds our own boat's real data, and is never seeded. Both get the same checked-in migrations from `main`, and dev and previews have no prod keys. Lands before the first real boat data arrives (email-in, #10) or anyone outside the team signs in. | #37, #60 |
 | Database and auth | Supabase Postgres with RLS. Migrations checked in under `supabase/`, local stack via the Supabase CLI. Supabase Auth: email magic link first, then Google and Apple ([decision](decisions/0001-auth.md)). Sign-in emails go through Resend's SMTP from `noreply@heynewton.app` ([decision](decisions/0003-email-provider.md)). RLS policies go through a `current_person_id()` function, so the auth provider can change without rewriting them. | #5, #27, #61 |
-| Records | Tables: `boats`, `people` (Newton's own ID; the auth provider's ID only in `auth_subject`; verified sender addresses for email-in), `memberships` (role, ownership share), `documents`, `renewals`, `maintenance_items`, `expenses`. Each record can link to its source document. | #5, #8, #9, #27 |
+| Records | Tables: `boats`, `people` (Newton's own ID; the auth provider's ID only in `auth_subject`), `sender_addresses` (verified addresses a person forwards from, #10; confirming new ones in #27), `memberships` (role, ownership share), `documents`, `renewals`, `maintenance_items`, `expenses`. Each record can link to its source document. | #5, #8, #9, #27 |
 | File storage | Supabase Storage: a private `documents` bucket, one folder per boat (`<boat_id>/…`), protected by storage RLS policies with the same roles as the `documents` table. Files are never overwritten; a correction is a new file. | #8 |
-| Email-in | Resend ([decision](decisions/0003-email-provider.md)) receives every address on `boats.heynewton.app` and posts each message to a webhook in the web app. The webhook checks the signature, fetches the body and attachments from Resend's API, stores the email and its attachments as documents of that boat and returns quickly. Mail from senders who are not members is held, not filed. Senders are matched against each person's verified sender addresses, not their login, since an Apple login can be a relay address. | #10, #27 |
+| Email-in | Resend ([decision](decisions/0003-email-provider.md)) receives every address on `boats.heynewton.app` and posts each message to a webhook in the web app (`/api/email-in`, since #10). Each boat's address is `<boat name>-<6 random characters>@boats.heynewton.app`. The webhook checks the signature, fetches the original message and attachments from Resend's API, stores them as documents of that boat and returns. Mail from senders who are not members is held, not filed: only who sent it and the subject are kept. Senders are matched against each person's verified sender addresses, not their login, since an Apple login can be a relay address. | #10, #27 |
 | Extraction | Claude classifies each document and proposes fields. `calc` parses and validates dates and amounts before anything is saved. Low-confidence results are flagged for review. | #11 |
-| Background work | Extraction and indexing run outside the webhook request, from a jobs table **(open: Supabase queue/cron or a hosted job runner)**. | #11, #13 |
+| Background work | Scheduled jobs: Vercel Cron calls a route in the web app ([decision](decisions/0005-scheduled-jobs.md)). Extraction and indexing run outside the webhook request, from a jobs table **(open: Supabase queue or a hosted job runner)**. | #11, #12, #13 |
 | Calculations | `packages/calc`: cost split, due dates. | #6, #7 |
 | Reminders | A daily scheduled job finds what is due (via `calc`) and sends one digest per person. Each sent item is recorded so it is not sent twice. Sent through Resend from `heynewton.app`, like sign-in mail ([decision](decisions/0003-email-provider.md)). | #12 |
 | Document search | Manuals split into chunks with page numbers, embedded into pgvector in the same database, under the same RLS. Voyage AI `voyage-4` at 1024 dimensions ([decision](decisions/0004-embeddings.md)). Indexing runs when a document becomes a manual, as a background job. | #13 |
@@ -301,12 +310,12 @@ who aren't us.
 
 Each becomes a record in `docs/decisions/` when the issue that needs it starts. Decided so far:
 [0001 Auth](decisions/0001-auth.md), [0002 Screen sizes](decisions/0002-screen-sizes.md),
-[0003 Email provider](decisions/0003-email-provider.md), [0004 Embeddings](decisions/0004-embeddings.md).
+[0003 Email provider](decisions/0003-email-provider.md), [0004 Embeddings](decisions/0004-embeddings.md),
+[0005 Scheduled jobs](decisions/0005-scheduled-jobs.md).
 
 | Decision | Needed by | Notes |
 | --- | --- | --- |
-| Hosting for the web app | #19 | Vercel proposed. |
-| Where background jobs run | #11, #12 | Supabase (queues, cron, edge functions) or a job runner next to the web app. |
+| Where queued background work runs | #11 | Scheduled jobs are decided ([0005](decisions/0005-scheduled-jobs.md)); work that follows an event (extraction, indexing) needs a queue: Supabase queues or a job runner next to the web app. |
 | Tide source outside the US | Phase 2 | NOAA is US only. |
 | On-device voice engines | Phase 2 | Wake word, speech-to-text, text-to-speech, all offline. |
 | Phone offline store and sync | Phase 2 | Conflict rules for logs written offline. |
