@@ -118,6 +118,9 @@ isOneToOne: false
 "can_write_boat":
 { Args: { "boat": string }; Returns: boolean
                            },
+"create_boat":
+{ Args: { "boat_name": string }; Returns: string
+                           },
 "current_person_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
