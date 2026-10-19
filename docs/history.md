@@ -74,7 +74,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#PR](https://github.com/heynewton/newton/pull/PR) · Sign-in emails from heynewton.app: Resend chosen, with the setup steps
+- [#66](https://github.com/heynewton/newton/pull/66) · Sign-in emails from heynewton.app: Resend chosen, with the setup steps
 
 ### What's next
 

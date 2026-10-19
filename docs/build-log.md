@@ -1304,5 +1304,5 @@ SUPABASE_ACCESS_TOKEN, SUPABASE_DEV_DB_PASSWORD and SUPABASE_DEV_PROJECT_REF are
 - `docs/tokens.md` (#65) hadn't merged, so the record lists what to add there instead.
 - The PR says "Refs #61": the issue closes once the setup is done and a sign-in email arrives.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#66](https://github.com/heynewton/newton/pull/66)
 
