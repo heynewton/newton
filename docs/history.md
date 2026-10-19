@@ -22,6 +22,7 @@ Workflow, board and process: how changes land, how issues are picked up, and how
 - [#44](https://github.com/heynewton/newton/pull/44) · 2026-10-19 · Up to four issues in progress, and the board opens on the Kanban view
 - [#56](https://github.com/heynewton/newton/pull/56) · 2026-10-19 · Open the spec and team docs from the repo, and see every PR by phase and topic
 - [#55](https://github.com/heynewton/newton/pull/55) · 2026-10-19 · A brief for maintainers: merging, backlog, settings and working with Claude
+- [#57](https://github.com/heynewton/newton/pull/57) · 2026-10-19 · Contributor guide no longer mentions the in-progress limit
 
 ### Architecture and decisions
 
