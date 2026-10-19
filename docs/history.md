@@ -89,6 +89,7 @@ The Supabase schema, row-level security, sign-in, storage and the sample boat.
 Mail forwarded to a boat's own address, filed as documents.
 
 - [#73](https://github.com/heynewton/newton/pull/73) · 2026-10-19 · Every boat gets its own email address, and mail from its members is filed as documents · closes [#10](https://github.com/heynewton/newton/issues/10)
+- [#100](https://github.com/heynewton/newton/pull/100) · 2026-10-19 · Email-in setup on the dev site: webhook, key and settings in place
 
 ### Web app features
 
