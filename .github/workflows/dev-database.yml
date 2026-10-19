@@ -41,7 +41,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Link newton-dev
-        run: npx supabase link --debug --project-ref "${{ vars.SUPABASE_DEV_PROJECT_REF }}"
+        run: npx supabase link --project-ref "${{ vars.SUPABASE_DEV_PROJECT_REF }}"
       # supabase link saves the pooler URL (IPv4, which GitHub runners need) without the password.
       - name: Point psql at the dev pooler
         run: |
@@ -60,6 +60,7 @@ jobs:
       - name: Seed loads (rolled back)
         if: github.event_name == 'pull_request'
         run: |
+          psql -v ON_ERROR_STOP=1 -At -c "select 'psql reaches dev as ' || current_user"
           if [ "$(jq '.migrations | length' dry-run.json)" != "0" ]; then
             echo "::notice::This PR has migrations dev doesn't have yet, so the seed is only checked after merge."
             exit 0
