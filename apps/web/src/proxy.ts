@@ -15,6 +15,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Every page, but not static files or images.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  // Every page, but not static files, images or the email-in webhook (no session there).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/email-in|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

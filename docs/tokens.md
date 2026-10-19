@@ -25,6 +25,7 @@ Rules for all of them:
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
+| `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | Project Resend account; that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment |
 | `ANTHROPIC_API_KEY` | secret | Anthropic | Project Claude Console account | Manual Q&A (`packages/agent`, #14): the live eval, and the app once it calls it | Local `.env` for the eval; the app's environment later. Not in CI |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
@@ -141,8 +142,39 @@ key per Supabase project, so revoking one doesn't break the other.
 - **Stored in:** pasted straight into Supabase → that project → Authentication → Emails → SMTP
   Settings (password field), with host `smtp.resend.com`, port `465`, user `resend`. Not saved
   anywhere else: a lost key is replaced, not recovered.
-- **Later (#10):** the inbound webhook adds a key that can read received mail, and the webhook
-  signing secret, both in Vercel's environment variables. Add them here then.
+
+## Email-in (`RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`)
+
+The `/api/email-in` webhook (#10) reads received mail from Resend and writes to the database
+without a signed-in person. Setup steps are in [decision 0003](decisions/0003-email-provider.md#3b-email-in-webhook-10).
+
+| Variable | Issued by | Permission | Stored in |
+| --- | --- | --- | --- |
+| `RESEND_API_KEY` | Resend, key `email-in-newton-dev` (`email-in-newton-prod` for #63) | Must read received emails, which "Sending access" can't; the narrowest that can (not confirmed yet) | Vercel env vars of the deployment it belongs to, marked Sensitive |
+| `RESEND_WEBHOOK_SECRET` | Resend, per webhook endpoint (`whsec_…`) | Checks that a request comes from Resend | Same |
+| `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/email-in.ts` and `lib/db/reminders.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
+| `INBOUND_EMAIL_DOMAIN` | — (not secret) | `boats.heynewton.app` | Same |
+
+- **Expiry:** none of them expire on their own. Rotate yearly with the other Resend keys; a new
+  webhook secret is made with Resend's rotate button.
+- **Locally:** `apps/web/.env.local`, with the local stack's secret key from `npm run db:start`.
+
+## Reminders (`CRON_SECRET`, `RESEND_API_KEY`, `SUPABASE_SECRET_KEY`)
+
+The daily reminders job (#12, [decision 0005](decisions/0005-scheduled-jobs.md)) is a route that
+Vercel Cron calls, reads every boat without a signed-in person, and sends email through Resend's
+API.
+
+| Variable | Issued by | Permission | Stored in |
+| --- | --- | --- | --- |
+| `CRON_SECRET` | Us: a random string of 32+ characters (`openssl rand -hex 32`) | Vercel sends it as `Authorization: Bearer …`; the route refuses calls without it | Vercel env vars of `heynewton-web` (Production target), marked Sensitive |
+| `RESEND_API_KEY` | Resend: the same key as email-in (`email-in-newton-dev`, see above), which can also send | Sending from `heynewton.app` | Same |
+| `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/reminders.ts` and `lib/db/email-in.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
+| `SITE_URL` | — (not secret) | Links in the email: `https://heynewton-web.vercel.app` on dev | Same |
+
+- **Expiry:** none of them expire on their own. Rotate yearly with the other keys.
+- **Locally:** `apps/web/.env.local`; call the route with
+  `curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/reminders`.
 
 
 Use the same choices for `newton-prod`:

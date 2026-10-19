@@ -1751,6 +1751,101 @@ Ok with the 6 and the order you defined.
 
 **Pull request:** [#85](https://github.com/heynewton/newton/pull/85)
 
+## Every boat gets its own email address
+
+**Prompt**
+
+The overnight plan (see "History and architecture catch up with what has merged"), item 2:
+
+````text
+Ok with the 6 and the order you defined.
+Ok with resend for inbound
+````
+
+**What Claude did**
+
+- **Addresses:** every boat gets an `email_alias`, its name plus six random characters
+  (`kittiwake-x7k2qd`), set by a trigger when the boat is created and not editable through the
+  API, so the address can't be guessed or changed to a guessable one. The address is the alias at
+  `INBOUND_EMAIL_DOMAIN` (`boats.heynewton.app`), shown on the boat's page under Documents and in
+  the first next step, which is no longer "Coming soon".
+- **Who counts as a member:** `match_inbound_email(alias, sender)` finds the boat and the member
+  whose sign-in address or verified `sender_addresses` entry is the From address. The new
+  `sender_addresses` table is seeded from the fixture's verified senders; confirming new ones by
+  email stays in #27.
+- **The webhook** (`/api/email-in`) checks Resend's Svix signature (written with `node:crypto`,
+  tested, no new runtime dependency), then:
+  - from a member: records the message in `inbound_emails`, downloads the original message
+    (`.eml`) and the attachments from Resend's API, and stores each as a document of the boat
+    (`source` email; type `email` for the message, `unsorted` for attachments, for #11 to sort),
+    linked to the message, with the email's received date;
+  - from anyone else: holds it. Only the sender, subject and attachment count are kept, and
+    nothing is downloaded. Owners and co-owners can see held mail through RLS; crew and
+    read-only members only see filed mail.
+  - a retried delivery is a no-op, and one that failed halfway finishes on the retry without
+    copies (unique provider ID, fixed storage paths, `completed_at`).
+- **Tests:** the five fixture emails run through the filing code with a fake Resend built from
+  the `.eml` files (`postal-mime`, dev only): 01–04 are filed with the exact fixture PDFs, 05 is
+  held without any download. Plus signature, retry, inline-image and address tests (40 web
+  tests), and 25 pgTAP tests for addresses, matching and RLS.
+- **Docs:** setup steps for the webhook in decision 0003, the new secrets in `docs/tokens.md`, the
+  architecture's Today section, and the fixtures README.
+
+**What changed along the way**
+
+- Resend's docs site wasn't reachable from the session, so the API shapes (received email with
+  a `raw` download link, attachments list with `download_url`, the `email.received` payload) come
+  from the types in Resend's own Node SDK (`resend@6.34.1`).
+- Inbound mail was decided in 0003 already, so no new decision record: the issue's first item was
+  covered by #66.
+- Owners need a way to see held mail and let it in, and the boat's address may need changing if
+  it leaks. Both are left for follow-up issues.
+
+**Pull request:** [#73](https://github.com/heynewton/newton/pull/73)
+
+## One email digest of what is overdue or coming up
+
+**Prompt**
+
+The overnight plan (see "History and architecture catch up with what has merged"), item 3:
+
+````text
+Ok with the 6 and the order you defined.
+````
+
+**What Claude did**
+
+- **Where it runs** ([decision 0005](decisions/0005-scheduled-jobs.md)): Vercel Cron calls
+  `GET /api/reminders` daily at 07:00 UTC with `CRON_SECRET`. It's a route in the web app, so it
+  reuses `packages/calc` through `lib/records` exactly as the boat page does. Supabase Edge
+  Functions (Deno, a second build of calc) and GitHub Actions schedules (late or skipped when
+  busy) were the alternatives. The queue for #11 stays open.
+- **What goes in a digest:** for every boat, `schedule()` finds what is overdue or due within
+  30 days (or 25 engine hours). Each owner and co-owner gets one email across all their boats,
+  with each item's due date, what it was worked out from ("Last done 18 Apr 2026 at 1,371 h,
+  every 6 months or 100 h"), its source document or "entered by hand", and the date it was
+  worked out.
+- **Not twice:** `reminders_sent` records every item sent, unique per person, item, due date and
+  status. So an item is reminded once when it comes up and once more if it becomes overdue; a
+  new due date (renewed, or done again) starts over. Resend gets an idempotency key per person
+  and day, so a retried run doesn't send twice either. One person's failed send doesn't stop the
+  others, and they get theirs on the next run.
+- The "when is it due" wording (`dueLine`, `interval`, `hours`) moved from the boat page into
+  `lib/records`, so the page and the email say the same thing.
+- **Tests:** 10 unit tests on Kittiwake's records (on 19 Oct 2026 the anodes are overdue for
+  Alex, Sam and Jordan, but not Riley who is crew; the registration comes up on 1 Dec; no
+  repeats; reminded again when overdue; one digest across two boats; HTML escaping; a failed
+  send retried the next day), and 8 pgTAP tests for `reminders_sent`.
+
+**What changed along the way**
+
+- The issue says "not sent twice for the same due date". Claude reads that as no repeats of the
+  same news, and sends one more reminder when a coming-up item becomes overdue, since that's
+  when it matters most. Easy to drop (one line in `sentKey`) if the maintainer prefers a single
+  reminder.
+
+**Pull request:** [#77](https://github.com/heynewton/newton/pull/77)
+
 ## Answers from the boat's manuals, with the page they came from
 
 **Prompt**
