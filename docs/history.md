@@ -37,6 +37,7 @@ The architecture page, the phase order and the recorded decisions.
 - [#48](https://github.com/heynewton/newton/pull/48) · 2026-10-19 · Plan for separate dev and prod databases in Phase 1, before real boat data
 - [#66](https://github.com/heynewton/newton/pull/66) · 2026-10-19 · Sign-in emails from heynewton.app: Resend chosen, with the setup steps
 - [#72](https://github.com/heynewton/newton/pull/72) · 2026-10-19 · History and architecture status catch up with what has merged
+- [#96](https://github.com/heynewton/newton/pull/96) · 2026-10-19 · The architecture page explains what Voyage and Claude each do, and what code checks
 
 ### Repo and infrastructure
 
