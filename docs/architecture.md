@@ -141,14 +141,14 @@ co-owners see who owes whom; questions about the manuals are answered with sourc
 | Web app and API | Next.js in `apps/web`: pages for people, route handlers for webhooks and the API. One deployable. Two layouts, phone and wide, tested at three widths ([decision](decisions/0002-screen-sizes.md)). | #15, #31 |
 | Hosting | Vercel, with a preview link on every PR and a dev site from `main` (#30). heynewton.app points at the dev site for now. | #19, #35 |
 | Dev and prod | Two hosted Supabase projects and two Vercel deployments. **Dev** (`newton-dev`, migrated and seeded from `main` since #60) backs the dev site and PR previews, holds only fixture data, and is loaded from `supabase/seed.sql`. **Prod** backs heynewton.app, holds our own boat's real data, and is never seeded. Both get the same checked-in migrations from `main`, and dev and previews have no prod keys. Lands before the first real boat data arrives (email-in, #10) or anyone outside the team signs in. | #37, #60 |
-| Database and auth | Supabase Postgres with RLS. Migrations checked in under `supabase/`, local stack via the Supabase CLI. Supabase Auth: email magic link first, then Google and Apple ([decision](decisions/0001-auth.md)). RLS policies go through a `current_person_id()` function, so the auth provider can change without rewriting them. | #5, #27 |
+| Database and auth | Supabase Postgres with RLS. Migrations checked in under `supabase/`, local stack via the Supabase CLI. Supabase Auth: email magic link first, then Google and Apple ([decision](decisions/0001-auth.md)). Sign-in emails go through Resend's SMTP from `noreply@heynewton.app` ([decision](decisions/0003-email-provider.md)). RLS policies go through a `current_person_id()` function, so the auth provider can change without rewriting them. | #5, #27, #61 |
 | Records | Tables: `boats`, `people` (Newton's own ID; the auth provider's ID only in `auth_subject`; verified sender addresses for email-in), `memberships` (role, ownership share), `documents`, `renewals`, `maintenance_items`, `expenses`. Each record can link to its source document. | #5, #8, #9, #27 |
 | File storage | Supabase Storage: a private `documents` bucket, one folder per boat (`<boat_id>/…`), protected by storage RLS policies with the same roles as the `documents` table. Files are never overwritten; a correction is a new file. | #8 |
-| Email-in | An inbound email provider **(open)** posts each message to a webhook in the web app. The webhook stores the raw email and attachments as documents of that boat and returns quickly. Mail from senders who are not members is held, not filed. Senders are matched against each person's verified sender addresses, not their login, since an Apple login can be a relay address. | #10, #27 |
+| Email-in | Resend ([decision](decisions/0003-email-provider.md)) receives every address on `boats.heynewton.app` and posts each message to a webhook in the web app. The webhook checks the signature, fetches the body and attachments from Resend's API, stores the email and its attachments as documents of that boat and returns quickly. Mail from senders who are not members is held, not filed. Senders are matched against each person's verified sender addresses, not their login, since an Apple login can be a relay address. | #10, #27 |
 | Extraction | Claude classifies each document and proposes fields. `calc` parses and validates dates and amounts before anything is saved. Low-confidence results are flagged for review. | #11 |
 | Background work | Extraction and indexing run outside the webhook request, from a jobs table **(open: Supabase queue/cron or a hosted job runner)**. | #11, #13 |
 | Calculations | `packages/calc`: cost split, due dates. | #6, #7 |
-| Reminders | A daily scheduled job finds what is due (via `calc`) and sends one digest per person. Each sent item is recorded so it is not sent twice. Outbound email provider **(open)**, likely the same as inbound. | #12 |
+| Reminders | A daily scheduled job finds what is due (via `calc`) and sends one digest per person. Each sent item is recorded so it is not sent twice. Sent through Resend from `heynewton.app`, like sign-in mail ([decision](decisions/0003-email-provider.md)). | #12 |
 | Document search | Manuals split into chunks with page numbers, embedded into pgvector in the same database, under the same RLS. Embedding provider **(open)**. | #13 |
 | Q&A | Claude with tool use: document search and record lookup. Answers cite the document and page, and say so when the manuals don't cover the question. | #14 |
 | Export | One archive per boat: every record as JSON plus every file. Owners and co-owners only. | #16 |
@@ -292,12 +292,12 @@ who aren't us.
 ## Open decisions
 
 Each becomes a record in `docs/decisions/` when the issue that needs it starts. Decided so far:
-[0001 Auth](decisions/0001-auth.md), [0002 Screen sizes](decisions/0002-screen-sizes.md).
+[0001 Auth](decisions/0001-auth.md), [0002 Screen sizes](decisions/0002-screen-sizes.md),
+[0003 Email provider](decisions/0003-email-provider.md).
 
 | Decision | Needed by | Notes |
 | --- | --- | --- |
 | Hosting for the web app | #19 | Vercel proposed. |
-| Inbound (and outbound) email provider | #10, #12 | Must post inbound mail with attachments to a webhook. |
 | Where background jobs run | #11, #12 | Supabase (queues, cron, edge functions) or a job runner next to the web app. |
 | Embedding provider | #13 | Stored in pgvector either way. |
 | Tide source outside the US | Phase 2 | NOAA is US only. |

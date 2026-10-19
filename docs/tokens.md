@@ -24,6 +24,7 @@ Rules for all of them:
 | `SUPABASE_DEV_DB_PASSWORD` | secret | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo secrets, and the project password manager |
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
+| Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
 
 ## `VERCEL_TOKEN`
 
@@ -110,7 +111,21 @@ as Read where possible, and update this table in the same PR.
   only in the `production` environment as `SUPABASE_PROD_DB_PASSWORD`.
 - Both are reset in Supabase → Project Settings → Database. Update the secret right after.
 
-## Supabase project settings chosen at creation
+## Resend SMTP keys
+
+Supabase sends sign-in emails through Resend ([decision](decisions/0003-email-provider.md)). One
+key per Supabase project, so revoking one doesn't break the other.
+
+- **Where:** Resend → API Keys → Create API key, signed in as the project account.
+- **Names:** `supabase-newton-dev`, and `supabase-newton-prod` for #63.
+- **Permission:** Sending access (not Full access), domain `heynewton.app` only.
+- **Expiry:** Resend keys don't expire. Rotate yearly; put the date in the project calendar.
+- **Stored in:** pasted straight into Supabase → that project → Authentication → Emails → SMTP
+  Settings (password field), with host `smtp.resend.com`, port `465`, user `resend`. Not saved
+  anywhere else: a lost key is replaced, not recovered.
+- **Later (#10):** the inbound webhook adds a key that can read received mail, and the webhook
+  signing secret, both in Vercel's environment variables. Add them here then.
+
 
 Use the same choices for `newton-prod`:
 
@@ -123,3 +138,4 @@ Use the same choices for `newton-prod`:
 
 Your local stack still exposes new tables by default, so a migration that forgets its `grant`
 lines works on a laptop but not on the hosted projects. Previews on dev (#62) catch that.
+## Supabase project settings chosen at creation
