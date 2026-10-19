@@ -72,7 +72,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- README links to every page in `docs/` (PR link added once opened)
+- [#58](https://github.com/heynewton/newton/pull/58) · README links to every page in `docs/`
 
 ### What's next
 

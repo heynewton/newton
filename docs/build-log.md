@@ -1250,4 +1250,4 @@ contributin.md (should we move contributing into docs, or not because it's commo
 
 - Moved #55 and #56 from **In progress** to "How we work" in `docs/history.md`, now that they merged.
 
-**Pull request:** (added once opened)
+**Pull request:** [#58](https://github.com/heynewton/newton/pull/58)
