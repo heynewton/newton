@@ -276,8 +276,17 @@ describe("parseMailbox", () => {
     ['"Sample, Alex" <alex@example.com>', { address: "alex@example.com", name: "Sample, Alex" }],
     ["<alex@example.com>", { address: "alex@example.com", name: null }],
     [" alex@example.com ", { address: "alex@example.com", name: null }],
+    ["Alex <Sample> <alex@example.com>", { address: "alex@example.com", name: "Alex <Sample>" }],
   ])("%s", (value, expected) => {
     expect(parseMailbox(value)).toEqual(expected);
+  });
+
+  it("stays fast on long hostile input", () => {
+    const start = performance.now();
+    parseMailbox(`${" ".repeat(100_000)}x`);
+    parseMailbox(`"${" ".repeat(100_000)}<a@b>`);
+    safeFilename(`${"-".repeat(100_000)}x`, "f");
+    expect(performance.now() - start).toBeLessThan(200);
   });
 });
 

@@ -83,10 +83,27 @@ export function boatEmailAddress(alias: string, inboundDomain: string | undefine
 }
 
 // Splits `Name <address>` into its parts. A bare address has no name.
+// String slicing rather than a regular expression, since the value comes from whoever sent the
+// mail and a backtracking pattern can be made slow.
 export function parseMailbox(value: string): { address: string; name: string | null } {
-  const match = /^\s*(?:"?([^"<]*?)"?\s*)?<([^<>\s]+)>\s*$/.exec(value);
-  if (match) return { address: match[2].toLowerCase(), name: match[1]?.trim() || null };
-  return { address: value.trim().toLowerCase(), name: null };
+  const trimmed = value.trim();
+  const open = trimmed.lastIndexOf("<");
+  if (open >= 0 && trimmed.endsWith(">")) {
+    const address = trimmed.slice(open + 1, -1).trim().toLowerCase();
+    let name = trimmed.slice(0, open).trim();
+    if (name.length >= 2 && name.startsWith('"') && name.endsWith('"')) name = name.slice(1, -1).trim();
+    return { address, name: name || null };
+  }
+  return { address: trimmed.toLowerCase(), name: null };
+}
+
+// Drops these characters from both ends.
+function trimChars(value: string, chars: string): string {
+  let start = 0;
+  let end = value.length;
+  while (start < end && chars.includes(value[start])) start++;
+  while (end > start && chars.includes(value[end - 1])) end--;
+  return value.slice(start, end);
 }
 
 // The boat aliases a message was sent to on our inbound domain, in order, without repeats.
@@ -112,15 +129,14 @@ export function safeFilename(name: string | null, fallback: string): string {
   const cleaned = (name ?? "")
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
-    .replace(/[^A-Za-z0-9._-]+/g, "-")
-    .replace(/^[-.]+|-+$/g, "")
-    .slice(-100);
-  return cleaned || fallback;
+    .replace(/[^A-Za-z0-9._-]+/g, "-");
+  const trimmed = trimChars(trimChars(cleaned, "-.").slice(-100), "-.");
+  return trimmed || fallback;
 }
 
 // The original message's filename, shown on the boat's page: its subject, or "Email".
 export function messageFilename(subject: string | null): string {
-  const base = (subject ?? "").replace(/[\u0000-\u001f/\\]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
+  const base = (subject ?? "").replace(/[\u0000-\u001f/\\\s]+/g, " ").trim().slice(0, 120);
   return `${base || "Email"}.eml`;
 }
 
