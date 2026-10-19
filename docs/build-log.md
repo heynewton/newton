@@ -1639,6 +1639,91 @@ Ok with calc phase 2
 
 **Pull request:** [#81](https://github.com/heynewton/newton/pull/81)
 
+## Phase 2 calculations: bearing, distance and time to a mark
+
+**Prompt**
+
+The overnight plan (see "History and architecture catch up with what has merged"), item 4:
+
+````text
+Ok with calc phase 2
+````
+
+**What Claude did**
+
+- `bearingAndDistance(from, to)` in `packages/calc`: initial great-circle bearing (degrees true)
+  and distance (nautical miles) by the haversine formula on the mean Earth radius. The same point
+  has no bearing (null) rather than a made-up 0°.
+- `timeToMark(distanceNm, speedKnots, now)`: minutes en route and the ETA to the second, or no
+  answer below 0.1 kn, since "infinity" isn't an ETA.
+- 12 tests: the published Land's End to John o' Groats example (968.9 km, 009°07′11″), one degree
+  along a meridian and the equator and back, the antimeridian, a mark 0.5 nm away at 045°, the
+  same point, invalid positions, and ETAs across time zones.
+
+**What changed along the way**
+
+- Spherical rather than ellipsoidal: over a day's sailing the difference is a fraction of a
+  percent, well under GPS and chart error. Rhumb lines were left out; a boat steers a course to a
+  mark it can usually see.
+
+**Pull request:** [#83](https://github.com/heynewton/newton/pull/83)
+
+## Phase 2 calculations: course to steer for tidal stream and leeway
+
+**Prompt**
+
+The overnight plan (see "History and architecture catch up with what has merged"), item 4:
+
+````text
+Ok with calc phase 2
+````
+
+**What Claude did**
+
+- `courseToSteer({ track, boatSpeed, tide, leeway })` in `packages/calc`: the vector triangle
+  navigators draw on the chart. It splits the stream into its parts across and along the track,
+  points the boat upstream just enough to cancel the cross-track part, then steers into the wind
+  by the leeway. It returns the heading, the expected speed over the ground, and each correction
+  separately, so the answer can say why ("23.6° to port for the stream").
+- When the stream across the track is faster than the boat, or the stream against it is, it says
+  the track can't be held instead of returning a number.
+- 11 tests: no stream, stream with and against, the classic example (track 090°, 5 kn, stream
+  180° at 2 kn: steer 066.4°, 4.58 kn over the ground), leeway on either tack and across north,
+  and an independent check that adding the boat's vector (less leeway) and the stream's lands
+  exactly on the track for four mixed cases.
+
+**What changed along the way**
+
+- The track is an input, so this didn't need #79 first; the issue's "Blocked by" line was taken
+  out.
+
+**Pull request:** [#84](https://github.com/heynewton/newton/pull/84)
+
+## Test coverage on every PR
+
+**Prompt**
+
+The overnight plan (see "History and architecture catch up with what has merged"), item 5:
+
+````text
+Ok with the 6 and the order you defined.
+````
+
+**What Claude did**
+
+- `@vitest/coverage-v8` (matching Vitest 5.0.5) in each workspace, and `npm run test:coverage`
+  at the root, which runs every workspace's tests with coverage.
+- `packages/calc/vitest.config.ts`: at least 95% of lines and branches, or the run fails
+  (today 98.4% and 97.0%). The other workspaces are reported, not gated, as the issue asks.
+- CI's `check` job runs `test:coverage` instead of `npm test`, then
+  `davelosert/vitest-coverage-report-action@v2` once per workspace: a PR comment per workspace that
+  is edited on later pushes, and the job summary. Fork PRs get a read-only token, so they skip the
+  comment (`comment-on: none`) and keep the summary. The report runs even when the threshold
+  fails, so the comment shows why.
+- `docs/process.md` (Definition of Done) and the `ship-change` skill mention the bar and the report.
+
+**Pull request:** [#86](https://github.com/heynewton/newton/pull/86)
+
 ## Every boat gets its own email address
 
 **Prompt**
