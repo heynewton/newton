@@ -1,6 +1,6 @@
 # 0003: Resend for sign-in mail and email-in
 
-**Status:** Decided, 2026-10-18. Setup pending (the maintainer's steps below). **Issues:** #61, #10, #12, #63.
+**Status:** Decided, 2026-10-18. Setup in progress: both domains added to Resend and their DNS records in Cloudflare (2026-10-19); the SMTP key and Supabase settings are next. **Issues:** #61, #10, #12, #63.
 
 ## Context
 
@@ -43,8 +43,8 @@ until we outgrow it.
   Its MX record points only that subdomain at Resend, which catches every address on it. #10
   decides the address format (for example `<boat>@boats.heynewton.app`) and how the webhook maps
   an address to a boat.
-- **Sending region:** the region nearest the Supabase projects (Ireland if they are in Europe,
-  otherwise US East). It's set per domain when it's added; moving later needs Resend support.
+- **Sending region:** US East (`us-east-1`), the same as `newton-dev`. It's set per domain when
+  it's added; moving later needs Resend support. Prod (#63) uses the same region as dev.
 - **Inbound flow for #10:** Resend posts `email.received` with metadata only. The webhook checks
   the Svix signature ([verifying](https://resend.com/docs/dashboard/webhooks/verify-webhooks-requests)),
   then fetches the body through the Received Emails API and each attachment from a download link
@@ -114,14 +114,16 @@ typed from this page.
 
 ### 2. Sending domain `heynewton.app`
 
-- [ ] Resend → Domains → Add domain → `heynewton.app`. Region: the one nearest the Supabase
-      projects (see the Decision). Leave receiving **off** for this domain.
+- [ ] Resend → Domains → Add domain → `heynewton.app`. Region: US East (`us-east-1`), like the
+      Supabase projects. Leave receiving **off** for this domain.
 - [ ] Resend shows the records to add. Add each in Cloudflare → `heynewton.app` → DNS → Records,
       copying name, type, value and priority exactly:
   - **TXT** `resend._domainkey`: the DKIM key.
   - **MX** `send`: the bounce (return-path) server, with the priority Resend shows.
   - **TXT** `send`: the SPF record for the return path (`v=spf1 include:…`).
-  - Set Cloudflare's proxy to **DNS only** where it offers one (MX and TXT have none).
+  - **CNAME** `rsend`: Resend's sending host.
+  - Set Cloudflare's proxy to **DNS only** on the CNAME (MX and TXT have no proxy). A proxied
+    CNAME fails verification.
 - [ ] If `heynewton.app` has no `_dmarc` record yet, add **TXT** `_dmarc` with
       `v=DMARC1; p=none; rua=mailto:dev@heynewton.app`. Tighten to `p=quarantine` after a few weeks
       of clean reports.
@@ -135,7 +137,7 @@ typed from this page.
 Can wait until #10 starts, but doing it now proves the DNS in one go.
 
 - [ ] Resend → Domains → Add domain → `boats.heynewton.app`, same region. Add the records it shows
-      in Cloudflare the same way (DKIM and return path under `boats`).
+      in Cloudflare the same way (`resend._domainkey.boats`, `send.boats`, `rsend.boats`).
 - [ ] Turn **receiving on** for this domain and add the **MX** record for `boats` that Resend shows.
       It must be the only MX on `boats`.
 - [ ] Wait for the receiving record to show **Verified**. Send a test email to any address
@@ -178,16 +180,5 @@ Can wait until #10 starts, but doing it now proves the DNS in one go.
 
 ### 7. Write it down
 
-- [ ] Add Resend to `docs/tokens.md` (see the next section) in the PR that records the setup.
-
-### For `docs/tokens.md`
-
-`docs/tokens.md` (PR #65) wasn't on `main` when this record was written. Once it is, add:
-
-- An overview row: `RESEND_SMTP_KEY_DEV` / `_PROD` (not a GitHub secret) · Resend · Project Resend
-  account (Free) · Supabase Auth SMTP of `newton-dev` / `newton-prod` · Supabase only.
-- A section like the Vercel one: where (Resend → API Keys), name (`supabase-newton-dev`,
-  `supabase-newton-prod`), permission (Sending access, `heynewton.app` only), expiry (none; rotate
-  yearly), stored in (the matching Supabase project's SMTP settings only).
-- Later, #10 adds the inbound key (the narrowest permission that can read received mail, stored in
-  Vercel's environment variables) and the webhook signing secret.
+- [ ] Check the key's settings in Resend against [Resend SMTP keys](../tokens.md#resend-smtp-keys)
+      in `docs/tokens.md`, and correct that section if they differ.
