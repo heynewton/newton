@@ -32,5 +32,8 @@ start 97
 - The local Supabase stack wouldn't start in the cloud container (Docker Hub and ECR rate
   limits). The real sign-in is therefore left to the PR's preview; a local production build
   checked the page and the route's 404, 403 and 503 answers.
+- `SUPABASE_SECRET_KEY` turned out to be on Vercel's Preview target already; the maintainer added
+  it to Production. After a re-run of Deploy, choosing "Alex Sample" on the PR's preview signed in
+  and opened Kittiwake's page.
 
 **Pull request:** [#99](https://github.com/heynewton/newton/pull/99)
