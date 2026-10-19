@@ -154,12 +154,12 @@ The web app's `/api/email-in` route files mail sent to boats' addresses. It need
 where it runs, and the Supabase URL and keys from #62. Real boats' mail must only ever reach prod
 (#63, #37), so on dev, send test mail to test boats only.
 
-- [ ] Resend → Webhooks → Add endpoint: `https://heynewton-web.vercel.app/api/email-in` (the dev
+- [x] Resend → Webhooks → Add endpoint: `https://heynewton-web.vercel.app/api/email-in` (the dev
       site), event `email.received` only. Copy its signing secret (`whsec_…`).
-- [ ] Resend → API Keys → Create API key `email-in-newton-dev`. Reading received mail needs more
+- [x] Resend → API Keys → Create API key `email-in-newton-dev`. Reading received mail needs more
       than "Sending access"; pick the narrowest permission that can read received emails (at the
       time of writing, "Full access") and write down which one in `docs/tokens.md`.
-- [ ] Vercel → `heynewton-web` → Settings → Environment Variables, for Preview and Production
+- [x] Vercel → `heynewton-web` → Settings → Environment Variables, for Preview and Production
       (both are dev while #63 is open): `RESEND_WEBHOOK_SECRET`, `RESEND_API_KEY`,
       `INBOUND_EMAIL_DOMAIN=boats.heynewton.app`, and `SUPABASE_SECRET_KEY` (newton-dev → Project
       Settings → API Keys → secret key). Mark the secrets **Sensitive**. Redeploy.
