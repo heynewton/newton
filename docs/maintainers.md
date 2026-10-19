@@ -43,9 +43,11 @@ every change through a PR.
 
 ## Keeping the lights on
 
-- **Secrets** (Settings → Secrets and variables → Actions). `PROJECT_TOKEN` moves board cards and
-  expires: renew it before the date on the token. `VERCEL_TOKEN` deploys previews and the dev site.
-  Both are tied to project accounts, not personal ones.
+- **Secrets** (Settings → Secrets and variables → Actions). [docs/tokens.md](tokens.md) lists
+  every token: who issued it, its exact scope and permissions, where it's stored and when it
+  expires, so it can be renewed or copied for prod. `VERCEL_TOKEN` (deploys) and the Supabase
+  token are on project accounts. `PROJECT_TOKEN` (board cards) belongs to the maintainer who created
+  it, because GitHub tokens always belong to a person.
 - **Leaked secrets.** Secret scanning and push protection are on. If a secret lands in the repo
   anyway, rotate it first; removing it from history is not enough.
 - **Service accounts.** Vercel, Cloudflare (DNS for heynewton.app) and, soon, Supabase are on
