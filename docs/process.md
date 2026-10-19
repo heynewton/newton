@@ -8,7 +8,7 @@ decides what and when.
 
 | Who | Role | Does |
 | --- | --- | --- |
-| Maintainer | Product owner | Orders the backlog, makes product calls, reviews and merges. Merging is acceptance. |
+| Maintainers | Product owners | Order the backlog, make product calls, review and merge. Merging is acceptance. See the [maintainer brief](maintainers.md). |
 | Claude (Claude Code) | Dev team | Turns ideas into issues, writes the code, opens PRs, keeps the board and build log current, flags blockers. |
 | Contributors | Reviewers and builders | Review PRs in the areas they care about, try Newton on their own boats, pick up `help wanted` issues. |
 
@@ -49,7 +49,7 @@ of the Ready column. PRs from forks don't move cards, because forks can't read t
 Projects read and write on `heynewton` and read access to this repo's issues and PRs. It expires:
 regenerate it before the date on the token and update the secret, or cards stop moving.
 
-**Who can move cards by hand.** People can, on the board. Local Claude sessions (on the
+**Who can move cards by hand.** People can, on the board. Local Claude sessions (on a
 maintainer's machine) can too, with `gh project item-edit`. Cloud sessions can't: their GitHub
 proxy rejects GraphQL whatever the token, and Projects only has a GraphQL API (see
 [GitHub proxy](https://code.claude.com/docs/en/cloud-environments) in the Claude Code docs). A
@@ -104,9 +104,9 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
 
 | When | What | Who |
 | --- | --- | --- |
-| Weekly, ~15 min | **Planning**: order the top of Ready; refine those issues; turn ideas for the next phase into issues. | Maintainer, Claude |
+| Weekly, ~15 min | **Planning**: order the top of Ready; refine those issues; turn ideas for the next phase into issues. | Maintainers, Claude |
 | Continuously | **Flow**: take the top unblocked Ready issue, ship it with the `ship-change` skill. | Claude, contributors |
-| Weekly | **Review**: demo what merged, on real boat data kept locally. A short update to contributors, based on the build log. | Maintainer, contributors |
+| Weekly | **Review**: demo what merged, on real boat data kept locally. A short update to contributors, based on the build log. | Maintainers, contributors |
 | Monthly | **Retro**: what slowed us down, what broke, what to change. Changes go into CLAUDE.md or the skill. | Everyone |
 
 ## Order of work
