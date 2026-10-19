@@ -76,7 +76,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#PR](https://github.com/heynewton/newton/pull/PR) · Bearing, distance and time to a mark from the boat's position (Phase 2)
+- [#83](https://github.com/heynewton/newton/pull/83) · Bearing, distance and time to a mark from the boat's position (Phase 2)
 - [#70](https://github.com/heynewton/newton/pull/70) · A boat's page shows its renewals, maintenance, co-owner balance and documents
 - [#65](https://github.com/heynewton/newton/pull/65) · Every token written down, so prod gets exactly the same ones
 - [#68](https://github.com/heynewton/newton/pull/68) · A hosted dev database, migrated and seeded from every merge to `main`

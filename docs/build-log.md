@@ -1593,4 +1593,4 @@ Ok with calc phase 2
   percent, well under GPS and chart error. Rhumb lines were left out; a boat steers a course to a
   mark it can usually see.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#83](https://github.com/heynewton/newton/pull/83)
