@@ -27,7 +27,9 @@ Rules for all of them:
 | `SUPABASE_DEV_URL`, `SUPABASE_DEV_PUBLISHABLE_KEY` | variables | Supabase | `newton-dev` project | `.github/workflows/deploy.yml`: the dev site and previews (#62) | Repo variables (not secret) |
 | `FIXTURE_SIGN_IN` | flag (not secret) | us | — | "Sign in as…" the sample boat's people on the dev site and previews (#97) | `.github/workflows/deploy.yml` (always `1` there); nowhere else |
 | `SUPABASE_SECRET_KEY` of `newton-dev` | secret | Supabase | `newton-dev` project | Fixture sign-in on the dev site and previews (#97), besides email-in and reminders | Vercel env vars of `heynewton-web`, Production (the dev site) and Preview targets |
-| Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
+| `SUPABASE_PROD_ACCESS_TOKEN`, `SUPABASE_PROD_DB_PASSWORD` | secrets | Supabase | Project Supabase account; `newton-prod` project | `.github/workflows/production.yml` (#63) | The `production` environment only |
+| `SUPABASE_PROD_PROJECT_REF`, `SUPABASE_PROD_URL`, `SUPABASE_PROD_PUBLISHABLE_KEY`, `PROD_SITE_URL` | variables | Supabase, Vercel | `newton-prod`; `heynewton-prod` | `.github/workflows/production.yml` (#63) | The `production` environment only (environment variables, not repo variables) |
+| Prod server keys (`SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `CRON_SECRET`) | secrets | Supabase, Resend, us | `newton-prod`; project Resend account | Email-in and reminders on prod (#63) | Vercel env vars of `heynewton-prod`, Production target ([Production](#production)) |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | Project Resend account; that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment |
 | `ANTHROPIC_API_KEY` | secret | Anthropic | `heynewton` org in the Claude Console, one workspace per environment | Manual Q&A (`packages/agent`, #14): the live eval, and the app once it calls it | Local `.env` for the eval; the app's environment later. Not in CI |
@@ -169,7 +171,7 @@ workflow fails if the key doesn't start with `sb_publishable_`.
 - **Used as:** `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`, at build time from the job's
   environment and at run time through `vercel deploy --env`. Nothing is set in Vercel.
 - **Expiry:** none. If the key is rotated in Supabase, update the variable and re-run Deploy.
-- **Prod:** never these. heynewton.app gets its own project and keys with #37.
+- **Prod:** never these. Production has its own keys in the `production` environment ([Production](#production)).
 
 ## Fixture sign-in (`FIXTURE_SIGN_IN`, `SUPABASE_SECRET_KEY`)
 
@@ -191,7 +193,7 @@ email is sent.
 - **Who can use it:** anyone with a preview or dev-site link, since previews are public. They only
   reach fixture data on `newton-dev`. Previews only run for branches of this repo (not forks), so
   only people who can push here can run code next to the key.
-- **Prod:** never. heynewton.app gets its own project with #37, deployed without this flag.
+- **Prod:** never. The Production workflow fails if `FIXTURE_SIGN_IN` is set and checks the route answers 404 there.
 
 `newton-dev`'s Authentication → URL Configuration (set by hand; the access token can't write auth
 settings):
@@ -292,3 +294,69 @@ it until the app asks questions. Tests and CI use a scripted stand-in.
   `set -a && source .env && set +a && npm run eval:manual-qa -w @newton/agent`. Without a key the
   eval is skipped, not failed.
 - **Later:** for prod on Vercel, consider workload identity federation instead of a stored key.
+
+## Production
+
+Everything prod needs, set up once by the maintainer for #63. Same names and settings as dev
+unless a step says otherwise; **never reuse a dev key or value**. Tick these off in the PR or on
+#63 as they're done.
+
+**1. Supabase `newton-prod`**
+
+- [ ] Supabase → New project `newton-prod`, same organisation and the
+      [settings chosen at creation](#supabase-project-settings-chosen-at-creation). Generate the
+      database password and save it in the password manager as "Supabase newton-prod database".
+- [ ] Access token `github-actions-newton-prod`, as described under
+      [Supabase access tokens](#supabase-access-tokens-supabase_dev_access_token-supabase_prod_access_token).
+- [ ] Authentication → URL Configuration: **Site URL** `https://heynewton-prod.vercel.app`,
+      **Redirect URLs** `https://heynewton-prod.vercel.app/**` only (no previews, no dev site).
+      #37 changes both to `https://heynewton.app`.
+- [ ] Authentication → Emails → SMTP: decision 0003, [step 6](decisions/0003-email-provider.md#6-supabase-newton-prod-63)
+      (key `supabase-newton-prod`).
+
+**2. GitHub environment `production`**
+
+- [ ] Repo settings → Environments → New environment `production`. Deployment protection rules:
+      **Required reviewers** the maintainer, **Deployment branches** `main` only.
+- [ ] Environment secrets: `SUPABASE_PROD_ACCESS_TOKEN`, `SUPABASE_PROD_DB_PASSWORD`.
+- [ ] Environment variables: `SUPABASE_PROD_PROJECT_REF`, `SUPABASE_PROD_URL`
+      (`https://<ref>.supabase.co`), `SUPABASE_PROD_PUBLISHABLE_KEY` (`sb_publishable_…`),
+      `PROD_SITE_URL` (`https://heynewton-prod.vercel.app`).
+- [ ] Nothing prod in repo-level secrets or variables, where any workflow could read it.
+
+**3. Vercel `heynewton-prod`**
+
+- [ ] Vercel → Add New → Project `heynewton-prod` on the project's Hobby account, with no Git
+      connection (GitHub Actions deploys it with `VERCEL_TOKEN`, as for dev). The workflow sets its
+      root directory.
+- [ ] Settings → Environment Variables, **Production** target only, secrets marked Sensitive:
+
+| Variable | Value |
+| --- | --- |
+| `SUPABASE_SECRET_KEY` | `newton-prod`'s Secret key |
+| `RESEND_API_KEY` | New Resend key `email-in-newton-prod`, Full access (as dev's) |
+| `RESEND_WEBHOOK_SECRET` | The signing secret of the prod webhook (step 4) |
+| `INBOUND_EMAIL_DOMAIN` | `boats.heynewton.app` |
+| `CRON_SECRET` | A new `openssl rand -hex 32`, not dev's |
+| `SITE_URL` | `https://heynewton-prod.vercel.app` (heynewton.app after #37) |
+
+- [ ] Never `FIXTURE_SIGN_IN`: the Production workflow fails if it's there.
+
+**4. Resend webhook for prod**
+
+- [ ] Decision 0003 [step 3b](decisions/0003-email-provider.md#3b-email-in-webhook-10), last
+      item: a second endpoint `https://heynewton-prod.vercel.app/api/email-in`, event
+      `email.received`. Each webhook ignores addresses that aren't its own project's boats.
+
+**5. First release and checks**
+
+- [ ] Merge the #63 PR, approve the Production run, and check it applied every migration and
+      passed "Fixture sign-in answers 404".
+- [ ] Sign in on the prod URL with a team member's address (the email comes from
+      `noreply@heynewton.app`), add a test boat, email it a PDF from that address: it appears on
+      prod, and the dev webhook's delivery in Resend says `unknown_address`.
+- [ ] `curl -H "Authorization: Bearer <prod CRON_SECRET>" https://heynewton-prod.vercel.app/api/reminders`
+      answers 200, and Vercel → `heynewton-prod` → Cron Jobs lists the daily job.
+- [ ] List env vars on both Vercel projects: no `newton-prod` key on `heynewton-web`, no
+      `newton-dev` key on `heynewton-prod`.
+- [ ] Delete the test boat and the test person from `newton-prod`.

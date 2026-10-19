@@ -203,7 +203,9 @@ where it runs, and the Supabase URL and keys from #62. Real boats' mail must onl
 - [ ] Create a second key, `supabase-newton-prod`, with the same settings, and enter it only in
       `newton-prod`'s SMTP settings. Never one key for both projects: revoking one doesn't break
       the other.
-- [ ] Same sender, rate limit and test, with the prod site's URLs.
+- [ ] Same sender, rate limit and test, with the prod site's URLs (`https://heynewton-prod.vercel.app`
+      until #37). The rest of prod's setup is under [Production](../tokens.md#production) in
+      `docs/tokens.md`.
 
 ### 7. Write it down
 

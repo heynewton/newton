@@ -114,7 +114,7 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
 - [heynewton.app](https://heynewton.app) currently serves the dev site: `www` redirects to it, and the
   DNS records on Cloudflare point at Vercel with the proxy off. That is fine while the site is static
   pages with no data. Still in Phase 1, before the first real boat data arrives or anyone outside
-  the team signs in, the domain moves to a production project with its own Supabase, so previews
+  the team signs in, the domain moves to the production project (see Production below), so previews
   and dev never share a URL or a database with real boat data (#37).
 
 ## Dev database
@@ -133,6 +133,33 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
   `service_role` automatically; the hosted projects don't. A migration that forgets its `grant`
   passes the local tests and then fails on dev, so every migration revokes and grants explicitly.
 - Its tokens and settings are in [tokens.md](tokens.md).
+
+## Production
+
+Production is the Supabase project `newton-prod` and the Vercel project `heynewton-prod`, at
+its own `vercel.app` URL until #37 moves heynewton.app to it. It is where real boat data lives,
+so it is never seeded and nothing on dev or previews holds its keys.
+
+- **Release path.** Merge to `main` → the Dev database workflow migrates and seeds `newton-dev` →
+  when that succeeds, the **Production** workflow (`.github/workflows/production.yml`) starts on
+  the same commit and waits for the maintainer's approval (Actions → the run → **Review
+  deployments** → `production`). Approved, it lists the migrations it will apply, applies them to
+  `newton-prod` (migrations only, no seed), then builds and deploys the web app to
+  `heynewton-prod`. Every PR's preview has already exercised the change against dev.
+- **What to check before approving:** the run's commit, and whether its migrations are safe on
+  data that already exists (dev's seed resets its rows, prod's don't). Leave a run waiting, or
+  reject it, to hold a release; a newer commit waiting for approval replaces it.
+- **Every merge asks**, docs-only ones included, because the Dev database workflow runs on every
+  push. Approving one of those just redeploys the same app.
+- **Fixture sign-in is never on:** the workflow fails if `FIXTURE_SIGN_IN` is set anywhere for
+  production, and after deploying checks that `/auth/fixture-sign-in` answers 404.
+- **Email-in and reminders** run on prod from the `heynewton-prod` project's own env vars: its
+  own Resend webhook and keys, `newton-prod`'s secret key and its own `CRON_SECRET`
+  ([tokens.md](tokens.md#production)). Vercel Cron calls `/api/reminders` on prod daily, as on dev.
+- **The `production` environment** holds every prod value: the Supabase access token and database
+  password (secrets), the project ref, URL, publishable key and site URL (variables). Its
+  deployment protection rule requires the maintainer's review and only allows `main`.
+- **Setup** (once, by the maintainer): the checklist in [tokens.md](tokens.md#production).
 
 ## Rhythm
 
