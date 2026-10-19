@@ -18,7 +18,7 @@ explicit "what was not tested" notes.
 
 ## The board
 
-The [Newton project board](https://github.com/orgs/heynewton/projects/1/views/4) (Kanban view) has five columns:
+The [Newton project board](https://github.com/orgs/heynewton/projects/1/views/5) (Kanban view) has five columns:
 
 **Inbox → Ready → In progress → In review → Done**
 
@@ -29,6 +29,12 @@ The [Newton project board](https://github.com/orgs/heynewton/projects/1/views/4)
 - **In review**: a PR is open and waiting for review.
 - **Done**: merged.
 
+The Kanban view shows each piece of work once: every issue, plus every PR that closes no issue
+(a docs fix, a follow-up). A PR that closes an issue is hidden there, because its issue's card
+already shows the work and links the PR. That's the project's `Kanban` field: `Hidden` for those
+PRs, empty for everything else, and the view filters on `-kanban:Hidden`. The **All items** view
+shows everything.
+
 ### Cards move by themselves
 
 A GitHub Actions workflow (`.github/workflows/board.yml`) moves cards when issues and PRs change:
@@ -38,10 +44,12 @@ A GitHub Actions workflow (`.github/workflows/board.yml`) moves cards when issue
 | An issue is opened | the board, in **Inbox** |
 | An issue in Inbox or Ready is assigned | **In progress** |
 | A draft PR is opened, or a PR goes back to draft | its issues: **In progress** |
-| A PR is opened or marked ready for review | the PR and the issues it closes (`Closes #N`): **In review** |
+| A PR is opened or marked ready for review | the PR and the issues it closes (`Closes #N`): **In review**. The PR is hidden on Kanban if it closes an issue |
 | A PR is merged, or an issue is closed | **Done** |
 | A PR is closed without merging | its open issues: back to **Ready** |
 | An issue is reopened | **Ready** |
+
+Editing a PR that is already merged or closed doesn't move its card.
 
 Two moves stay manual, because they are product decisions: Inbox → Ready (triage), and the order
 of the Ready column. PRs from forks don't move cards, because forks can't read the

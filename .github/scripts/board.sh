@@ -17,12 +17,18 @@ project=$(gql -f org="$ORG" -F n="$PROJECT_NUMBER" -f query='
     organization(login: $org) { projectV2(number: $n) {
       id
       field(name: "Status") { ... on ProjectV2SingleSelectField { id options { id name } } }
+      kanban: field(name: "Kanban") { ... on ProjectV2SingleSelectField { id options { id name } } }
     } }
   }' --jq '.data.organization.projectV2')
 PROJECT_ID=$(jq -r .id <<<"$project")
 FIELD_ID=$(jq -r .field.id <<<"$project")
 
 option_id() { jq -r --arg n "$1" '.field.options[] | select(.name == $n) | .id' <<<"$project"; }
+
+# The Kanban view hides PR cards whose issue already shows the work: a PR that closes an issue
+# gets Kanban = Hidden; any other PR stays visible. Skipped if the project has no Kanban field.
+KANBAN_FIELD=$(jq -r '.kanban.id // empty' <<<"$project")
+KANBAN_HIDDEN=$(jq -r '.kanban.options[]? | select(.name == "Hidden") | .id' <<<"$project")
 
 # move <node id> <status> [only-from status...]
 # Adds the issue or PR to the board if needed, then sets its status. With only-from statuses, the
@@ -77,6 +83,38 @@ closing_issues() {
 
 pr_node() { gh api "repos/$REPO/pulls/$NUMBER" --jq .node_id; }
 
+# How many issues the pull request closes, open or closed.
+closing_count() {
+  gql -f owner="${REPO%/*}" -f name="${REPO#*/}" -F n="$NUMBER" -f query='
+    query($owner: String!, $name: String!, $n: Int!) { repository(owner: $owner, name: $name) {
+      pullRequest(number: $n) { closingIssuesReferences { totalCount } } } }' \
+    --jq '.data.repository.pullRequest.closingIssuesReferences.totalCount'
+}
+
+# kanban_for_pr <PR node id>: hide the PR's card on the Kanban view when it closes an issue.
+kanban_for_pr() {
+  [ -n "$KANBAN_FIELD" ] && [ -n "$KANBAN_HIDDEN" ] || return 0
+  local node=$1 item
+  item=$(gql -f id="$node" -f query='
+    query($id: ID!) { node(id: $id) { ... on PullRequest {
+      projectItems(first: 20) { nodes { id project { id } } } } } }' \
+    --jq ".data.node.projectItems.nodes[] | select(.project.id == \"$PROJECT_ID\") | .id" | head -1)
+  [ -n "$item" ] || return 0
+  if [ "$(closing_count)" -gt 0 ]; then
+    gql -f p="$PROJECT_ID" -f i="$item" -f f="$KANBAN_FIELD" -f o="$KANBAN_HIDDEN" -f query='
+      mutation($p: ID!, $i: ID!, $f: ID!, $o: String!) {
+        updateProjectV2ItemFieldValue(input: {projectId: $p, itemId: $i, fieldId: $f,
+          value: {singleSelectOptionId: $o}}) { projectV2Item { id } } }' > /dev/null
+    echo "#$NUMBER: hidden on Kanban (shown through its issue)"
+  else
+    gql -f p="$PROJECT_ID" -f i="$item" -f f="$KANBAN_FIELD" -f query='
+      mutation($p: ID!, $i: ID!, $f: ID!) {
+        clearProjectV2ItemFieldValue(input: {projectId: $p, itemId: $i, fieldId: $f}) {
+          projectV2Item { id } } }' > /dev/null
+    echo "#$NUMBER: shown on Kanban (closes no issue)"
+  fi
+}
+
 case "$EVENT/$ACTION" in
   issues/opened)
     move "$(issue_node "$NUMBER")" Inbox "" ;;
@@ -89,18 +127,21 @@ case "$EVENT/$ACTION" in
 
   pull_request/closed)
     if [ "$MERGED" = true ]; then
-      move "$(pr_node)" Done
+      pr=$(pr_node); move "$pr" Done; kanban_for_pr "$pr"
       for i in $(closing_issues); do move "$i" Done; done
     else
-      move "$(pr_node)" Done
+      pr=$(pr_node); move "$pr" Done; kanban_for_pr "$pr"
       for i in $(closing_issues); do move "$i" Ready "In progress" "In review"; done
     fi ;;
   pull_request/*)
-    if [ "$DRAFT" = true ]; then
-      move "$(pr_node)" "In progress"
+    # An edited description on a PR that is already merged or closed mustn't move its card back.
+    if [ "$(gh api "repos/$REPO/pulls/$NUMBER" --jq .state)" != open ]; then
+      echo "#$NUMBER is closed: card stays where it is"
+    elif [ "$DRAFT" = true ]; then
+      pr=$(pr_node); move "$pr" "In progress"; kanban_for_pr "$pr"
       for i in $(closing_issues); do move "$i" "In progress" "" Inbox Ready "In review"; done
     else
-      move "$(pr_node)" "In review"
+      pr=$(pr_node); move "$pr" "In review"; kanban_for_pr "$pr"
       for i in $(closing_issues); do move "$i" "In review" "" Inbox Ready "In progress"; done
     fi ;;
 
