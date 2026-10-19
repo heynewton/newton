@@ -25,7 +25,7 @@ The [Newton project board](https://github.com/orgs/heynewton/projects/1/views/4)
 - **Inbox**: new issues nobody has looked at yet.
 - **Ready**: issues ready to start, **in priority order**. The top one is next. There are no
   priority labels; the order is the priority.
-- **In progress**: at most four issues at a time (the column limit on the board).
+- **In progress**: issues someone (or a Claude session) is working on now.
 - **In review**: a PR is open and waiting for review.
 - **Done**: merged.
 
