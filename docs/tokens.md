@@ -25,6 +25,7 @@ Rules for all of them:
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
+| `ANTHROPIC_API_KEY` | secret | Anthropic | Project Claude Console account | Manual Q&A (`packages/agent`, #14): the live eval, and the app once it calls it | Local `.env` for the eval; the app's environment later. Not in CI |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
@@ -156,3 +157,16 @@ Use the same choices for `newton-prod`:
 Your local stack still exposes new tables by default, so a migration that forgets its `grant`
 lines works on a laptop but not on the hosted projects. Previews on dev (#62) catch that.
 ## Supabase project settings chosen at creation
+
+## `ANTHROPIC_API_KEY`
+
+Claude for manual Q&A (#14). Not created yet: only the live eval (`npm run eval:manual-qa -w
+@newton/agent`) uses it until the app asks questions. Tests and CI use a scripted stand-in.
+
+- **Where:** Claude Console (platform.claude.com) → API keys, signed in as the project account
+  (`dev@heynewton.app`), in a workspace for Newton.
+- **Name:** `newton-dev`, and a separate `newton-prod` key for prod.
+- **Spend:** set a monthly limit on the workspace. One eval run is ten questions on
+  `claude-opus-5-5` at low effort: a few cents.
+- **Expiry:** keys don't expire; rotate yearly with a calendar reminder.
+- **Stored in:** `.env` locally (git-ignored), never in the repo or CI.
