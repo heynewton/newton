@@ -21,7 +21,8 @@ Thanks for helping out. Newton is early (Phase 1), so the rules are short.
 
 ## Reviewing
 
-- Reviews are welcome on any PR. They are not required to merge; the maintainer merges.
+- Reviews are welcome on any PR. They are not required to merge; a maintainer merges
+  (see the [maintainer brief](docs/maintainers.md)).
 - Open review threads must be resolved before merging, so a comment is a real stop sign. Use a
   "nit:" prefix for comments that shouldn't block.
 - PRs are squash-merged into `main`.
