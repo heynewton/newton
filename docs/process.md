@@ -25,7 +25,7 @@ The [Newton project board](https://github.com/orgs/heynewton/projects/1/views/4)
 - **Inbox**: new issues nobody has looked at yet.
 - **Ready**: issues ready to start, **in priority order**. The top one is next. There are no
   priority labels; the order is the priority.
-- **In progress**: at most four issues at a time (the column limit on the board).
+- **In progress**: issues someone (or a Claude session) is working on now.
 - **In review**: a PR is open and waiting for review.
 - **Done**: merged.
 
@@ -106,6 +106,23 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
   pages with no data. Still in Phase 1, before the first real boat data arrives or anyone outside
   the team signs in, the domain moves to a production project with its own Supabase, so previews
   and dev never share a URL or a database with real boat data (#37).
+
+## Dev database
+
+- The hosted Supabase project `newton-dev`, in the project's Supabase organisation, is the dev
+  database. It only ever holds fixture data: the made-up boat Kittiwake from `fixtures/sample-boat`,
+  and whatever is made while testing. Never put real boat data in it.
+- Every push to `main` updates it (`.github/workflows/dev-database.yml`): `supabase db push` applies
+  new migrations, then `psql` loads `supabase/seed.sql`. The seed runs every time, so Kittiwake's
+  rows go back to what `boat.json` says; other rows stay. A failed migration or seed fails the run
+  and shows on the commit. Re-run it from the Actions tab (**Run workflow**).
+- PRs that touch `supabase/` or `fixtures/sample-boat/` get a **Dry run against dev** check: it
+  lists the migrations that would apply and, when there are none, loads the seed and rolls it back.
+  It changes nothing in dev. PRs from forks skip it, since they get no secrets.
+- The local stack (`npm run db:start`) exposes new tables to `anon`, `authenticated` and
+  `service_role` automatically; the hosted projects don't. A migration that forgets its `grant`
+  passes the local tests and then fails on dev, so every migration revokes and grants explicitly.
+- Its tokens and settings are in [tokens.md](tokens.md).
 
 ## Rhythm
 

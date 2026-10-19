@@ -37,6 +37,32 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"document_chunks": {
+                  Row: {
+                    "boat_id": string,"chunk_index": number,"content": string,"created_at": string,"document_id": string,"embedding": string,"embedding_model": string,"id": string,"page": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "boat_id": string,"chunk_index": number,"content": string,"created_at"?: string,"document_id": string,"embedding": string,"embedding_model": string,"id"?: string,"page": number
+                  }
+                  Update: {
+                    "boat_id"?: string,"chunk_index"?: number,"content"?: string,"created_at"?: string,"document_id"?: string,"embedding"?: string,"embedding_model"?: string,"id"?: string,"page"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "document_chunks_boat_id_fkey"
+      columns: ["boat_id"]
+isOneToOne: false
+      referencedRelation: "boats"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "document_chunks_document_id_boat_id_fkey"
+      columns: ["document_id","boat_id"]
+isOneToOne: false
+      referencedRelation: "documents"
+      referencedColumns: ["id","boat_id"]
+    }
+                  ]
                 },"documents": {
                   Row: {
                     "added_by": string | null,"boat_id": string,"content_type": string | null,"created_at": string,"filename": string | null,"id": string,"received_at": string,"size_bytes": number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type": Database["public"]['Enums']["document_type"]
@@ -210,6 +236,11 @@ isOneToOne: false
                            },
 "my_role_on":
 { Args: { "boat": string }; Returns: Database["public"]['Enums']["membership_role"]
+                           },
+"search_document_chunks":
+{ Args: { "match_count"?: number,"model": string,"only_boat_id"?: string,"query_embedding": string }; Returns: {
+              "boat_id": string,"chunk_id": string,"content": string,"document_id": string,"document_received_at": string,"filename": string,"indexed_at": string,"page": number,"similarity": number
+            }[]
                            },
 "shares_boat_with":
 { Args: { "person": string }; Returns: boolean

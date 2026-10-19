@@ -1388,6 +1388,145 @@ and shared screenshots of Supabase's token permissions form, asking which permis
 
 **Pull request:** [#65](https://github.com/heynewton/newton/pull/65)
 
+## A hosted dev database, migrated and seeded from main
+
+**Prompt**
+
+````text
+SUPABASE_ACCESS_TOKEN, SUPABASE_DEV_DB_PASSWORD and SUPABASE_DEV_PROJECT_REF are saved. Start #60 and #61 in parallel sessions.
+````
+
+**What Claude did**
+
+- Added `.github/workflows/dev-database.yml`, in the `dev` environment. On every push to `main` it
+  links `newton-dev`, runs `supabase db push` and then loads `supabase/seed.sql` with `psql`
+  through the project's connection pooler (GitHub runners have no IPv6, which the direct database
+  host needs). A failed migration or seed fails the run.
+- On PRs that touch `supabase/` or `fixtures/sample-boat/`, the same workflow runs a **Dry run
+  against dev**: link, `supabase db push --dry-run`, and, when dev already has every migration, the
+  seed inside a transaction that is rolled back. Nothing in dev changes. Forks skip it.
+- Made the seed safe to re-run: `build-seed.mjs` now writes `on conflict` clauses, so existing
+  sign-in rows are left alone and the boat, memberships and records are reset to `boat.json`.
+  CI's database job loads the seed a second time to prove it.
+- `docs/architecture.md` and `docs/process.md` say where dev lives, how it's updated, that it only
+  holds fixture data, and that the hosted projects don't expose new tables the way the local stack
+  does, so every migration grants explicitly.
+
+**What changed along the way**
+
+- The plan was `supabase db push --include-seed`. Tried locally, it loads the seed only the first
+  time; after the seed changes it only records the new file hash and never runs it again. So the
+  workflow runs the seed itself.
+- The session hit a usage limit halfway through and was resumed later.
+
+**Pull request:** [#68](https://github.com/heynewton/newton/pull/68)
+
+---
+
+## No limit on issues in progress
+
+**Prompt**
+
+````text
+remove the limit of 4
+````
+
+**What Claude did**
+
+- Removed the in-progress limit from `CLAUDE.md` and `docs/process.md`, the only two places that
+  still stated it (#57 had already removed it from `CONTRIBUTING.md`). The board's column limit is
+  a GitHub UI setting for the maintainer to remove.
+
+**Pull request:** [#67](https://github.com/heynewton/newton/pull/67)
+
+---
+
+## Sign-in email provider: Resend
+
+**Prompt**
+
+```text
+SUPABASE_ACCESS_TOKEN, SUPABASE_DEV_DB_PASSWORD and SUPABASE_DEV_PROJECT_REF are saved. Start #60 and #61 in parallel sessions.
+```
+
+**What Claude did**
+
+- Took #61 in its own session, next to the dev database (#60).
+- Compared Resend, Postmark, Mailgun, Amazon SES, Brevo and Cloudflare Email Service on Supabase
+  SMTP support, inbound mail to many addresses with webhooks and attachments (for #10), free and
+  first paid tiers, and EU options, from each provider's current pages.
+- Wrote `docs/decisions/0003-email-provider.md`: Resend for sign-in mail, email-in and reminders,
+  on the free plan. Sign-in mail comes from `noreply@heynewton.app`; email-in uses its own
+  subdomain, `boats.heynewton.app`, so the root domain's mail isn't touched.
+- Added a setup checklist for the maintainer: the Resend account on the project address, the
+  Cloudflare DNS records (where to copy each from), a sending-only key per Supabase project, the
+  Supabase SMTP and rate limit settings, and the test that closes #61.
+- Updated `docs/architecture.md`: sign-in mail, email-in and reminders name Resend, and the email
+  provider is no longer an open decision.
+
+**What changed along the way**
+
+- `docs/tokens.md` (#65) hadn't merged, so the record lists what to add there instead.
+- The PR says "Refs #61": the issue closes once the setup is done and a sign-in email arrives.
+- Moved #64 and #65 from **In progress** to "Repo and infrastructure" in `docs/history.md`, now that they merged.
+
+**Pull request:** [#66](https://github.com/heynewton/newton/pull/66)
+
+---
+
+## Manuals indexed for search with pgvector, and an embeddings provider chosen
+
+**Prompt**
+
+````text
+Start #13 and #15 in parallel sessions.
+````
+
+The planning session started this one for #13 with a brief: a decision record for the embedding
+provider with current prices, a `document_chunks` migration with row-level security and a search
+function, pgTAP tests including a cross-boat leak test, indexing code behind an embedder interface
+with a fake embedder for tests, tested on the fixture manual, and a note on when indexing runs.
+
+**What Claude did**
+
+- Checked current prices on the providers' pages and wrote `docs/decisions/0004-embeddings.md`:
+  Voyage AI `voyage-4` at 1024 dimensions, compared with `voyage-4-lite` and `-large`, OpenAI's
+  two models, Mistral's EU-hosted `mistral-embed` and an open model run by us. Every hosted option
+  costs well under a dollar to index a whole boat, so quality, effort and data decided it. 1024
+  dimensions is also what Mistral and `bge-m3` produce, so the EU options are a re-embed away, not
+  a migration. The record says to opt out of Voyage's training on our content before the first
+  real manual, only manuals are sent, and what would make us switch.
+- Added `supabase/migrations/20261019130000_document_chunks.sql`: pgvector, `document_chunks`
+  (boat, document, page, chunk text, embedding, model name) tied to its document's boat with a
+  composite foreign key, the same roles as `documents` (members read, writers add and remove, no
+  edits), explicit grants including the service role for the indexing job, and
+  `search_document_chunks()`, which runs as the caller, checks `can_read_boat()` again, and returns
+  the document's name and dates so answers can state source and freshness.
+- Added 24 pgTAP tests, including the leak test: a crew member searching with exactly another
+  boat's chunk vector gets only their own boat's chunks.
+- Added `packages/indexing`: text per page from a PDF (`unpdf`), chunks that split at numbered
+  headings and never span pages, an `Embedder` interface with the Voyage embedder (key from
+  `VOYAGE_API_KEY`) and a deterministic bag-of-words fake, an in-memory store for tests and a
+  Supabase store, plus `indexDocument()`, `searchChunks()` and `shouldIndex()` (manuals only).
+- Made the fixture manual excerpt two PDF pages (a form feed in the text starts a page), so the
+  tests check that page numbers survive: the oil capacity question finds 6.3 on page 2.
+- Documented `VOYAGE_API_KEY` in `docs/tokens.md`, updated `docs/architecture.md`, and regenerated
+  `database.types.ts`.
+
+**What changed along the way**
+
+- The records migration (#54) had already added a unique `(id, boat_id)` on `documents`, so the
+  chunks table reuses it instead of adding its own.
+- The fixture PDFs were one page each. `build.mjs` now writes extra pages after the existing
+  objects, so the one-page PDFs and their emails come out byte for byte the same.
+- Indexing has no trigger yet: the background job runner is still open (#11), so the decision
+  record says the job calls `indexDocument()` when a document becomes a manual, and nothing calls
+  it until then.
+
+**Pull request:** [#69](https://github.com/heynewton/newton/pull/69)
+
+---
+
 ## A boat's records on its page
 
 **Prompt**

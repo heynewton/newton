@@ -36,7 +36,9 @@ because the sample documents aren't seeded.
 
 ## Documents
 
-Each document has a text source (`documents/*.txt`) and a generated one-page PDF next to it.
+Each document has a text source (`documents/*.txt`) and a generated PDF next to it. A form feed
+on its own line starts a new PDF page: the manual excerpt has two (6.1-6.2, then 6.3-6.5), so
+search tests can check page numbers.
 
 | Document | What tests can use it for |
 | --- | --- |

@@ -20,10 +20,12 @@ Rules for all of them:
 | --- | --- | --- | --- | --- | --- |
 | `VERCEL_TOKEN` | secret | Vercel | Project Vercel account (Hobby) | `.github/workflows/deploy.yml` | Repo secrets |
 | `PROJECT_TOKEN` | secret | GitHub | The maintainer's GitHub user (see below) | `.github/workflows/board.yml` | Repo secrets |
-| `SUPABASE_ACCESS_TOKEN` | secret | Supabase | Project Supabase account | Dev database workflow (#60) | Repo secrets |
+| `SUPABASE_DEV_ACCESS_TOKEN` | secret | Supabase | Project Supabase account | Dev database workflow (#60) | Repo secrets |
 | `SUPABASE_DEV_DB_PASSWORD` | secret | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo secrets, and the project password manager |
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
+| Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
+| `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
 
@@ -56,17 +58,19 @@ correct this section if they differ.
 - **Not for cloud sessions:** Claude cloud sessions can't use it. Their GitHub proxy blocks
   GraphQL, which Projects needs, whatever the token (see `docs/process.md`).
 
-## Supabase access token (`SUPABASE_ACCESS_TOKEN`)
+## Supabase access tokens (`SUPABASE_DEV_ACCESS_TOKEN`, `SUPABASE_PROD_ACCESS_TOKEN`)
 
 Created in Supabase → Account preferences → Access Tokens → Generate new token, signed in as the
 project account. Supabase tokens are scoped to projects with per-capability permissions; everything
 starts at **None**.
 
-**Dev token** (created October 2026; settings confirmed from the creation screen)
+**Dev token** (created October 2026, recreated for #60 to add API keys read; settings confirmed from the creation screen)
 
-- **Name:** `github-actions-newton`
+- **Name:** `github-actions-newton-dev`
 - **Expiry:** 90 days. Renew before it lapses, or migrations stop reaching dev.
 - **Resource access:** `newton-dev` only.
+- **Stored in:** the repo secret `SUPABASE_DEV_ACCESS_TOKEN`. The workflow passes it to the CLI as
+  `SUPABASE_ACCESS_TOKEN`, the name the CLI reads.
 - **Capabilities** (everything not listed stays **None**):
 
 | Section | Capability | Access | Why |
@@ -76,9 +80,15 @@ starts at **None**.
 | Database | Connection Pooling | Read | GitHub's runners reach the database through the pooler |
 | Application services | Data API Config | Read | `supabase link` compares hosted settings with `supabase/config.toml` |
 | Application services | Storage Config | Read | Same comparison, for storage |
+| Application services | API Keys | Read | `supabase link` reads the project's API keys; without it, link fails with "Missing required permission(s): api_gateway_keys_read" (#60) |
+| Application services | API Key Secrets | Read | Needed with API Keys for the same call; without it, link fails with "Your account does not have the necessary privileges to access this endpoint" on `GET /v1/projects/<ref>/api-keys` (#60) |
 
 Supabase rates this "High risk" because a migration can run any SQL. That is what the workflow
-needs. The token can't read API keys, auth settings or signing keys, can't manage backups or
+needs. Supabase's [token docs](https://supabase.com/docs/guides/platform/personal-access-tokens) list Project Settings, API
+Keys and API Key Secrets (all Read) as what `supabase link` needs. So the token can read the
+project's API keys, including the secret ones that bypass RLS, but can't change them. For dev that
+exposes only fixture data; for prod it's a reason to keep the token in the approval-gated
+`production` environment. It can't read auth settings or signing keys, can't manage backups or
 network settings, and can't see any other project.
 
 If a workflow run fails on a missing permission, the error names it: add only that capability,
@@ -89,9 +99,25 @@ as Read where possible, and update this table in the same PR.
 - **Name:** `github-actions-newton-prod`
 - **Resource access:** `newton-prod` only, never both projects in one token.
 - **Stored in:** the GitHub environment `production` (Settings → Environments → production →
-  Environment secrets) as `SUPABASE_ACCESS_TOKEN`. The environment needs the maintainer's approval,
+  Environment secrets) as `SUPABASE_PROD_ACCESS_TOKEN`. The environment needs the maintainer's approval,
   so a dev workflow or a PR can never use it.
 - **Expiry:** the same, with its own calendar reminder.
+
+## `VOYAGE_API_KEY`
+
+Embeddings for manual search ([decision 0004](decisions/0004-embeddings.md)). Not created yet:
+nothing calls Voyage until the indexing job (#11) or Q&A (#14) runs against a real database.
+Tests and CI use a fake embedder and need no key.
+
+- **Where:** Voyage AI dashboard (dashboard.voyageai.com) → API keys, signed in as the project
+  account (`dev@heynewton.app`).
+- **Name:** `newton-dev`, and a separate `newton-prod` key for prod, so one can be revoked
+  without the other.
+- **Before first use:** opt out of training on our content in the dashboard. It only covers
+  content sent after opting out.
+- **Expiry:** Voyage keys don't expire; revoke and replace them yearly, with a calendar reminder.
+- **Stored in:** `.env` locally (`VOYAGE_API_KEY=…`, git-ignored), and the environment of
+  whatever runs the indexing job. Prod's key only in the `production` environment.
 
 ## Supabase database passwords
 
@@ -102,7 +128,21 @@ as Read where possible, and update this table in the same PR.
   only in the `production` environment as `SUPABASE_PROD_DB_PASSWORD`.
 - Both are reset in Supabase → Project Settings → Database. Update the secret right after.
 
-## Supabase project settings chosen at creation
+## Resend SMTP keys
+
+Supabase sends sign-in emails through Resend ([decision](decisions/0003-email-provider.md)). One
+key per Supabase project, so revoking one doesn't break the other.
+
+- **Where:** Resend → API Keys → Create API key, signed in as the project account.
+- **Names:** `supabase-newton-dev`, and `supabase-newton-prod` for #63.
+- **Permission:** Sending access (not Full access), domain `heynewton.app` only.
+- **Expiry:** Resend keys don't expire. Rotate yearly; put the date in the project calendar.
+- **Stored in:** pasted straight into Supabase → that project → Authentication → Emails → SMTP
+  Settings (password field), with host `smtp.resend.com`, port `465`, user `resend`. Not saved
+  anywhere else: a lost key is replaced, not recovered.
+- **Later (#10):** the inbound webhook adds a key that can read received mail, and the webhook
+  signing secret, both in Vercel's environment variables. Add them here then.
+
 
 Use the same choices for `newton-prod`:
 
@@ -115,3 +155,4 @@ Use the same choices for `newton-prod`:
 
 Your local stack still exposes new tables by default, so a migration that forgets its `grant`
 lines works on a laptop but not on the hosted projects. Previews on dev (#62) catch that.
+## Supabase project settings chosen at creation
