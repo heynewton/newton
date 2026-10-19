@@ -1,0 +1,126 @@
+# Releases main to production (#63): newton-prod gets the checked-in migrations, then the web app
+# is deployed to the Vercel project heynewton-prod against it. It starts once the Dev database
+# workflow has migrated and seeded dev from the same commit, and waits for the maintainer's
+# approval on the `production` environment, which holds every prod key. newton-prod is never
+# seeded. Fixture sign-in is never on here: the job fails if anything sets FIXTURE_SIGN_IN.
+name: Production
+
+on:
+  workflow_run:
+    workflows: [Dev database]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  deployments: write
+
+# One release at a time. A newer commit waiting for approval replaces an older one that waits.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  VERCEL_PROJECT: heynewton-prod
+  VERCEL_TELEMETRY_DISABLED: 1
+
+jobs:
+  release:
+    name: Migrate and deploy production
+    # Only after dev took the same commit, and only from a push to main (not a manual dev run on
+    # another branch).
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.PROD_SITE_URL }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_PROD_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_PROD_DB_PASSWORD }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # Environment variables of `production`, not repo variables: dev's values never reach here.
+      SUPABASE_URL: ${{ vars.SUPABASE_PROD_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PROD_PUBLISHABLE_KEY }}
+    steps:
+      - name: Check the prod settings
+        env:
+          DEV_URL: ${{ vars.SUPABASE_DEV_URL }}
+          PROJECT_REF: ${{ vars.SUPABASE_PROD_PROJECT_REF }}
+          SITE: ${{ vars.PROD_SITE_URL }}
+        run: |
+          missing=()
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD VERCEL_TOKEN SUPABASE_URL SUPABASE_PUBLISHABLE_KEY PROJECT_REF SITE; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Not set in the production environment: ${missing[*]} (see docs/tokens.md)."
+            exit 1
+          fi
+          # Only a publishable key may reach a deployment. A secret key bypasses row-level security.
+          if [[ "$SUPABASE_PUBLISHABLE_KEY" != sb_publishable_* ]]; then
+            echo "::error::SUPABASE_PROD_PUBLISHABLE_KEY must be a publishable key (sb_publishable_...)."
+            exit 1
+          fi
+          if [ "$SUPABASE_URL" = "$DEV_URL" ] || [[ "$SUPABASE_URL" != *"$PROJECT_REF"* ]]; then
+            echo "::error::SUPABASE_PROD_URL must be newton-prod's URL, not newton-dev's."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Link newton-prod
+        run: npx supabase link --project-ref "${{ vars.SUPABASE_PROD_PROJECT_REF }}"
+      - name: Migrations that will apply
+        run: npx supabase db push --linked --dry-run --yes
+      # Migrations only. Never --include-seed, never psql -f seed.sql, never seed buckets.
+      - name: Apply migrations
+        run: npx supabase db push --linked --yes
+
+      - run: npm install --global vercel@64.5.0
+      - name: Link the Vercel project
+        run: vercel link --yes --project "$VERCEL_PROJECT" --token "$VERCEL_TOKEN"
+      # Root directory and framework as for the dev project. Vercel Authentication keeps its default (the
+      # production URL is public, other deployment URLs need a Vercel login).
+      - name: Configure the Vercel project
+        run: |
+          project_id=$(jq -r .projectId .vercel/project.json)
+          curl --fail --silent --show-error -X PATCH \
+            -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
+            -d '{"rootDirectory":"apps/web","framework":"nextjs"}' \
+            "https://api.vercel.com/v9/projects/$project_id" > /dev/null
+
+      - run: vercel pull --yes --environment production --token "$VERCEL_TOKEN"
+      # The project's own env vars (secret keys, set in the Vercel dashboard) must not turn on
+      # fixture sign-in either.
+      - name: Check fixture sign-in is off
+        run: |
+          if [ -n "${FIXTURE_SIGN_IN:-}" ] || grep -q '^FIXTURE_SIGN_IN=' .vercel/.env.production.local 2>/dev/null; then
+            echo "::error::FIXTURE_SIGN_IN is set for production. Remove it from heynewton-prod's environment variables."
+            exit 1
+          fi
+      - run: vercel build --prod --token "$VERCEL_TOKEN"
+      - name: Deploy
+        run: |
+          vercel deploy --prebuilt --archive=tgz --prod \
+            --env "SUPABASE_URL=$SUPABASE_URL" --env "SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY" \
+            --token "$VERCEL_TOKEN"
+
+      # The sample boat's people must not be able to sign in on production.
+      - name: Fixture sign-in answers 404
+        run: |
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
+            --data-urlencode "email=alex@example.com" "${{ vars.PROD_SITE_URL }}/auth/fixture-sign-in")
+          if [ "$status" != "404" ]; then
+            echo "::error::/auth/fixture-sign-in answered $status on production, expected 404."
+            exit 1
+          fi
