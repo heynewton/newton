@@ -119,11 +119,10 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
   (`--archive=tgz`) to stay well under it. If a deploy fails with "Too many requests ...
   api-upload-free", the limit was hit anyway: previews and the dev site pause until it resets
   (24 hours). Deploy isn't a required check, so that failure doesn't block merging.
-- [heynewton.app](https://heynewton.app) currently serves the dev site: `www` redirects to it, and the
-  DNS records on Cloudflare point at Vercel with the proxy off. That is fine while the site is static
-  pages with no data. Still in Phase 1, before the first real boat data arrives or anyone outside
-  the team signs in, the domain moves to the production project (see Production below), so previews
-  and dev never share a URL or a database with real boat data (#37).
+- The dev site is only at https://heynewton-web.vercel.app. [heynewton.app](https://heynewton.app)
+  serves production (see Production below) since #37, so previews and dev never share a URL or a
+  database with real boat data. Fixture sign-in and sample data are on the dev site, never on
+  heynewton.app.
 
 ## Dev database
 
@@ -145,8 +144,10 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
 ## Production
 
 Production is the Supabase project `newton-prod` and the Vercel project `heynewton-prod`, at
-its own `vercel.app` URL until #37 moves heynewton.app to it. It is where real boat data lives,
-so it is never seeded and nothing on dev or previews holds its keys.
+[heynewton.app](https://heynewton.app) since #37 (`www` redirects to it; DNS on Cloudflare points at
+Vercel with the proxy off). It is where real boat data lives, so it is never seeded and nothing on
+dev or previews holds its keys. Its Auth URL configuration allows only `https://heynewton.app`, so a
+sign-in link always comes back there.
 
 - **Release path.** Merge to `main` → the Dev database workflow migrates and seeds `newton-dev` →
   when that succeeds, the **Production** workflow (`.github/workflows/production.yml`) starts on
