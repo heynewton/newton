@@ -94,6 +94,10 @@ Resend's API calls in one module in `apps/web`, the way the database is reached 
 - Received mail counts toward the 100-a-day limit, so a burst of forwarded email can delay
   sign-in links on the free plan. Supabase's own auth email limit (30 an hour by default) stays
   below what Resend allows in an hour but not in a day; watch Resend's dashboard as boats join.
+- A new domain has no sending history, and Supabase's default templates link to `supabase.co`.
+  The first test email passed SPF, DKIM and DMARC and still landed in Gmail's spam folder.
+  Branded templates with links on our own domain (#71) fix the content; reputation builds as
+  people sign in and mark the email "Not spam".
 - Resend API keys don't expire on their own. We rotate them yearly by hand (calendar reminder).
 - Resend keeps received mail and logs for 30 days on free and Pro; Newton keeps its own copy in
   Supabase Storage, so that's fine.
