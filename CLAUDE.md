@@ -9,7 +9,11 @@ assumes it may become a paid product, so it is multi-boat and multi-owner from d
 
 - Website / domain: heynewton.app
 - Repo: github.com/heynewton/newton (public, AGPL-3.0)
-- Full spec: "Newton — Product & Architecture Spec" in the team Google Drive (heynewton folder)
+- Team Google Drive: [heynewton folder](https://drive.google.com/drive/folders/1O-MYSYuXWingDvfq2jdmDhxgK5rPNn9P)
+  - Full spec: [Newton — Product & Architecture Spec](https://docs.google.com/document/d/19byJe41PNjezQD93sBnIgbE90bdVzTzWd5ptSrVg5yU/edit)
+  - Accounts, domain and expenses: [Newton — Accounts, Domain & Expenses](https://docs.google.com/document/d/1yNKJPDzgc-OO_nyNnlF-x5toDMCzRrqSQ_09dPOFIVA/edit)
+  - These links only open for people the folder is shared with. Keep its sharing on "Restricted":
+    the repo is public, so "Anyone with the link" would make the folder public.
 
 ## Principles (follow these in every change)
 

@@ -1,7 +1,7 @@
 # Architecture
 
 How Newton is built today, and what each build phase adds. The product view (users, data
-model, agent tools, risks) is in the "Newton — Product & Architecture Spec" in the team Google
+model, agent tools, risks) is in the [Newton — Product & Architecture Spec](https://docs.google.com/document/d/19byJe41PNjezQD93sBnIgbE90bdVzTzWd5ptSrVg5yU/edit) in the team Google
 Drive; this page is the engineering view and stays in step with the code.
 
 **Status (last updated 2026-10-18):** Phase 1: scaffold, plus boats, people, memberships,
