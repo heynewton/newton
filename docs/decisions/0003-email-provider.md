@@ -36,7 +36,7 @@ Prices and limits from each provider's pages on 2026-10-18.
 **Resend, for sign-in mail now and for email-in (#10) and reminders (#12) later.** Free plan
 until we outgrow it.
 
-- **Sender:** `Newton <noreply@heynewton.app>`. The domain `heynewton.app` is verified in Resend.
+- **Sender:** `Hey Newton <noreply@heynewton.app>`. The domain `heynewton.app` is verified in Resend.
   Resend's records sit on `resend._domainkey` and a `send` subdomain, so the root's MX and SPF
   records (and `dev@heynewton.app`) aren't touched.
 - **Inbound domain:** `boats.heynewton.app`, added to Resend as a second domain with receiving on.
@@ -158,7 +158,7 @@ Can wait until #10 starts, but doing it now proves the DNS in one go.
 
 - [ ] Supabase → `newton-dev` → Authentication → Emails → SMTP Settings → Enable custom SMTP:
   - **Sender email:** `noreply@heynewton.app`
-  - **Sender name:** `Newton`
+  - **Sender name:** `Hey Newton`
   - **Host:** `smtp.resend.com`, **Port:** `465`
   - **Username:** `resend`
   - **Password:** the `supabase-newton-dev` key
@@ -167,7 +167,7 @@ Can wait until #10 starts, but doing it now proves the DNS in one go.
       include the dev site's and previews' `/auth/callback` (#62 covers previews).
 - [ ] Test: on the dev site, sign in with an address that is **not** on the Supabase team (a
       personal Gmail is fine for the test). The email should arrive in the inbox, not spam, from
-      `Newton <noreply@heynewton.app>`, and the link should sign in. In Gmail, "Show original"
+      `Hey Newton <noreply@heynewton.app>`, and the link should sign in. In Gmail, "Show original"
       should say SPF, DKIM and DMARC **PASS**.
 - [ ] Comment on #61 with the result. #61 closes when this test passes.
 
