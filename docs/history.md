@@ -23,6 +23,7 @@ Workflow, board and process: how changes land, how issues are picked up, and how
 - [#56](https://github.com/heynewton/newton/pull/56) · 2026-10-19 · Open the spec and team docs from the repo, and see every PR by phase and topic
 - [#55](https://github.com/heynewton/newton/pull/55) · 2026-10-19 · A brief for maintainers: merging, backlog, settings and working with Claude
 - [#57](https://github.com/heynewton/newton/pull/57) · 2026-10-19 · Contributor guide no longer mentions the in-progress limit
+- [#58](https://github.com/heynewton/newton/pull/58) · 2026-10-19 · README links to every page in `docs/`
 
 ### Architecture and decisions
 
@@ -40,6 +41,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#18](https://github.com/heynewton/newton/pull/18) · 2026-10-18 · Project scaffold: web app, calc package, one-command checks and CI · closes [#3](https://github.com/heynewton/newton/issues/3)
 - [#30](https://github.com/heynewton/newton/pull/30) · 2026-10-18 · Preview link on every PR, and a dev site from `main` · closes [#19](https://github.com/heynewton/newton/issues/19)
 - [#38](https://github.com/heynewton/newton/pull/38) · 2026-10-18 · heynewton.app serves the homepage · closes [#35](https://github.com/heynewton/newton/issues/35)
+- [#64](https://github.com/heynewton/newton/pull/64) · 2026-10-19 · Deploys upload one archive and skip docs-only changes, so previews keep working on busy days · closes [#59](https://github.com/heynewton/newton/issues/59)
 
 ### Brand and website
 
@@ -73,7 +75,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#58](https://github.com/heynewton/newton/pull/58) · README links to every page in `docs/`
+- [#65](https://github.com/heynewton/newton/pull/65) · Every token written down, so prod gets exactly the same ones
 
 ### What's next
 
