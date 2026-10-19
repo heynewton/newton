@@ -35,4 +35,4 @@ Do the field approach: add the field, update the Board workflow to set it, and c
 - #100 merged while this was being built, and the automation moved it to Done, where the new view
   shows it.
 
-**Pull request:** see this PR's history file in `docs/history/`.
+**Pull request:** [#102](https://github.com/heynewton/newton/pull/102)
