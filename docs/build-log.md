@@ -1388,6 +1388,90 @@ and shared screenshots of Supabase's token permissions form, asking which permis
 
 **Pull request:** [#65](https://github.com/heynewton/newton/pull/65)
 
+## A hosted dev database, migrated and seeded from main
+
+**Prompt**
+
+````text
+SUPABASE_ACCESS_TOKEN, SUPABASE_DEV_DB_PASSWORD and SUPABASE_DEV_PROJECT_REF are saved. Start #60 and #61 in parallel sessions.
+````
+
+**What Claude did**
+
+- Added `.github/workflows/dev-database.yml`, in the `dev` environment. On every push to `main` it
+  links `newton-dev`, runs `supabase db push` and then loads `supabase/seed.sql` with `psql`
+  through the project's connection pooler (GitHub runners have no IPv6, which the direct database
+  host needs). A failed migration or seed fails the run.
+- On PRs that touch `supabase/` or `fixtures/sample-boat/`, the same workflow runs a **Dry run
+  against dev**: link, `supabase db push --dry-run`, and, when dev already has every migration, the
+  seed inside a transaction that is rolled back. Nothing in dev changes. Forks skip it.
+- Made the seed safe to re-run: `build-seed.mjs` now writes `on conflict` clauses, so existing
+  sign-in rows are left alone and the boat, memberships and records are reset to `boat.json`.
+  CI's database job loads the seed a second time to prove it.
+- `docs/architecture.md` and `docs/process.md` say where dev lives, how it's updated, that it only
+  holds fixture data, and that the hosted projects don't expose new tables the way the local stack
+  does, so every migration grants explicitly.
+
+**What changed along the way**
+
+- The plan was `supabase db push --include-seed`. Tried locally, it loads the seed only the first
+  time; after the seed changes it only records the new file hash and never runs it again. So the
+  workflow runs the seed itself.
+- The session hit a usage limit halfway through and was resumed later.
+
+**Pull request:** [#68](https://github.com/heynewton/newton/pull/68)
+
+---
+
+## No limit on issues in progress
+
+**Prompt**
+
+````text
+remove the limit of 4
+````
+
+**What Claude did**
+
+- Removed the in-progress limit from `CLAUDE.md` and `docs/process.md`, the only two places that
+  still stated it (#57 had already removed it from `CONTRIBUTING.md`). The board's column limit is
+  a GitHub UI setting for the maintainer to remove.
+
+**Pull request:** [#67](https://github.com/heynewton/newton/pull/67)
+
+---
+
+## Sign-in email provider: Resend
+
+**Prompt**
+
+```text
+SUPABASE_ACCESS_TOKEN, SUPABASE_DEV_DB_PASSWORD and SUPABASE_DEV_PROJECT_REF are saved. Start #60 and #61 in parallel sessions.
+```
+
+**What Claude did**
+
+- Took #61 in its own session, next to the dev database (#60).
+- Compared Resend, Postmark, Mailgun, Amazon SES, Brevo and Cloudflare Email Service on Supabase
+  SMTP support, inbound mail to many addresses with webhooks and attachments (for #10), free and
+  first paid tiers, and EU options, from each provider's current pages.
+- Wrote `docs/decisions/0003-email-provider.md`: Resend for sign-in mail, email-in and reminders,
+  on the free plan. Sign-in mail comes from `noreply@heynewton.app`; email-in uses its own
+  subdomain, `boats.heynewton.app`, so the root domain's mail isn't touched.
+- Added a setup checklist for the maintainer: the Resend account on the project address, the
+  Cloudflare DNS records (where to copy each from), a sending-only key per Supabase project, the
+  Supabase SMTP and rate limit settings, and the test that closes #61.
+- Updated `docs/architecture.md`: sign-in mail, email-in and reminders name Resend, and the email
+  provider is no longer an open decision.
+
+**What changed along the way**
+
+- `docs/tokens.md` (#65) hadn't merged, so the record lists what to add there instead.
+- The PR says "Refs #61": the issue closes once the setup is done and a sign-in email arrives.
+- Moved #64 and #65 from **In progress** to "Repo and infrastructure" in `docs/history.md`, now that they merged.
+
+**Pull request:** [#66](https://github.com/heynewton/newton/pull/66)
+
 ---
 
 ## Manuals indexed for search with pgvector, and an embeddings provider chosen
