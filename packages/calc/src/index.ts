@@ -7,3 +7,5 @@ export { tideHeightAt } from "./tide";
 export type { TideExtreme, TideAt } from "./tide";
 export { bearingAndDistance, timeToMark, MIN_SPEED_KNOTS } from "./navigation";
 export type { Position, BearingAndDistance, TimeToMark } from "./navigation";
+export { courseToSteer } from "./course-to-steer";
+export type { CourseToSteerInput, CourseToSteer, TidalStream, Leeway } from "./course-to-steer";

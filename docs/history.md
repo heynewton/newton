@@ -62,6 +62,7 @@ Deterministic, tested functions in `calc` for the numbers Newton reports.
 - [#40](https://github.com/heynewton/newton/pull/40) · 2026-10-18 · Due dates for renewals and maintenance: what's overdue and coming up · closes [#7](https://github.com/heynewton/newton/issues/7)
 - [#39](https://github.com/heynewton/newton/pull/39) · 2026-10-18 · Co-owner cost split: who owes what · closes [#6](https://github.com/heynewton/newton/issues/6)
 - [#81](https://github.com/heynewton/newton/pull/81) · 2026-10-19 · Tide height at any time from the cached high and low waters (Phase 2) · closes [#78](https://github.com/heynewton/newton/issues/78)
+- [#83](https://github.com/heynewton/newton/pull/83) · 2026-10-19 · Bearing, distance and time to a mark from the boat's position (Phase 2) · closes [#79](https://github.com/heynewton/newton/issues/79)
 
 ### Data and security
 
@@ -83,7 +84,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#83](https://github.com/heynewton/newton/pull/83) · Bearing, distance and time to a mark from the boat's position (Phase 2)
+- [#84](https://github.com/heynewton/newton/pull/84) · Course to steer, corrected for tidal stream and leeway (Phase 2)
 
 ### What's next
 
