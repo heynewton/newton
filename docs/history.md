@@ -93,6 +93,12 @@ What a signed-in person can do in the app.
 - [#70](https://github.com/heynewton/newton/pull/70) · 2026-10-19 · A boat's page shows its renewals, maintenance, co-owner balance and documents · closes [#15](https://github.com/heynewton/newton/issues/15)
 - [#77](https://github.com/heynewton/newton/pull/77) · 2026-10-19 · Owners and co-owners get one email digest of what is overdue or coming up · closes [#12](https://github.com/heynewton/newton/issues/12)
 
+### Manual Q&A
+
+Answers from a boat's manuals through Claude, with the page they came from, and their evals.
+
+- [#87](https://github.com/heynewton/newton/pull/87) · 2026-10-19 · Answers from the boat's manuals, with the page they came from · closes [#14](https://github.com/heynewton/newton/issues/14)
+
 ### What's next
 
 The open Phase 1 issues, grouped by what they deliver. The board holds their order.
