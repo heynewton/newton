@@ -37,4 +37,4 @@ I gave email-in-newton-dev Full access. Note it in docs/tokens.md and tick steps
   so the first check found nothing done and the second found steps 1–3 done.
 - The test with a real email (step 4) and the prod endpoint (step 5, #63) are still open.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#100](https://github.com/heynewton/newton/pull/100)
