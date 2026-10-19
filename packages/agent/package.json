@@ -10,6 +10,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary --coverage.reporter=json",
     "eval:manual-qa": "vitest run --config vitest.eval.config.ts"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^22",
+    "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^9.39.5",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
