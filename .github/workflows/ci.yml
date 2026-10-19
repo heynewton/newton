@@ -74,8 +74,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - name: Seed is up to date with fixtures/sample-boat/boat.json
-        run: node fixtures/sample-boat/build-seed.mjs && git diff --exit-code supabase/seed.sql
+      - name: Seed is up to date with fixtures/sample-boat
+        run: |
+          node fixtures/sample-boat/build-seed.mjs
+          git add --intent-to-add supabase/storage
+          git diff --exit-code supabase/seed.sql supabase/storage
       - run: npx supabase db start
       # The hosted dev project loads the seed on every push to main, on top of the last run.
       - name: Seed is safe to re-run

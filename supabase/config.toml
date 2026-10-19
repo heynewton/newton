@@ -125,6 +125,15 @@ file_size_limit = "50MiB"
 # allowed_mime_types = ["image/png", "image/jpeg"]
 # objects_path = "./images"
 
+# The per-boat document store. The bucket and its policies come from migration
+# 20261019100000_documents.sql; this entry only uploads the sample boat's documents on
+# `supabase start` and `supabase db reset`, so the seeded document rows open. The CLI updates the
+# existing bucket rather than creating it, so `public` must stay false to match the migration.
+# The folder holds symlinks written by fixtures/sample-boat/build-seed.mjs.
+[storage.buckets.documents]
+public = false
+objects_path = "./storage/documents"
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true

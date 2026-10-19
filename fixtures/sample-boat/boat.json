@@ -66,6 +66,36 @@
       "ownershipPercent": 0
     }
   ],
+  "documents": [
+    {
+      "id": "00000000-0000-4000-8000-000000000601",
+      "name": "insurance-certificate",
+      "type": "insurance",
+      "source": "email",
+      "receivedAt": "2026-04-14T18:22:05Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000602",
+      "name": "registration",
+      "type": "registration",
+      "source": "email",
+      "receivedAt": "2025-01-18T10:04:51Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000603",
+      "name": "yard-invoice",
+      "type": "invoice",
+      "source": "email",
+      "receivedAt": "2026-10-03T16:45:12Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000604",
+      "name": "manual-excerpt",
+      "type": "manual",
+      "source": "email",
+      "receivedAt": "2026-10-11T08:15:40Z"
+    }
+  ],
   "renewals": [
     {
       "id": "00000000-0000-4000-8000-000000000301",
