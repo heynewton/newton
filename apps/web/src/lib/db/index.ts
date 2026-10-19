@@ -1,5 +1,7 @@
 import "server-only";
+import type { ExpenseRow, MaintenanceRow, RenewalRow } from "@/lib/records";
 import { createClient, supabaseSettings } from "./client";
+import type { Database } from "./database.types";
 
 // The web app's only way into the database and auth. Components and pages call these
 // functions, never the Supabase client, so the provider can change behind this module
@@ -127,4 +129,106 @@ export async function getMyBoat(person: Person, boatId: string): Promise<BoatMem
     .maybeSingle();
   if (error) throw new Error(`Could not load the boat: ${error.message}`);
   return data ? { boatId: data.boats.id, boatName: data.boats.name, role: data.role } : null;
+}
+
+export type DocumentType = Database["public"]["Enums"]["document_type"];
+
+export type BoatDocument = {
+  id: string;
+  type: DocumentType;
+  source: "email" | "upload";
+  filename: string | null;
+  receivedAt: string;
+};
+
+export type BoatMember = {
+  personId: string;
+  name: string;
+  role: MembershipRole;
+  ownershipShare: number;
+};
+
+export type BoatRecords = {
+  documents: BoatDocument[];
+  renewals: RenewalRow[];
+  maintenance: MaintenanceRow[];
+  expenses: ExpenseRow[];
+  members: BoatMember[];
+};
+
+// Everything the boat page shows, read as the signed-in person: RLS only returns rows of boats
+// they are on. Call getMyBoat first so a boat they're not on is a 404, not an empty page.
+export async function getBoatRecords(boatId: string): Promise<BoatRecords> {
+  const supabase = await createClient();
+  if (!supabase) throw new Error("No database configured");
+  const [documents, renewals, maintenance, expenses, members] = await Promise.all([
+    supabase
+      .from("documents")
+      .select("id, type, source, filename, received_at")
+      .eq("boat_id", boatId)
+      .order("received_at", { ascending: false }),
+    supabase
+      .from("renewals")
+      .select("id, kind, title, reference, expires_on, document_id")
+      .eq("boat_id", boatId),
+    supabase
+      .from("maintenance_items")
+      .select("id, title, every_months, every_engine_hours, last_done_on, last_done_engine_hours, document_id")
+      .eq("boat_id", boatId),
+    supabase
+      .from("expenses")
+      .select("id, description, amount_cents, currency, spent_on, paid_by, document_id")
+      .eq("boat_id", boatId),
+    supabase
+      .from("memberships")
+      .select("person_id, role, ownership_share, people!inner(display_name, email)")
+      .eq("boat_id", boatId),
+  ]);
+  for (const result of [documents, renewals, maintenance, expenses, members]) {
+    if (result.error) throw new Error(`Could not load the boat's records: ${result.error.message}`);
+  }
+  return {
+    documents: documents.data!.map((d) => ({
+      id: d.id,
+      type: d.type,
+      source: d.source,
+      filename: d.filename,
+      receivedAt: d.received_at,
+    })),
+    renewals: renewals.data!,
+    maintenance: maintenance.data!,
+    expenses: expenses.data!,
+    members: members.data!.map((m) => ({
+      personId: m.person_id,
+      name: m.people.display_name ?? m.people.email ?? "A member",
+      role: m.role,
+      ownershipShare: m.ownership_share,
+    })),
+  };
+}
+
+// How long a link to a stored document works. Long enough to open it, short enough that a
+// copied or leaked link soon stops working.
+const DOCUMENT_LINK_SECONDS = 60;
+
+// A short-lived link to one of the boat's stored files, or null if the document isn't on a boat
+// the signed-in person is on. Both the row and the signed URL go through RLS as that person.
+export async function getDocumentLink(boatId: string, documentId: string): Promise<string | null> {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuid.test(boatId) || !uuid.test(documentId)) return null;
+  const supabase = await createClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("documents")
+    .select("storage_path")
+    .eq("boat_id", boatId)
+    .eq("id", documentId)
+    .maybeSingle();
+  if (error) throw new Error(`Could not load the document: ${error.message}`);
+  if (!data) return null;
+  const { data: signed, error: signError } = await supabase.storage
+    .from("documents")
+    .createSignedUrl(data.storage_path, DOCUMENT_LINK_SECONDS);
+  if (signError || !signed) return null;
+  return signed.signedUrl;
 }
