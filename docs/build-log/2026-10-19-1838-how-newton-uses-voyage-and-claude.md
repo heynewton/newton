@@ -30,4 +30,4 @@ Put the architecture.md update in its own branch and PR from main instead.
 - The change was first written on the manual Q&A branch; #87 had already merged, so it moved to
   its own branch from `main`.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#96](https://github.com/heynewton/newton/pull/96)
