@@ -96,9 +96,9 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
 - PRs from forks get no preview, because forks can't read repo secrets.
 - [heynewton.app](https://heynewton.app) currently serves the dev site: `www` redirects to it, and the
   DNS records on Cloudflare point at Vercel with the proxy off. That is fine while the site is static
-  pages with no data. Before sign-in (#5) opens to anyone outside the team, the domain moves to a
-  production project with its own Supabase, so previews and dev never share a URL or a database
-  with real boat data (#37).
+  pages with no data. Still in Phase 1, before the first real boat data arrives or anyone outside
+  the team signs in, the domain moves to a production project with its own Supabase, so previews
+  and dev never share a URL or a database with real boat data (#37).
 
 ## Rhythm
 
