@@ -219,6 +219,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"reminders_sent": {
+                  Row: {
+                    "boat_id": string,"due_at_engine_hours": number | null,"due_on": string | null,"id": string,"item_id": string,"item_type": Database["public"]['Enums']["reminder_item_type"],"person_id": string,"sent_at": string,"status": Database["public"]['Enums']["reminder_status"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "boat_id": string,"due_at_engine_hours"?: number | null,"due_on"?: string | null,"id"?: string,"item_id": string,"item_type": Database["public"]['Enums']["reminder_item_type"],"person_id": string,"sent_at"?: string,"status": Database["public"]['Enums']["reminder_status"]
+                  }
+                  Update: {
+                    "boat_id"?: string,"due_at_engine_hours"?: number | null,"due_on"?: string | null,"id"?: string,"item_id"?: string,"item_type"?: Database["public"]['Enums']["reminder_item_type"],"person_id"?: string,"sent_at"?: string,"status"?: Database["public"]['Enums']["reminder_status"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reminders_sent_boat_id_fkey"
+      columns: ["boat_id"]
+isOneToOne: false
+      referencedRelation: "boats"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reminders_sent_person_id_fkey"
+      columns: ["person_id"]
+isOneToOne: false
+      referencedRelation: "people"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"renewals": {
                   Row: {
                     "boat_id": string,"created_at": string,"document_id": string | null,"expires_on": string,"id": string,"kind": Database["public"]['Enums']["renewal_kind"],"notes": string | null,"reference": string | null,"title": string
@@ -307,7 +333,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "document_source": "email"|"upload","document_type": "unsorted"|"email"|"invoice"|"receipt"|"insurance"|"registration"|"manual"|"contract"|"survey"|"other","inbound_email_status": "filed"|"held","membership_role": "owner"|"co_owner"|"crew"|"read_only","renewal_kind": "insurance"|"registration"|"licence"|"other"
+            "document_source": "email"|"upload","document_type": "unsorted"|"email"|"invoice"|"receipt"|"insurance"|"registration"|"manual"|"contract"|"survey"|"other","inbound_email_status": "filed"|"held","membership_role": "owner"|"co_owner"|"crew"|"read_only","reminder_item_type": "renewal"|"maintenance","reminder_status": "due_soon"|"overdue","renewal_kind": "insurance"|"registration"|"licence"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -427,7 +453,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "document_source": ["email", "upload"],"document_type": ["unsorted", "email", "invoice", "receipt", "insurance", "registration", "manual", "contract", "survey", "other"],"inbound_email_status": ["filed", "held"],"membership_role": ["owner", "co_owner", "crew", "read_only"],"renewal_kind": ["insurance", "registration", "licence", "other"]
+            "document_source": ["email", "upload"],"document_type": ["unsorted", "email", "invoice", "receipt", "insurance", "registration", "manual", "contract", "survey", "other"],"inbound_email_status": ["filed", "held"],"membership_role": ["owner", "co_owner", "crew", "read_only"],"reminder_item_type": ["renewal", "maintenance"],"reminder_status": ["due_soon", "overdue"],"renewal_kind": ["insurance", "registration", "licence", "other"]
           }
         }
 } as const

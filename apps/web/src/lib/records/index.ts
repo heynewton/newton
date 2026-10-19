@@ -152,6 +152,36 @@ function byDueDate(a: ScheduledItem, b: ScheduledItem): number {
   return (a.due.dueAtEngineHours ?? 0) - (b.due.dueAtEngineHours ?? 0) || a.row.title.localeCompare(b.row.title);
 }
 
+// How the boat page and the reminder emails say when something is due.
+
+export function hours(value: number): string {
+  return `${value.toLocaleString("en-US")} h`;
+}
+
+// "every 12 months or 100 h"
+export function interval(row: MaintenanceRow): string {
+  const parts = [];
+  if (row.every_months !== null) parts.push(`${row.every_months} month${row.every_months === 1 ? "" : "s"}`);
+  if (row.every_engine_hours !== null) parts.push(hours(row.every_engine_hours));
+  return `every ${parts.join(" or ")}`;
+}
+
+// When it's due, and what that was computed from.
+export function dueLine(item: ScheduledItem): { due: string; basis: string } {
+  const { dueOn, dueAtEngineHours } = item.due;
+  const when = [dueOn && formatDate(dueOn), dueAtEngineHours !== undefined && `at ${hours(dueAtEngineHours)}`]
+    .filter(Boolean)
+    .join(" or ");
+  const verb = item.type === "renewal" ? "Expires" : item.status === "overdue" ? "Was due" : "Due";
+  const due = `${verb} ${when}${dueOn && dueAtEngineHours !== undefined ? ", whichever comes first" : ""}`;
+  if (item.type === "renewal") {
+    return { due, basis: item.row.reference ? `Reference ${item.row.reference}.` : "" };
+  }
+  const row = item.row;
+  const doneAt = row.last_done_engine_hours !== null ? ` at ${hours(row.last_done_engine_hours)}` : "";
+  return { due, basis: `Last done ${formatDate(row.last_done_on)}${doneAt}, ${interval(row)}.` };
+}
+
 export type CurrencySplit = {
   currency: string;
   balances: CoOwnerBalance[];

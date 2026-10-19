@@ -91,6 +91,7 @@ What a signed-in person can do in the app.
 
 - [#53](https://github.com/heynewton/newton/pull/53) · 2026-10-19 · Add your first boat after signing in · closes [#32](https://github.com/heynewton/newton/issues/32)
 - [#70](https://github.com/heynewton/newton/pull/70) · 2026-10-19 · A boat's page shows its renewals, maintenance, co-owner balance and documents · closes [#15](https://github.com/heynewton/newton/issues/15)
+- [#77](https://github.com/heynewton/newton/pull/77) · 2026-10-19 · Owners and co-owners get one email digest of what is overdue or coming up · closes [#12](https://github.com/heynewton/newton/issues/12)
 
 ### What's next
 
