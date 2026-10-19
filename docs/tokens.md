@@ -78,10 +78,15 @@ starts at **None**.
 | Database | Connection Pooling | Read | GitHub's runners reach the database through the pooler |
 | Application services | Data API Config | Read | `supabase link` compares hosted settings with `supabase/config.toml` |
 | Application services | Storage Config | Read | Same comparison, for storage |
-| Project | API keys (`api_gateway_keys_read`) | Read | `supabase link` reads the project's API keys; without it, link fails with "Missing required permission(s): api_gateway_keys_read" (#60) |
+| Application services | API Keys | Read | `supabase link` reads the project's API keys; without it, link fails with "Missing required permission(s): api_gateway_keys_read" (#60) |
+| Application services | API Key Secrets | Read | Needed with API Keys for the same call; without it, link fails with "Your account does not have the necessary privileges to access this endpoint" on `GET /v1/projects/<ref>/api-keys` (#60) |
 
 Supabase rates this "High risk" because a migration can run any SQL. That is what the workflow
-needs. The token can read the project's API keys but not change them. It can't read auth settings or signing keys, can't manage backups or
+needs. Supabase's [token docs](https://supabase.com/docs/guides/platform/personal-access-tokens) list Project Settings, API
+Keys and API Key Secrets (all Read) as what `supabase link` needs. So the token can read the
+project's API keys, including the secret ones that bypass RLS, but can't change them. For dev that
+exposes only fixture data; for prod it's a reason to keep the token in the approval-gated
+`production` environment. It can't read auth settings or signing keys, can't manage backups or
 network settings, and can't see any other project.
 
 If a workflow run fails on a missing permission, the error names it: add only that capability,
