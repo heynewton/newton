@@ -23,6 +23,7 @@ Workflow, board and process: how changes land, how issues are picked up, and how
 - [#56](https://github.com/heynewton/newton/pull/56) · 2026-10-19 · Open the spec and team docs from the repo, and see every PR by phase and topic
 - [#55](https://github.com/heynewton/newton/pull/55) · 2026-10-19 · A brief for maintainers: merging, backlog, settings and working with Claude
 - [#57](https://github.com/heynewton/newton/pull/57) · 2026-10-19 · Contributor guide no longer mentions the in-progress limit
+- [#58](https://github.com/heynewton/newton/pull/58) · 2026-10-19 · README links to every page in `docs/`
 
 ### Architecture and decisions
 
@@ -73,7 +74,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#58](https://github.com/heynewton/newton/pull/58) · README links to every page in `docs/`
+- [#64](https://github.com/heynewton/newton/pull/64) · Deploys upload one archive and skip docs-only changes, so previews keep working on busy days
 
 ### What's next
 

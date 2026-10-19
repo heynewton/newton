@@ -94,10 +94,13 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
   the `VERCEL_TOKEN` repo secret, created on the project's Vercel account (not a personal one).
 - Previews only ever use fake data from `fixtures/`, so they are public to anyone with the link.
 - PRs from forks get no preview, because forks can't read repo secrets.
+- Only changes that can alter the site deploy: `apps/web/`, `packages/`, the root `package.json`,
+  `package-lock.json`, `.nvmrc` and the workflow itself. A PR that only touches docs, `supabase/`
+  or other workflows gets no preview and no Deploy check, and merging it leaves the dev site as is.
 - Vercel's free plan allows 5,000 uploaded files a day. Deploys upload the build as one archive
   (`--archive=tgz`) to stay well under it. If a deploy fails with "Too many requests ...
   api-upload-free", the limit was hit anyway: previews and the dev site pause until it resets
-  (24 hours). That check failing doesn't block merging a PR that doesn't change the web app.
+  (24 hours). Deploy isn't a required check, so that failure doesn't block merging.
 - [heynewton.app](https://heynewton.app) currently serves the dev site: `www` redirects to it, and the
   DNS records on Cloudflare point at Vercel with the proxy off. That is fine while the site is static
   pages with no data. Still in Phase 1, before the first real boat data arrives or anyone outside

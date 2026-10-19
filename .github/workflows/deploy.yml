@@ -2,10 +2,25 @@
 # The only link to Vercel is the VERCEL_TOKEN repo secret (see docs/process.md).
 name: Deploy
 
+# Only changes that can alter the site deploy, so docs-only PRs don't use up Vercel's free quota.
 on:
   pull_request:
+    paths:
+      - apps/web/**
+      - packages/**
+      - package.json
+      - package-lock.json
+      - .nvmrc
+      - .github/workflows/deploy.yml
   push:
     branches: [main]
+    paths:
+      - apps/web/**
+      - packages/**
+      - package.json
+      - package-lock.json
+      - .nvmrc
+      - .github/workflows/deploy.yml
 
 permissions:
   contents: read

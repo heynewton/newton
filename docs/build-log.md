@@ -1317,4 +1317,25 @@ Create the issues from your plan, re-scope #37 as the final cutover with Blocked
   maintainer approved the plan without seeing it. Claude spelled out the plan when creating the
   issues.
 
+Then, in another session:
+
+````text
+suggest ways to not be blocked by the vercel limit
+````
+
+````text
+do 1 and 2 in one pr
+````
+
+- Claude read the failed runs: the cap is files uploaded a day, not deploys, and `--prebuilt`
+  uploads every file of the build output. Most of that evening's PRs were docs-only, yet each
+  deployed twice (preview, then `main`).
+- It suggested, best first: upload one archive, skip deploys when the site didn't change, promote
+  the preview instead of rebuilding on merge, or move to the Pro plan (already planned for #37).
+- Option 1 was already in this PR, so Claude added option 2 here instead of opening a new one: the
+  Deploy workflow only runs when `apps/web/`, `packages/`, the root package files, `.nvmrc` or the
+  workflow change. Deploy isn't a required check in the `main` ruleset, so a skipped run doesn't
+  block merging.
+- Moved #58 from **In progress** to "How we work" in `docs/history.md`, now that it merged.
+
 **Pull request:** [#64](https://github.com/heynewton/newton/pull/64)
