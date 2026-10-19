@@ -59,7 +59,7 @@ every change through a PR.
 ## Working with Claude
 
 Claude Code is the dev team (see [Roles](process.md#roles)). It follows `CLAUDE.md` and the
-`ship-change` skill, and adds an entry to [build-log.md](build-log.md) for each PR. That log is
+`ship-change` skill, and adds an entry to the [build log](build-log/) for each PR. That log is
 the quickest way to see what was asked, what was built and what changed along the way.
 
 - A local session can move board cards by hand; a cloud session can't, and relies on the board
