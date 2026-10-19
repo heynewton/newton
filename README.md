@@ -10,6 +10,18 @@ from day one to support many boats and many owners, so it can grow into a paid p
 
 Website: [heynewton.app](https://heynewton.app)
 
+## Documentation
+
+| Page | What it covers |
+| --- | --- |
+| [Architecture](docs/architecture.md) | How the parts fit together today, and the target for each phase |
+| [Decisions](docs/decisions/) | Recorded decisions, such as [auth](docs/decisions/0001-auth.md) and [screen sizes](docs/decisions/0002-screen-sizes.md) |
+| [History](docs/history.md) | Every merged PR by phase and topic, what's in progress and what's next |
+| [Build log](docs/build-log.md) | How each change was built with Claude Code, prompt by prompt |
+| [How we work](docs/process.md) | Roles, the project board and the weekly rhythm |
+| [Contributing](CONTRIBUTING.md) | How to pick up an issue, open a PR and review |
+| [Maintainer brief](docs/maintainers.md) | What maintainers do on top of contributing: merging, backlog, settings |
+
 ## Principles
 
 1. **The boat is the tenant, not the user.** Every record belongs to a boat. People have a
@@ -34,6 +46,7 @@ Website: [heynewton.app](https://heynewton.app)
 | Document search | pgvector |
 | Agent | Claude API with tool use |
 | Email-in | Inbound email to a per-boat address |
+| Web app | Next.js (App Router) + Tailwind, in `apps/web` |
 | Mobile app | Expo / React Native |
 | Boat data | Signal K (Raspberry Pi + NMEA 2000 gateway) |
 | Tides | NOAA predictions, cached |
@@ -47,6 +60,8 @@ How the parts fit together, today and in each phase: [docs/architecture.md](docs
 2. **On-water voice**: tide and course-to-mark first (phone GPS only), then target angles via Signal K.
 3. **Three to five friends' boats**: self-serve onboarding; measure time until a new boat is useful.
 4. **Paid product.**
+
+What has landed so far, and what's next in Phase 1: [docs/history.md](docs/history.md).
 
 ## Development
 
@@ -84,7 +99,8 @@ The seed loads the made-up sample boat Kittiwake (`fixtures/sample-boat`), so si
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+Start with [CONTRIBUTING.md](CONTRIBUTING.md), then [How we work](docs/process.md) for roles and
+the board. Maintainers also read the [maintainer brief](docs/maintainers.md).
 
 ## License
 

@@ -20,6 +20,8 @@ Workflow, board and process: how changes land, how issues are picked up, and how
 - [#50](https://github.com/heynewton/newton/pull/50) · 2026-10-18 · Board cards move by themselves when issues and PRs change · closes [#49](https://github.com/heynewton/newton/issues/49)
 - [#51](https://github.com/heynewton/newton/pull/51) · 2026-10-18 · Board docs say who can move cards: cloud sessions let the workflow do it · closes [#24](https://github.com/heynewton/newton/issues/24)
 - [#44](https://github.com/heynewton/newton/pull/44) · 2026-10-19 · Up to four issues in progress, and the board opens on the Kanban view
+- [#56](https://github.com/heynewton/newton/pull/56) · 2026-10-19 · Open the spec and team docs from the repo, and see every PR by phase and topic
+- [#55](https://github.com/heynewton/newton/pull/55) · 2026-10-19 · A brief for maintainers: merging, backlog, settings and working with Claude
 
 ### Architecture and decisions
 
@@ -70,8 +72,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#55](https://github.com/heynewton/newton/pull/55) · A brief for maintainers: merging, backlog, settings and working with Claude
-- [#56](https://github.com/heynewton/newton/pull/56) · Links to the team Drive, spec and admin docs, and this history page
+- README links to every page in `docs/` (PR link added once opened)
 
 ### What's next
 
