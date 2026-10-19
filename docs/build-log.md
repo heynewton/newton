@@ -1616,4 +1616,4 @@ Ok with resend for inbound
 - Owners need a way to see held mail and let it in, and the boat's address may need changing if
   it leaks. Both are left for follow-up issues.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#73](https://github.com/heynewton/newton/pull/73)
