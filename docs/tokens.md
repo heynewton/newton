@@ -298,38 +298,38 @@ it until the app asks questions. Tests and CI use a scripted stand-in.
 ## Production
 
 Everything prod needs, set up once by the maintainer for #63. Same names and settings as dev
-unless a step says otherwise; **never reuse a dev key or value**. Tick these off in the PR or on
-#63 as they're done.
+unless a step says otherwise; **never reuse a dev key or value**. Steps 1–4 were done on 19 October 2026;
+step 5 follows the first release.
 
 **1. Supabase `newton-prod`**
 
-- [ ] Supabase → New project `newton-prod`, same organisation and the
+- [x] Supabase → New project `newton-prod`, same organisation and the
       [settings chosen at creation](#supabase-project-settings-chosen-at-creation). Generate the
       database password and save it in the password manager as "Supabase newton-prod database".
-- [ ] Access token `github-actions-newton-prod`, as described under
+- [x] Access token `github-actions-newton-prod`, as described under
       [Supabase access tokens](#supabase-access-tokens-supabase_dev_access_token-supabase_prod_access_token).
-- [ ] Authentication → URL Configuration: **Site URL** `https://heynewton-prod.vercel.app`,
+- [x] Authentication → URL Configuration: **Site URL** `https://heynewton-prod.vercel.app`,
       **Redirect URLs** `https://heynewton-prod.vercel.app/**` only (no previews, no dev site).
       #37 changes both to `https://heynewton.app`.
-- [ ] Authentication → Emails → SMTP: decision 0003, [step 6](decisions/0003-email-provider.md#6-supabase-newton-prod-63)
+- [x] Authentication → Emails → SMTP: decision 0003, [step 6](decisions/0003-email-provider.md#6-supabase-newton-prod-63)
       (key `supabase-newton-prod`).
 
 **2. GitHub environment `production`**
 
-- [ ] Repo settings → Environments → New environment `production`. Deployment protection rules:
+- [x] Repo settings → Environments → New environment `production`. Deployment protection rules:
       **Required reviewers** the maintainer, **Deployment branches** `main` only.
-- [ ] Environment secrets: `SUPABASE_PROD_ACCESS_TOKEN`, `SUPABASE_PROD_DB_PASSWORD`.
-- [ ] Environment variables: `SUPABASE_PROD_PROJECT_REF`, `SUPABASE_PROD_URL`
+- [x] Environment secrets: `SUPABASE_PROD_ACCESS_TOKEN`, `SUPABASE_PROD_DB_PASSWORD`.
+- [x] Environment variables: `SUPABASE_PROD_PROJECT_REF`, `SUPABASE_PROD_URL`
       (`https://<ref>.supabase.co`), `SUPABASE_PROD_PUBLISHABLE_KEY` (`sb_publishable_…`),
       `PROD_SITE_URL` (`https://heynewton-prod.vercel.app`).
-- [ ] Nothing prod in repo-level secrets or variables, where any workflow could read it.
+- [x] Nothing prod in repo-level secrets or variables, where any workflow could read it.
 
 **3. Vercel `heynewton-prod`**
 
-- [ ] Vercel → Add New → Project `heynewton-prod` on the project's Hobby account, with no Git
-      connection (GitHub Actions deploys it with `VERCEL_TOKEN`, as for dev). The workflow sets its
-      root directory.
-- [ ] Settings → Environment Variables, **Production** target only, secrets marked Sensitive:
+- [x] Project `heynewton-prod` in Team Hey Newton (Hobby), with no Git connection (GitHub Actions
+      deploys it with `VERCEL_TOKEN`, as for dev): `vercel project add heynewton-prod`. Created that
+      way it defaults to framework "Other", so the workflow sets Next.js and the root directory.
+- [x] Settings → Environment Variables, **Production** target only, secrets marked Sensitive:
 
 | Variable | Value |
 | --- | --- |
@@ -340,11 +340,11 @@ unless a step says otherwise; **never reuse a dev key or value**. Tick these off
 | `CRON_SECRET` | A new `openssl rand -hex 32`, not dev's |
 | `SITE_URL` | `https://heynewton-prod.vercel.app` (heynewton.app after #37) |
 
-- [ ] Never `FIXTURE_SIGN_IN`: the Production workflow fails if it's there.
+- [x] Never `FIXTURE_SIGN_IN`: the Production workflow fails if it's there.
 
 **4. Resend webhook for prod**
 
-- [ ] Decision 0003 [step 3b](decisions/0003-email-provider.md#3b-email-in-webhook-10), last
+- [x] Decision 0003 [step 3b](decisions/0003-email-provider.md#3b-email-in-webhook-10), last
       item: a second endpoint `https://heynewton-prod.vercel.app/api/email-in`, event
       `email.received`. Each webhook ignores addresses that aren't its own project's boats.
 
