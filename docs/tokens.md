@@ -20,13 +20,14 @@ Rules for all of them:
 | --- | --- | --- | --- | --- | --- |
 | `VERCEL_TOKEN` | secret | Vercel | Project Vercel account (Hobby) | `.github/workflows/deploy.yml` | Repo secrets |
 | `PROJECT_TOKEN` | secret | GitHub | The maintainer's GitHub user (see below) | `.github/workflows/board.yml` | Repo secrets |
+| `HISTORY_APP_ID`, `HISTORY_APP_PRIVATE_KEY` | variable, secret | GitHub | The `heynewton` org (a GitHub App) | `.github/workflows/history.yml` | Repo variables; repo secrets |
 | `SUPABASE_DEV_ACCESS_TOKEN` | secret | Supabase | Project Supabase account | Dev database workflow (#60) | Repo secrets |
 | `SUPABASE_DEV_DB_PASSWORD` | secret | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo secrets, and the project password manager |
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | Project Resend account; that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment |
-| `ANTHROPIC_API_KEY` | secret | Anthropic | Project Claude Console account | Manual Q&A (`packages/agent`, #14): the live eval, and the app once it calls it | Local `.env` for the eval; the app's environment later. Not in CI |
+| `ANTHROPIC_API_KEY` | secret | Anthropic | `heynewton` org in the Claude Console, one workspace per environment | Manual Q&A (`packages/agent`, #14): the live eval, and the app once it calls it | Local `.env` for the eval; the app's environment later. Not in CI |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
@@ -59,6 +60,32 @@ correct this section if they differ.
   owned by `heynewton` would remove that tie.
 - **Not for cloud sessions:** Claude cloud sessions can't use it. Their GitHub proxy blocks
   GraphQL, which Projects needs, whatever the token (see `docs/process.md`).
+
+## History App (`HISTORY_APP_ID`, `HISTORY_APP_PRIVATE_KEY`)
+
+The History workflow rebuilds `docs/history.md` after every merge and pushes it straight to
+`main`. The "Protect main" ruleset only takes PRs, so the push comes from a GitHub App that is
+the ruleset's one bypass. An App belongs to the org, not to a person, and the workflow turns its
+key into a token that lasts an hour.
+
+- **Where:** GitHub → `heynewton` org settings → Developer settings → GitHub Apps → New GitHub App.
+- **Name:** `heynewton-history` (App names are unique across GitHub). Homepage:
+  `https://github.com/heynewton/newton`. Webhook: off.
+- **Permissions:** Repository → Contents: read and write (Metadata: read comes with it).
+  Everything else: no access. Where can it be installed: only this account.
+- **Install:** on `heynewton`, only the `newton` repository.
+- **Bypass:** Repo settings → Rules → Rulesets → "Protect main" → Bypass list → add
+  `heynewton-history`, mode "Always allow". Nothing else is on the list.
+- **Saved as:** the App ID (on the App's page) with
+  `gh variable set HISTORY_APP_ID --repo heynewton/newton`; a private key (App page → Generate a
+  private key, a `.pem` download) with
+  `gh secret set HISTORY_APP_PRIVATE_KEY --repo heynewton/newton < key.pem`, then delete the file.
+- **Expiry:** App keys don't expire. Generate a new one and delete the old one on the App page if
+  it may have leaked.
+- **Before it's set up** the workflow skips itself (no `HISTORY_APP_ID`), and `docs/history.md`
+  only changes when someone runs `npm run history` in a PR.
+- **What it can do:** push to any branch of this repo, `main` included, without a PR. Only the
+  History workflow has the key, and it only commits `docs/history.md`.
 
 ## Supabase access tokens (`SUPABASE_DEV_ACCESS_TOKEN`, `SUPABASE_PROD_ACCESS_TOKEN`)
 
@@ -176,6 +203,7 @@ API.
 - **Locally:** `apps/web/.env.local`; call the route with
   `curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/reminders`.
 
+## Supabase project settings chosen at creation
 
 Use the same choices for `newton-prod`:
 
@@ -188,17 +216,22 @@ Use the same choices for `newton-prod`:
 
 Your local stack still exposes new tables by default, so a migration that forgets its `grant`
 lines works on a laptop but not on the hosted projects. Previews on dev (#62) catch that.
-## Supabase project settings chosen at creation
 
 ## `ANTHROPIC_API_KEY`
 
-Claude for manual Q&A (#14). Not created yet: only the live eval (`npm run eval:manual-qa -w
-@newton/agent`) uses it until the app asks questions. Tests and CI use a scripted stand-in.
+Claude for manual Q&A (#14). Only the live eval (`npm run eval:manual-qa -w @newton/agent`) uses
+it until the app asks questions. Tests and CI use a scripted stand-in.
 
-- **Where:** Claude Console (platform.claude.com) → API keys, signed in as the project account
-  (`dev@heynewton.app`), in a workspace for Newton.
-- **Name:** `newton-dev`, and a separate `newton-prod` key for prod.
-- **Spend:** set a monthly limit on the workspace. One eval run is ten questions on
-  `claude-opus-5-5` at low effort: a few cents.
+- **Where:** Claude Console (platform.claude.com), in the `heynewton` organization owned by the
+  project account (`dev@heynewton.app`).
+- **Workspaces:** `newton-dev` and `newton-prod`, each with its own monthly spend limit, so dev
+  runs can't use up prod's budget and one key can be revoked without the other.
+- **Name:** the key is named after its workspace. `newton-dev` exists; `newton-prod`'s key is
+  created when the app calls Claude.
+- **Spend:** one eval run is ten questions on `claude-opus-5-5` at low effort: a few cents.
 - **Expiry:** keys don't expire; rotate yearly with a calendar reminder.
-- **Stored in:** `.env` locally (git-ignored), never in the repo or CI.
+- **Stored in:** `.env` at the repo root (git-ignored), never in the repo or CI. Vitest doesn't
+  read `.env`, so load it into the shell first:
+  `set -a && source .env && set +a && npm run eval:manual-qa -w @newton/agent`. Without a key the
+  eval is skipped, not failed.
+- **Later:** for prod on Vercel, consider workload identity federation instead of a stored key.

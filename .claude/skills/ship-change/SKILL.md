@@ -37,12 +37,14 @@ allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(gh pr vi
 - When adding to an existing PR, update its title and description to match.
 
 ## 5. Build log
-Add an entry to `docs/build-log.md` for the request, following the existing format: the prompt
-word for word (lightly cleaned where privacy needs it, with replaced text in [brackets]), what
-Claude did, what changed along the way, and the PR link. Commit it to the same PR.
+Add the entry as a **new file** in `docs/build-log/`, named `YYYY-MM-DD-HHMM-short-title.md`
+(UTC, when you write it), following the existing entries and `docs/build-log/README.md`: the
+prompt word for word (lightly cleaned where privacy needs it, with replaced text in [brackets]),
+what Claude did, what changed along the way, and the PR link. Commit it to the same PR. Don't
+edit other entries, so PRs open at the same time never conflict.
 
 ## 6. History
-Add the PR to `docs/history.md`, in the same PR: one line under **In progress** with the PR link
-and its title. When the PR merges, the next PR that touches the page moves the line to its phase
-and topic, adds the merge date and the issue it closed, and takes that issue off **What's next**.
-Add a topic only when no existing one fits.
+Once the PR has a number, add `docs/history/pr-NNNN.md` to it (format in `docs/history/README.md`):
+`pr`, `phase`, `topic`, `closes` and a short `summary`. Pick a topic from
+`docs/history/topics.json`, and add one there only when none fits. Don't edit `docs/history.md`:
+the History workflow rebuilds it with `npm run history` after the PR merges.
