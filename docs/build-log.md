@@ -1439,4 +1439,4 @@ with a fake embedder for tests, tested on the fixture manual, and a note on when
   record says the job calls `indexDocument()` when a document becomes a manual, and nothing calls
   it until then.
 
-**Pull request:** [#PRNUM](https://github.com/heynewton/newton/pull/PRNUM)
+**Pull request:** [#69](https://github.com/heynewton/newton/pull/69)

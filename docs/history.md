@@ -76,7 +76,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#PRNUM](https://github.com/heynewton/newton/pull/PRNUM) · Manuals split into pages and chunks for search, locked to each boat, with Voyage AI chosen for embeddings
+- [#69](https://github.com/heynewton/newton/pull/69) · Manuals split into pages and chunks for search, locked to each boat, with Voyage AI chosen for embeddings
 
 ### What's next
 
