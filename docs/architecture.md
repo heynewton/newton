@@ -16,6 +16,7 @@ in `docs/decisions/` when an issue needs it.
 
 - [The target shape in one picture](#the-target-shape-in-one-picture)
 - [Rules every part follows](#rules-every-part-follows)
+- [AI models: who does what](#ai-models-who-does-what)
 - [Today: the scaffold](#today-the-scaffold)
 - [Phase 1 target: home side for our own boat](#phase-1-target-home-side-for-our-own-boat)
 - [Phase 2 target: on-water voice](#phase-2-target-on-water-voice)
@@ -83,6 +84,86 @@ These are the [principles](../README.md#principles) turned into technical rules.
 | 5. Owners own their data | Every record and file can be exported per boat. Nothing about a boat lives outside the boat's rows and its storage folder, so a record can move to a new owner. |
 | 6. Safety framing | Every fact carries its source (document, page, station) and its timestamp, so answers can say where a number came from and how old it is. Records keep an audit trail: who added or changed them, and from which email or file. |
 
+## AI models: who does what
+
+Newton uses two hosted models today, each for one narrow job, and keeps everything else in
+code. Neither model is the source of a number, a date or a citation: Voyage only decides which
+pages are worth reading, Claude only phrases what those pages say, and code checks the result.
+
+| Model | Provider | Its job | What it is sent | What it never does | Code | Key | In tests and CI |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `voyage-4`, 1024 dimensions | Voyage AI | Turns manual chunks (`input_type: "document"`) and questions (`"query"`) into vectors, so pgvector can find the closest pages | Text of documents of type `manual` (later owner-written procedures, #21), and the question. Training on our content is opted out. | See invoices, insurance, contracts or email bodies; answer anything | `packages/indexing` (`VoyageEmbedder` behind the `Embedder` interface) | `VOYAGE_API_KEY` | `FakeEmbedder` (deterministic bag of words), no key |
+| `claude-opus-5-5`, low effort | Anthropic | Reads the few excerpts search found and returns `{covered, answer, sources}` as structured output | The fixed system prompt (cached) and up to four numbered excerpts with their document name and page, plus the question | Search, compute, write the citation, or answer from general knowledge | `packages/agent` (`ClaudeAnswerModel` behind the `AnswerModel` interface) | `ANTHROPIC_API_KEY` | A scripted stand-in model, no key |
+
+Claude has no embeddings API, which is why retrieval and answering come from two providers
+([decision 0004](decisions/0004-embeddings.md)). Similarity search itself is not a model: it is
+`search_document_chunks()` in Postgres, running as the person asking, so row-level security keeps
+each boat's manuals to its own members.
+
+### One question, end to end
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Agent as packages/agent
+  participant Voyage as Voyage AI (voyage-4)
+  participant DB as Postgres + pgvector (RLS)
+  participant Claude as Claude (claude-opus-5-5)
+
+  User->>Agent: "How much oil does the engine take?"
+  Agent->>Voyage: embed the question (query)
+  Voyage-->>Agent: 1024 numbers
+  Agent->>DB: search_document_chunks(boat, vector, 4)
+  DB-->>Agent: 4 excerpts + document, page, received date
+  Agent->>Claude: system prompt + numbered excerpts + question
+  Claude-->>Agent: {covered, answer, sources: [2]}
+  Agent->>Agent: guards: cites an excerpt? every number in it?
+  Agent-->>User: answer + "From manual.pdf, page 2 (received 11 Oct 2026)."
+```
+
+Indexing is the same first step done ahead of time: when a document becomes a manual, its PDF
+text is split into chunks that keep their page, each chunk is embedded by Voyage as a
+`document`, and the vectors are stored in `document_chunks` with the model that made them.
+
+### What code checks after Claude answers
+
+- **Sources come from the excerpts, not the model.** Claude returns excerpt numbers; code turns
+  them into document, page and received date. An answer that cites no excerpt it was given is
+  withheld.
+- **Every number must be in a cited excerpt.** If the answer has a figure that isn't written in
+  the excerpts it cites (converted, added up or invented), it is withheld (principle 2).
+- **Saying no is a normal answer.** Nothing found, Claude saying the excerpts don't cover it, a
+  safety refusal (retried once on Anthropic's server-side fallback model), all give "The boat's
+  manuals on Newton don't cover that, so I won't guess." A cut-off or malformed reply is an error,
+  not an answer.
+
+### Changing a model
+
+Both models sit behind an interface, so a change is a new class, not a rewrite.
+
+- **Embeddings:** every chunk stores `embedding_model`, and search only compares a question with
+  chunks from the same model, so a switch re-embeds boat by boat. Another 1024-dimension model
+  (`mistral-embed`, `bge-m3`) is a re-embed; any other size needs a migration. What would trigger a
+  switch (EU processing, missed pages, Voyage's terms, offline on the phone) is in
+  [decision 0004](decisions/0004-embeddings.md).
+- **Claude:** `DEFAULT_MODEL` in `packages/agent/src/claude.ts`; the live eval takes
+  `NEWTON_QA_MODEL` to try another one. A model change lands only with a passing
+  `npm run eval:manual-qa` run.
+
+### Coming next
+
+| Use | Model | When |
+| --- | --- | --- |
+| Extraction: classify each filed document and propose fields (dates, amounts, vendor) | Claude, structured output; `calc` validates every date and amount before saving | #11 |
+| Questions about records ("when is the insurance due?") | Claude with tools (record lookup, `calc`), the answer built only from tool results | After #14 |
+| Voice on the boat: wake word, speech to text, text to speech | On-device engines, so they work offline **(open)** | Phase 2 |
+| Search offline on the phone | A small open embedding model on the device, with the boat's chunks re-embedded for it ([decision 0004](decisions/0004-embeddings.md)) | Phase 2, if needed |
+| Cost per boat | Log Claude and Voyage tokens per boat | Phase 3 |
+
+On the water, common questions (tide, course to mark, target angle) never reach a model: an
+on-device intent router calls `calc` directly. Only open questions go to Claude, and only when
+there is signal.
+
 ## Today: the scaffold
 
 What is in `main` now (after [#18](https://github.com/heynewton/newton/pull/18) and
@@ -106,6 +187,7 @@ flowchart LR
     Web["apps/web<br/>Next.js 16, App Router,<br/>Tailwind 4, TypeScript"]
     Calc["packages/calc<br/>TypeScript, Vitest<br/>money, cost split, due dates"]
     Indexing["packages/indexing<br/>PDF pages, chunks,<br/>embedder interface"]
+    AgentPkg["packages/agent<br/>manual Q#amp;A, guards, eval"]
   end
   subgraph Local["supabase/ (local, Docker)"]
     DB[("Postgres + RLS<br/>boats, people, memberships,<br/>documents, document_chunks (pgvector)")]
@@ -121,6 +203,8 @@ flowchart LR
   CI --> DB
   Indexing -.->|"chunks, search (not wired yet)"| DB
   Indexing -.->|"embeddings"| Voyage["Voyage AI<br/>voyage-4"]
+  AgentPkg -->|"search"| Indexing
+  AgentPkg -.->|"read excerpts, answer"| Claude["Anthropic<br/>claude-opus-5-5"]
 ```
 
 | Part | Where | State |
