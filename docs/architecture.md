@@ -16,6 +16,7 @@ in `docs/decisions/` when an issue needs it.
 
 - [The target shape in one picture](#the-target-shape-in-one-picture)
 - [Rules every part follows](#rules-every-part-follows)
+- [AI models: who does what](#ai-models-who-does-what)
 - [Today: the scaffold](#today-the-scaffold)
 - [Phase 1 target: home side for our own boat](#phase-1-target-home-side-for-our-own-boat)
 - [Phase 2 target: on-water voice](#phase-2-target-on-water-voice)
@@ -83,6 +84,86 @@ These are the [principles](../README.md#principles) turned into technical rules.
 | 5. Owners own their data | Every record and file can be exported per boat. Nothing about a boat lives outside the boat's rows and its storage folder, so a record can move to a new owner. |
 | 6. Safety framing | Every fact carries its source (document, page, station) and its timestamp, so answers can say where a number came from and how old it is. Records keep an audit trail: who added or changed them, and from which email or file. |
 
+## AI models: who does what
+
+Newton uses two hosted models today, each for one narrow job, and keeps everything else in
+code. Neither model is the source of a number, a date or a citation: Voyage only decides which
+pages are worth reading, Claude only phrases what those pages say, and code checks the result.
+
+| Model | Provider | Its job | What it is sent | What it never does | Code | Key | In tests and CI |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `voyage-4`, 1024 dimensions | Voyage AI | Turns manual chunks (`input_type: "document"`) and questions (`"query"`) into vectors, so pgvector can find the closest pages | Text of documents of type `manual` (later owner-written procedures, #21), and the question. Training on our content is opted out. | See invoices, insurance, contracts or email bodies; answer anything | `packages/indexing` (`VoyageEmbedder` behind the `Embedder` interface) | `VOYAGE_API_KEY` | `FakeEmbedder` (deterministic bag of words), no key |
+| `claude-opus-5-5`, low effort | Anthropic | Reads the few excerpts search found and returns `{covered, answer, sources}` as structured output | The fixed system prompt (cached) and up to four numbered excerpts with their document name and page, plus the question | Search, compute, write the citation, or answer from general knowledge | `packages/agent` (`ClaudeAnswerModel` behind the `AnswerModel` interface) | `ANTHROPIC_API_KEY` | A scripted stand-in model, no key |
+
+Claude has no embeddings API, which is why retrieval and answering come from two providers
+([decision 0004](decisions/0004-embeddings.md)). Similarity search itself is not a model: it is
+`search_document_chunks()` in Postgres, running as the person asking, so row-level security keeps
+each boat's manuals to its own members.
+
+### One question, end to end
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Agent as packages/agent
+  participant Voyage as Voyage AI (voyage-4)
+  participant DB as Postgres + pgvector (RLS)
+  participant Claude as Claude (claude-opus-5-5)
+
+  User->>Agent: "How much oil does the engine take?"
+  Agent->>Voyage: embed the question (query)
+  Voyage-->>Agent: 1024 numbers
+  Agent->>DB: search_document_chunks(boat, vector, 4)
+  DB-->>Agent: 4 excerpts + document, page, received date
+  Agent->>Claude: system prompt + numbered excerpts + question
+  Claude-->>Agent: {covered, answer, sources: [2]}
+  Agent->>Agent: guards: cites an excerpt? every number in it?
+  Agent-->>User: answer + "From manual.pdf, page 2 (received 11 Oct 2026)."
+```
+
+Indexing is the same first step done ahead of time: when a document becomes a manual, its PDF
+text is split into chunks that keep their page, each chunk is embedded by Voyage as a
+`document`, and the vectors are stored in `document_chunks` with the model that made them.
+
+### What code checks after Claude answers
+
+- **Sources come from the excerpts, not the model.** Claude returns excerpt numbers; code turns
+  them into document, page and received date. An answer that cites no excerpt it was given is
+  withheld.
+- **Every number must be in a cited excerpt.** If the answer has a figure that isn't written in
+  the excerpts it cites (converted, added up or invented), it is withheld (principle 2).
+- **Saying no is a normal answer.** Nothing found, Claude saying the excerpts don't cover it, a
+  safety refusal (retried once on Anthropic's server-side fallback model), all give "The boat's
+  manuals on Newton don't cover that, so I won't guess." A cut-off or malformed reply is an error,
+  not an answer.
+
+### Changing a model
+
+Both models sit behind an interface, so a change is a new class, not a rewrite.
+
+- **Embeddings:** every chunk stores `embedding_model`, and search only compares a question with
+  chunks from the same model, so a switch re-embeds boat by boat. Another 1024-dimension model
+  (`mistral-embed`, `bge-m3`) is a re-embed; any other size needs a migration. What would trigger a
+  switch (EU processing, missed pages, Voyage's terms, offline on the phone) is in
+  [decision 0004](decisions/0004-embeddings.md).
+- **Claude:** `DEFAULT_MODEL` in `packages/agent/src/claude.ts`; the live eval takes
+  `NEWTON_QA_MODEL` to try another one. A model change lands only with a passing
+  `npm run eval:manual-qa` run.
+
+### Coming next
+
+| Use | Model | When |
+| --- | --- | --- |
+| Extraction: classify each filed document and propose fields (dates, amounts, vendor) | Claude, structured output; `calc` validates every date and amount before saving | #11 |
+| Questions about records ("when is the insurance due?") | Claude with tools (record lookup, `calc`), the answer built only from tool results | After #14 |
+| Voice on the boat: wake word, speech to text, text to speech | On-device engines, so they work offline **(open)** | Phase 2 |
+| Search offline on the phone | A small open embedding model on the device, with the boat's chunks re-embedded for it ([decision 0004](decisions/0004-embeddings.md)) | Phase 2, if needed |
+| Cost per boat | Log Claude and Voyage tokens per boat | Phase 3 |
+
+On the water, common questions (tide, course to mark, target angle) never reach a model: an
+on-device intent router calls `calc` directly. Only open questions go to Claude, and only when
+there is signal.
+
 ## Today: the scaffold
 
 What is in `main` now (after [#18](https://github.com/heynewton/newton/pull/18) and
@@ -106,6 +187,7 @@ flowchart LR
     Web["apps/web<br/>Next.js 16, App Router,<br/>Tailwind 4, TypeScript"]
     Calc["packages/calc<br/>TypeScript, Vitest<br/>money, cost split, due dates"]
     Indexing["packages/indexing<br/>PDF pages, chunks,<br/>embedder interface"]
+    AgentPkg["packages/agent<br/>manual Q#amp;A, guards, eval"]
   end
   subgraph Local["supabase/ (local, Docker)"]
     DB[("Postgres + RLS<br/>boats, people, memberships,<br/>documents, document_chunks (pgvector)")]
@@ -121,19 +203,21 @@ flowchart LR
   CI --> DB
   Indexing -.->|"chunks, search (not wired yet)"| DB
   Indexing -.->|"embeddings"| Voyage["Voyage AI<br/>voyage-4"]
+  AgentPkg -->|"search"| Indexing
+  AgentPkg -.->|"read excerpts, answer"| Claude["Anthropic<br/>claude-opus-5-5"]
 ```
 
 | Part | Where | State |
 | --- | --- | --- |
 | Web app | `apps/web` | Homepage, placeholder `/get-started`, `/privacy` and `/terms`, and a shared footer from the root layout (#31). Previews per PR (#19). |
-| Sign-in and boats | `apps/web/src/app/sign-in`, `auth/callback`, `boats` | Email magic link (#5). A proxy (`src/proxy.ts`) refreshes the session cookie and sends a signed-in person from `/` to `/boats`, which goes on to `/boats/new` (no boat), their one boat, or a picker (#32). `/boats/new` asks only for the name; `/boats/<id>` is the boat's home: renewals and maintenance with due dates, the co-owner balance and the documents, each record linking to its file through a short-lived signed URL (#15), then next steps. `src/lib/records` maps rows to `packages/calc` inputs. Without `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (as on previews today), `/sign-in` stays a placeholder. |
+| Sign-in and boats | `apps/web/src/app/sign-in`, `auth/callback`, `boats` | Email magic link (#5). A proxy (`src/proxy.ts`) refreshes the session cookie and sends a signed-in person from `/` to `/boats`, which goes on to `/boats/new` (no boat), their one boat, or a picker (#32). `/boats/new` asks only for the name; `/boats/<id>` is the boat's home: renewals and maintenance with due dates, the co-owner balance and the documents, each record linking to its file through a short-lived signed URL (#15), then next steps. `src/lib/records` maps rows to `packages/calc` inputs. Without `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`, `/sign-in` stays a placeholder; the dev site and previews get `newton-dev`'s from the Deploy workflow (#62). The email link returns to the origin it was requested from. |
 | Data access | `apps/web/src/lib/db` | The web app's only way into the database and auth; a lint rule blocks `@supabase/*` imports elsewhere. Types generated from the schema (`npm run db:types`). |
 | Calc | `packages/calc` | Money helpers (`toCents`, `formatCents`), the co-owner cost split (`splitCosts`, #6), due dates for renewals and maintenance (`nextDue`, `findDue`, #7), and for Phase 2 the tide height between cached high and low waters (`tideHeightAt`, #78), the bearing, distance and time to a mark (`bearingAndDistance`, `timeToMark`, #79) and the course to steer for tidal stream and leeway (`courseToSteer`, #80), with tests. Imported as source (`main: src/index.ts`), no build step. |
 | Brand | `assets/brand` | Logo, favicon, monochrome marks. |
 | CI | `.github/workflows/ci.yml` | `npm ci`, lint, typecheck, test, build on every PR and on `main`; a second job starts Postgres and runs the RLS tests. |
 | History | `.github/workflows/history.yml`, `scripts/history.mjs` | After every merge that adds a `docs/history/` file, rebuilds `docs/history.md` and commits it to `main` as the `heynewton-history` GitHub App, the one bypass on the "Protect main" ruleset (#89). |
-| Dev database | Supabase project `newton-dev`, `.github/workflows/dev-database.yml` | Holds only fixture data. On every push to `main`, the workflow runs `supabase db push` with the checked-in migrations, then loads `supabase/seed.sql` with `psql` (the seed is safe to re-run, and resets the sample boat's rows to `boat.json`), then uploads the sample boat's four PDFs into the private `documents` bucket with `supabase seed buckets --linked` (from `supabase/storage/documents`, overwriting, so also safe to re-run), so the records' document links open on dev. PRs that touch `supabase/` or the sample boat get a dry run against dev that changes nothing. Nothing reads it yet: previews move to it in #62. Unlike the local stack, it doesn't expose new tables to the Data API roles, so every migration grants explicitly. |
-| Hosting | Vercel project `heynewton-web` | `main` deploys to the dev site, https://heynewton-web.vercel.app, which [heynewton.app](https://heynewton.app) also points at (DNS on Cloudflare, `www` redirects to the apex). Static pages only, so this is harmless until sign-in; #37 moves the domain to a production project first (#35). |
+| Dev database | Supabase project `newton-dev`, `.github/workflows/dev-database.yml` | Holds only fixture data. On every push to `main`, the workflow runs `supabase db push` with the checked-in migrations, then loads `supabase/seed.sql` with `psql` (the seed is safe to re-run, and resets the sample boat's rows to `boat.json`), then uploads the sample boat's four PDFs into the private `documents` bucket with `supabase seed buckets --linked` (from `supabase/storage/documents`, overwriting, so also safe to re-run), so the records' document links open on dev. PRs that touch `supabase/` or the sample boat get a dry run against dev that changes nothing. The dev site and every PR preview sign in against it (#62); its Auth URL configuration allows the dev site, heynewton.app and preview URLs. Unlike the local stack, it doesn't expose new tables to the Data API roles, so every migration grants explicitly. |
+| Hosting | Vercel project `heynewton-web` | `main` deploys to the dev site, https://heynewton-web.vercel.app, which [heynewton.app](https://heynewton.app) also points at (DNS on Cloudflare, `www` redirects to the apex). Previews and the dev site get `newton-dev`'s URL and publishable key from repo variables, passed by `.github/workflows/deploy.yml` at build and run time (#62), so they hold fixture data only; #37 moves the domain to a production project before real boat data (#35). |
 | Fixtures | `fixtures/sample-boat` | One invented boat (Kittiwake): boat, people, memberships with ownership shares, renewals, maintenance items and expenses in `boat.json`, four fake documents as text and PDF, five inbound `.eml` files. PDFs and emails are generated by `build.mjs`. |
 | Database and auth | `supabase/` | Local stack via the Supabase CLI (`npm run db:start`). Migration: `boats`, `people` (Newton's own `id`; the provider's user ID only in `auth_subject`, not readable through the API), `memberships` with role (owner, co-owner, crew, read-only) and ownership share. Records migration (#9): `renewals` (kind, expiry date), `maintenance_items` (interval in months and/or engine hours, last done date and hours) and `expenses` (integer cents and currency, paid by a person on the boat), each with a `boat_id` and a `document_id` pointing at its source document (set to null if the document is deleted), shaped like `calc`'s inputs. Policies go through `current_person_id()`; record tables use `can_read_boat()` and `can_write_boat()`. Boats are created only through `create_boat(name)`, which inserts the boat and the caller's `owner` membership in one transaction (#32). `seed.sql` is generated from the sample boat, including its four documents, with the records linked to them; the CLI uploads the matching files into the `documents` bucket from `supabase/storage/documents` (symlinks to the fixture PDFs) on start and reset (#76). pgTAP tests in `supabase/tests`, sharing the people and boats in `setup/tenancy.psql` (`npm run db:test`). The same migrations run on the hosted dev project (see Dev database). |
 | Document store | `supabase/migrations/…_documents.sql` | A private `documents` bucket with one folder per boat (`<boat_id>/…`), and a `documents` table (boat, storage path, type, source email or upload, received date, filename, content type, size, who added it). The same roles apply to both: members read; owners, co-owners and crew add; owners and co-owners delete; read-only members only read. Files can't be overwritten (no update policy), and a row's path must be in its own boat's folder. Nothing uploads yet; email-in (#10) and upload (Phase 3) will. |
@@ -156,7 +240,7 @@ co-owners see who owes whom; questions about the manuals are answered with sourc
 | Component | Choice | Issues |
 | --- | --- | --- |
 | Web app and API | Next.js in `apps/web`: pages for people, route handlers for webhooks and the API. One deployable. Two layouts, phone and wide, tested at three widths ([decision](decisions/0002-screen-sizes.md)). | #15, #31 |
-| Hosting | Vercel, with a preview link on every PR and a dev site from `main` (#30). heynewton.app points at the dev site for now. | #19, #35, #37 |
+| Hosting | Vercel, with a preview link on every PR and a dev site from `main` (#30). heynewton.app points at the dev site for now. The dev site and previews use the dev database (#62). | #19, #35, #37, #62 |
 | Dev and prod | Two hosted Supabase projects and two Vercel deployments. **Dev** (`newton-dev`, migrated and seeded from `main` since #60) backs the dev site and PR previews, holds only fixture data, and is loaded from `supabase/seed.sql`. **Prod** backs heynewton.app, holds our own boat's real data, and is never seeded. Both get the same checked-in migrations from `main`, and dev and previews have no prod keys. Lands before the first real boat data arrives (email-in, #10) or anyone outside the team signs in. | #37, #60 |
 | Database and auth | Supabase Postgres with RLS. Migrations checked in under `supabase/`, local stack via the Supabase CLI. Supabase Auth: email magic link first, then Google and Apple ([decision](decisions/0001-auth.md)). Sign-in emails go through Resend's SMTP from `noreply@heynewton.app` ([decision](decisions/0003-email-provider.md)). RLS policies go through a `current_person_id()` function, so the auth provider can change without rewriting them. | #5, #27, #61 |
 | Records | Tables: `boats`, `people` (Newton's own ID; the auth provider's ID only in `auth_subject`), `sender_addresses` (verified addresses a person forwards from, #10; confirming new ones in #27), `memberships` (role, ownership share), `documents`, `renewals`, `maintenance_items`, `expenses`. Each record can link to its source document. | #5, #8, #9, #27 |

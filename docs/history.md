@@ -37,6 +37,7 @@ The architecture page, the phase order and the recorded decisions.
 - [#48](https://github.com/heynewton/newton/pull/48) · 2026-10-19 · Plan for separate dev and prod databases in Phase 1, before real boat data
 - [#66](https://github.com/heynewton/newton/pull/66) · 2026-10-19 · Sign-in emails from heynewton.app: Resend chosen, with the setup steps
 - [#72](https://github.com/heynewton/newton/pull/72) · 2026-10-19 · History and architecture status catch up with what has merged
+- [#96](https://github.com/heynewton/newton/pull/96) · 2026-10-19 · The architecture page explains what Voyage and Claude each do, and what code checks
 
 ### Repo and infrastructure
 
@@ -50,6 +51,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#68](https://github.com/heynewton/newton/pull/68) · 2026-10-19 · A hosted dev database, migrated and seeded from every merge to `main` · closes [#60](https://github.com/heynewton/newton/issues/60)
 - [#86](https://github.com/heynewton/newton/pull/86) · 2026-10-19 · Test coverage on every PR, with a 95% bar for calc · closes [#46](https://github.com/heynewton/newton/issues/46)
 - [#85](https://github.com/heynewton/newton/pull/85) · 2026-10-19 · Unit tests for the web app's sign-in and database layer · closes [#47](https://github.com/heynewton/newton/issues/47)
+- [#98](https://github.com/heynewton/newton/pull/98) · 2026-10-19 · Previews and the dev site sign in against the hosted dev database · closes [#62](https://github.com/heynewton/newton/issues/62)
 
 ### Brand and website
 
