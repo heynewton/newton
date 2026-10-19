@@ -41,7 +41,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Link newton-dev
-        run: npx supabase link --project-ref "${{ vars.SUPABASE_DEV_PROJECT_REF }}"
+        run: npx supabase link --debug --project-ref "${{ vars.SUPABASE_DEV_PROJECT_REF }}"
       # supabase link saves the pooler URL (IPv4, which GitHub runners need) without the password.
       - name: Point psql at the dev pooler
         run: |
