@@ -76,6 +76,8 @@ What a signed-in person can do in the app.
 
 ### In progress
 
+- [#65](https://github.com/heynewton/newton/pull/65) · Every token written down, so prod gets exactly the same ones
+- [#68](https://github.com/heynewton/newton/pull/68) · A hosted dev database, migrated and seeded from every merge to `main`
 - [#66](https://github.com/heynewton/newton/pull/66) · Sign-in emails from heynewton.app: Resend chosen, with the setup steps
 
 ### What's next
