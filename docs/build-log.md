@@ -1212,4 +1212,4 @@ remove the reference to at most two, it's not really relevant
 - The limit stays where the board rules live: `docs/process.md` (the In progress column) and
   `CLAUDE.md`.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#57](https://github.com/heynewton/newton/pull/57)
