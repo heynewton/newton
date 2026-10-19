@@ -80,7 +80,7 @@ What a signed-in person can do in the app.
 
 ### In progress
 
-- [#PR](https://github.com/heynewton/newton/pull/PR) · Sample documents seeded, so every record opens its PDF after `db:reset`
+- [#82](https://github.com/heynewton/newton/pull/82) · Sample documents seeded, so every record opens its PDF after `db:reset`
 
 ### What's next
 

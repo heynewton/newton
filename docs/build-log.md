@@ -1618,4 +1618,4 @@ changed build-seed.mjs or the seed.
 - The hosted dev project gets the document rows but not the files. Uploading them there is left
   for a follow-up, because the dev token couldn't be tested from here.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#82](https://github.com/heynewton/newton/pull/82)
