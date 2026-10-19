@@ -59,10 +59,27 @@ npm run check    # lint, type check and tests
 npm run build    # production build
 ```
 
+The database and sign-in run on a local Supabase stack, which needs Docker (Docker Desktop works
+without signing in):
+
+```bash
+npm run db:start  # Postgres, Auth and a mail catcher; prints the URL and publishable key
+npm run db:test   # row-level security tests
+npm run db:reset  # re-apply migrations and seed from scratch
+npm run db:types  # regenerate apps/web/src/lib/db/database.types.ts after a migration
+```
+
+Copy `apps/web/.env.example` to `apps/web/.env.local` and fill in the publishable key. Sign-in
+emails don't leave your machine: open the mail catcher at http://127.0.0.1:54324 to click the link.
+The seed loads the made-up sample boat Kittiwake (`fixtures/sample-boat`), so signing in as
+`alex@example.com` (owner), `sam@example.net` or `jordan@example.com` (co-owners) or
+`riley@example.org` (crew) shows it on `/boats`.
+
 | Folder | What it is |
 | --- | --- |
 | `apps/web` | The web app (Next.js): the Phase 1 screen |
 | `packages/calc` | Deterministic, tested functions for every number Newton reports |
+| `supabase` | Database migrations, row-level security tests, local Supabase config |
 | `fixtures` | Fake sample data (no real boat data) |
 
 ## Contributing

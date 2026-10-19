@@ -26,3 +26,18 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  # Applies the migrations to a fresh local Postgres and runs the row-level security tests.
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Seed is up to date with fixtures/sample-boat/boat.json
+        run: node fixtures/sample-boat/build-seed.mjs && git diff --exit-code supabase/seed.sql
+      - run: npx supabase db start
+      - run: npm run db:test

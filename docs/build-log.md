@@ -780,6 +780,312 @@ start 6 and 7
 
 ---
 
+## Sign in with an email link, with boats, people and roles under row-level security
+
+**Prompt**
+
+````text
+can you start #5 sign-in now?
+````
+
+Follow-up, sent while Claude was working:
+
+````text
+what account should I use on docker
+````
+
+**What Claude did**
+
+- Read #5 (boats, people and roles under RLS, with magic-link sign-in) and its blocker #3, already
+  closed. The current checkout had uncommitted work for the sample boat (#4), so #5 was built in a
+  separate git worktree on a new branch from `main`, leaving that work untouched.
+- Set up the Supabase CLI in the repo and wrote one migration: `boats`, `people` and `memberships`
+  with the four roles. As in decision 0001, `people.id` is Newton's own ID, the provider's user ID
+  stays in `people.auth_subject` (column grants keep it out of the API), and every policy goes
+  through `current_person_id()`. A `can_write_boat()` helper is ready for record tables, so
+  read-only members can't write.
+- Wrote 26 pgTAP tests with four made-up people across two boats. They cover what each role can
+  see and change, signed-out access and `auth_subject`. Added a CI job that runs them on a fresh
+  Postgres.
+- Built the web side: a data-access module in `apps/web/src/lib/db` (with a lint rule against
+  Supabase imports anywhere else), the magic-link form, a callback route, a `/boats` page, a
+  "link didn't work" page and a proxy that refreshes the session. Without Supabase settings, as on
+  previews, `/sign-in` keeps its placeholder.
+- Tried the whole flow in the browser on the local stack with a fake address, from requesting the
+  link to signing out and reusing an old link. Checked the screens at 390px, 800px and 1280px.
+- Answered the follow-up: local Supabase needs no Docker account, so skip sign-in. If one is ever
+  needed, use the project address, not a personal one.
+
+**What changed along the way**
+
+- `/boats` first got stuck on "Loading…": with Cache Components on, the Supabase client read the
+  clock while Next.js prerendered the page. The data-access module now waits for the request
+  (`connection()`) before touching the database.
+- The first screen check found the email field and button were about 40px tall. They now meet the
+  44px touch-target rule from the screen-size decision.
+- Another session's dev server held port 3000, so the local redirect allow-list now accepts any
+  localhost port.
+- A test meant to show that co-owners can't add members passed for the wrong reason: the co-owner
+  couldn't even see the person being added. The tests now look up IDs outside RLS.
+
+**Pull request:** [#41](https://github.com/heynewton/newton/pull/41)
+
+---
+
+## The sample boat, ready to sign in to after a database reset
+
+**Prompt**
+
+This one came from another Claude Code session, which split it off while working on sign-in:
+
+````text
+Background (from the session that started this one):
+Newton (heynewton/newton) is in Phase 1. PR #41 (branch feat/supabase-auth, closes #5) adds a local Supabase stack: a migration with boats, people (Newton's own id, with the auth provider id only in people.auth_subject) and memberships with roles, RLS through current_person_id(), pgTAP tests, and magic-link sign-in in apps/web with a /boats page. The fake sample boat (#4) landed on main separately, in PR #36. supabase/seed.sql is just a placeholder comment for now. Start this after #41 merges, or branch from feat/supabase-auth if it hasn't merged yet. Never put real boat data in the repo.
+
+Task:
+Load the fake sample boat in `fixtures/sample-boat/boat.json` (Kittiwake, its people and memberships) into the local Supabase stack through `supabase/seed.sql`, so `npm run db:reset` gives a signed-in-ready demo boat. Each fixture person needs an `auth.users` row (the `create_person_for_auth_user` trigger then creates their `people` row), plus a boat and memberships with the right roles (owner, co_owner, crew, read_only). Generate the seed from boat.json with a small script (as `fixtures/sample-boat/build.mjs` does for PDFs) or write it by hand, whichever is clearer. Ownership shares belong to the cost-split work (#6/#9), so leave them out unless a column already exists. Done when `npm run db:reset` loads the boat, signing in locally by magic link as a fixture person (the mail catcher is at http://127.0.0.1:54324) shows Kittiwake on `/boats` with the right role, and `npm run db:test` still passes. Follow CLAUDE.md: first search for an existing issue (`gh issue list --search "seed"`) and create one if there is none, branch from an up-to-date main, open one PR, and add a build-log entry.
+````
+
+**What Claude did**
+
+- Found no issue for the seed, so opened #42 (backend, Phase 1) and moved it to In progress.
+  #41 hadn't merged yet, so the branch starts from `feat/supabase-auth` and the PR is stacked on it.
+- Wrote `fixtures/sample-boat/build-seed.mjs`, which turns `boat.json` into `supabase/seed.sql`:
+  an auth user and email identity per person, the boat, and the memberships. The trigger makes each
+  person, who then takes the fixture's ID and name. The auth IDs are kept separate from the person
+  IDs, as the auth decision asks.
+- Added a CI step that fails if `seed.sql` no longer matches `boat.json`, and documented how to sign
+  in as each fixture person.
+- Reset the local database, ran the RLS tests (26 pass), then signed in as Sam by magic link
+  through the mail catcher: `/boats` showed Kittiwake as Co-owner.
+
+**What changed along the way**
+
+- Generating instead of hand-writing the seed won because `boat.json` already holds the IDs and
+  roles, and a CI check can keep the two in step.
+- The fixture has no read-only person, so the seed covers owner, co-owner and crew only. Ownership
+  shares wait for #9.
+
+**Pull request:** [#43](https://github.com/heynewton/newton/pull/43)
+
+---
+
+## Board cards move by themselves
+
+**Prompt**
+
+````text
+can you improve the gh project workflow so that the cards move when the PR is created and merged?
+````
+
+**What Claude did**
+
+- Filed [#49](https://github.com/heynewton/newton/issues/49) and checked the board's built-in
+  workflows. All of them except "Auto-add sub-issues" were off, including "Item closed" and
+  "Pull request merged", which is why cards kept getting stuck.
+- Added `.github/workflows/board.yml` and `.github/scripts/board.sh`:
+  - Opening a PR moves it and the issues it closes to In review; a draft moves them to In progress.
+  - Merging moves them to Done. A PR closed without merging sends its issues back to Ready.
+  - New issues land in Inbox, and assigning one moves it to In progress.
+- Added a "Cards move by themselves" section to `docs/process.md`.
+
+**What changed along the way**
+
+- The built-in workflows can only be switched on in the GitHub UI and can't move an issue when its
+  PR opens, so the workflow handles every move itself. It doesn't depend on the built-ins.
+- `GITHUB_TOKEN` can't write to an organisation's project, so the workflow needs a `PROJECT_TOKEN`
+  secret.
+- Claude first said the same token could go in the cloud environment for #24. The Claude Code docs
+  say the cloud sessions' GitHub proxy blocks GraphQL (which Projects v2 needs) whatever the token,
+  so that can't work. This workflow is how cards move when a cloud session opens or merges a PR.
+  Claude noted this on #24.
+- The workflow uses `pull_request`, not `pull_request_target`, so it runs from the PR's own branch
+  and could be tested on this PR before merging. Forks don't get secrets, so their cards stay manual.
+- Claude tested the script locally against the real board on cases that shouldn't move anything
+  (#49 assigned while already In progress, #4 closed while already Done).
+
+**Pull request:** [#50](https://github.com/heynewton/newton/pull/50)
+
+---
+
+## Who can move board cards, now that cloud sessions can't
+
+**Prompt**
+
+````text
+start 24, 8 and 9 in 3 parallel sessions
+````
+
+**What Claude did**
+
+- Started one session per issue. This entry is the one for
+  [#24](https://github.com/heynewton/newton/issues/24) (giving Claude access to the board).
+- Rewrote #24's "Done when" for the approach that works: the Board workflow from #50 and its
+  `PROJECT_TOKEN` repo secret keep the board current, and the cloud `GH_TOKEN` items are gone.
+  Checked off what was already true (#21 and #24 are on the board, the token exists as the secret,
+  the workflow moves cards).
+- Added a "Who can move cards by hand" note to `docs/process.md`: people and local sessions can;
+  cloud sessions can't, because their GitHub proxy blocks GraphQL, so they assign the issue and
+  open the PR with `Closes #N` and let the workflow move the cards. It also says the token expires
+  and must be renewed.
+- Updated the board line in `CLAUDE.md` to say the same.
+
+**What changed along the way**
+
+- The plan in #24 was to put a token in the cloud environment as `GH_TOKEN`. The Claude Code docs
+  say that can't work whatever the token, so #24 now closes with docs instead of a token.
+
+**Pull request:** [#51](https://github.com/heynewton/newton/pull/51)
+
+---
+
+## Separate dev and prod databases move into Phase 1
+
+**Prompt**
+
+```text
+move dev/prod to phase 1
+```
+
+Context from the same session: asked when to work on hosted Supabase given PR #43, and whether to have a non-prod and a prod database. Claude recommended two hosted projects (dev for the dev site and previews, prod for real data), set up after #43 and before email-in (#10). It also noted that `docs/architecture.md` still listed the split under Phase 3.
+
+**What Claude did**
+
+- In `docs/architecture.md`, added a **Dev and prod** row to the Phase 1 components. Dev holds fixture data only and is seeded. Prod holds real data and is never seeded. Both get migrations from `main`, and the split lands before #10. Removed the split from the Phase 3 Operations row.
+- Updated the Previews section of `docs/process.md`. It still said the domain moves "before sign-in (#5)", and #5 has merged.
+- Moved issue #37 to the Phase 1 milestone. Rewrote its steps to cover both hosted projects and dropped "Blocked by: #5", since #5 is closed.
+
+**What changed along the way**
+
+- A first draft of #37's "Done when" said sign-in works on the hosted dev project with the fixture people. Hosted Supabase sends real email, and the fixture addresses are on `example.com`, so the line now only asks for the fixture boat to be loaded there.
+- #37 stays one issue. It wasn't split into separate dev and prod issues.
+
+**Pull request:** [#48](https://github.com/heynewton/newton/pull/48)
+
+---
+
+## A private document store for each boat
+
+**Prompt**
+
+````text
+start 24, 8 and 9 in 3 parallel sessions
+````
+
+**What Claude did**
+
+- Started one session per issue. This entry is the one for
+  [#8](https://github.com/heynewton/newton/issues/8) (the per-boat document store).
+- Added `supabase/migrations/20261019100000_documents.sql`:
+  - A private Storage bucket, `documents`, with one folder per boat (`<boat_id>/...`).
+  - A `documents` table: boat, storage path, type, source (email or upload), received date,
+    filename, content type, size and who added it.
+  - Row-level security on both, reusing the roles from #41: members read; owners, co-owners and
+    crew add; owners and co-owners delete; read-only members only read.
+- Added 32 database tests in `supabase/tests/database/documents.test.sql`, covering every role and
+  signed-out visitors, for both the table and the bucket.
+- Updated `docs/architecture.md` with the document store.
+
+**What changed along the way**
+
+- The issue asked the tests to reuse the existing tenancy setup, which lived inside
+  `rls.test.sql`. Claude moved it into `supabase/tests/database/setup/tenancy.psql` and both test
+  files include it. Claude first checked that `supabase test db` follows `\ir` includes and doesn't
+  run the `.psql` file as a test.
+- Files have no update policy, so a stored document can't be overwritten: a correction is a new
+  file. Only a document's type and filename can be changed after it's added.
+- The first test run failed because the test chose a document's `id`, which the column grants
+  didn't allow. Claude allowed it, so an upload path can include the document's id before the row
+  exists.
+- CI starts only Postgres, not the Storage API, so the storage policies are tested by writing
+  `storage.objects` rows as the signed-in person. No real upload went through the API yet. The PR
+  says so.
+- Deleting a boat removes its document rows but not its files, since files can only be removed
+  through the Storage API. Noted for export and transfer (#16).
+- The two parallel sessions agreed up front: #8 keeps the `documents` name and an `id uuid` key
+  for #9 to reference, uses the earlier migration timestamp, and leaves `supabase/seed.sql` to #9.
+  Seeding sample documents is a follow-up.
+
+**Pull request:** [#52](https://github.com/heynewton/newton/pull/52)
+
+---
+
+## Add your first boat after signing in
+
+**Prompt**
+
+````text
+can you also start 32 and 37 in parallel or they depend on other items?
+````
+
+**What Claude did**
+
+- Built [#32](https://github.com/heynewton/newton/issues/32) in its own session, in parallel with
+  the sessions on #8, #9 and #24.
+- Added `create_boat(boat_name)`, a SQL function that inserts the boat and the caller's `owner`
+  membership in one transaction, so a boat never exists without an owner. Signed-in people still
+  can't insert boats directly. 14 new pgTAP tests cover it.
+- `/` now sends a signed-in person to `/boats`, which goes on to `/boats/new` (no boat), their one
+  boat, or a picker. `/boats/new` asks only for the name. `/boats/<id>` shows the boat's name and
+  next steps marked "Coming soon".
+- Checked the flow in the running app with made-up people, at 390px, 800px and 1280px, in light
+  and dark mode.
+
+**What changed along the way**
+
+- Two other sessions were changing the database at the same time, so Claude ran its own Supabase
+  stack under a different project name and ports instead of sharing the default one.
+- Testing the picker showed the boat list wasn't sorted: ordering by an embedded table in Supabase
+  only sorts inside each row's embed. The list is now sorted in code.
+- Vercel previews have no database until #37, so the flow was only tested locally.
+
+**Pull request:** [#53](https://github.com/heynewton/newton/pull/53)
+
+---
+
+## Renewals, maintenance and expenses stored per boat
+
+**Prompt**
+
+````text
+start 24, 8 and 9 in 3 parallel sessions
+````
+
+The session that got the prompt started this one with issue #9 and the coordination rules for
+working next to #8: #8 owns the `documents` table and the earlier migration timestamp, this PR owns
+`supabase/seed.sql`, and `document_id` becomes a foreign key once #8 has merged.
+
+**What Claude did**
+
+- Read the inputs of `calc`'s due dates (#40) and cost split (#39) first, then shaped the tables to
+  match: `renewals` with an expiry date, `maintenance_items` with an interval in months and/or engine
+  hours plus the last-done date and reading, `expenses` in integer cents with a currency and a payer.
+  A reader only renames columns.
+- Added `ownership_share` to `memberships`, which the cost split needs and #43 had left for this PR.
+- Row-level security reuses `can_read_boat()` and `can_write_boat()` from #41: the same four
+  policies on each table. 43 new pgTAP tests in `supabase/tests/database/records.test.sql`.
+- Added Kittiwake's renewals, maintenance and expenses to `boat.json`, mostly from the fixture
+  documents (the yard invoice, the insurance certificate, the registration and the manual's
+  intervals), and extended `build-seed.mjs` to write them and the ownership shares into the seed.
+- Checked that the seeded rows go straight into `findDue` and `splitCosts` with a throwaway script.
+
+**What changed along the way**
+
+- Another session already had a local Supabase stack running under the default project name, so
+  Claude ran its database from a scratch copy of `supabase/` with its own project name and ports.
+- The payer is checked by a trigger rather than a foreign key to `memberships`, so an expense stays
+  when its payer later leaves the boat and past splits don't change.
+- #8's PR (#52) hadn't merged when this PR opened, so `document_id` started as a plain column.
+  After #52 merged, Claude rebased, made `document_id` a foreign key and switched the tests to #52's
+  shared `setup/tenancy.psql`. The foreign key covers `(document_id, boat_id)`, so a record can't
+  point at another boat's document, and deleting a document clears only `document_id`
+  (`on delete set null (document_id)`, Postgres 15 and later) and keeps the record.
+- The seed leaves `document_id` null: the sample documents aren't seeded yet.
+
+**Pull request:** [#54](https://github.com/heynewton/newton/pull/54)
+
+---
+
 ## Board views, and up to four issues in progress
 
 **Prompt**

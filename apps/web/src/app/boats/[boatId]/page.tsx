@@ -1,0 +1,96 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react";
+import { getCurrentPerson, getMyBoat, listMyBoats } from "@/lib/db";
+import { roleNames } from "../roles";
+import { SignOut } from "../sign-out";
+
+export const metadata: Metadata = { title: "Your boat · Hey Newton" };
+
+// What to do next with a new boat. Each one says "Coming soon" until it is built.
+const nextSteps = [
+  {
+    title: "Forward documents to the boat",
+    description:
+      "Send invoices, insurance and manuals to the boat's own email address, and Newton files them.",
+    comingSoon: true, // #10
+  },
+  {
+    title: "Ask about the boat",
+    description: "Get answers from the boat's manuals, with the page they came from.",
+    comingSoon: true, // #14
+  },
+  {
+    title: "Invite co-owners and crew",
+    description: "Share the boat, its costs and its reminders with the people who sail it.",
+    comingSoon: true, // Phase 3 onboarding
+  },
+];
+
+export default function BoatHome({ params }: PageProps<"/boats/[boatId]">) {
+  return (
+    <main className="mx-auto flex w-full flex-1 max-w-5xl flex-col gap-10 px-4 py-10 sm:py-16">
+      <Suspense fallback={<p className="text-zinc-600 dark:text-zinc-400">Loading…</p>}>
+        <Boat params={params} />
+      </Suspense>
+    </main>
+  );
+}
+
+async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
+  const { boatId } = await params;
+  const person = await getCurrentPerson();
+  if (!person) redirect("/sign-in");
+  const [boat, boats] = await Promise.all([getMyBoat(person, boatId), listMyBoats(person)]);
+  if (!boat) notFound();
+
+  return (
+    <>
+      <header className="flex flex-col gap-3">
+        <Image src="/icon.svg" alt="" width={40} height={40} />
+        <h1 className="text-3xl font-semibold break-words sm:text-4xl">{boat.boatName}</h1>
+        <p className="text-zinc-600 dark:text-zinc-400">You&apos;re its {roleNames[boat.role].toLowerCase()}.</p>
+      </header>
+
+      <section aria-labelledby="next-steps" className="flex flex-col gap-4">
+        <h2 id="next-steps" className="text-xl font-semibold">
+          Next steps
+        </h2>
+        <ul className="grid gap-4 sm:grid-cols-3">
+          {nextSteps.map((step) => (
+            <li
+              key={step.title}
+              className="flex flex-col gap-2 rounded-2xl border border-black/10 p-5 dark:border-white/15"
+            >
+              <h3 className="flex flex-wrap items-center gap-2 font-semibold">
+                {step.title}
+                {step.comingSoon && (
+                  <span className="rounded-full bg-spinnaker/20 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-spinnaker">
+                    Coming soon
+                  </span>
+                )}
+              </h3>
+              <p className="text-zinc-700 dark:text-zinc-300">{step.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <footer className="flex flex-col gap-2 border-t border-black/10 pt-6 dark:border-white/15">
+        <nav className="flex flex-wrap gap-x-6">
+          {boats.length > 1 && (
+            <Link href="/boats" className="flex min-h-11 items-center font-medium underline">
+              Your boats
+            </Link>
+          )}
+          <Link href="/boats/new" className="flex min-h-11 items-center font-medium underline">
+            Add another boat
+          </Link>
+        </nav>
+        <SignOut person={person} />
+      </footer>
+    </>
+  );
+}
