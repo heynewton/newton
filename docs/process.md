@@ -58,8 +58,8 @@ with `Closes #N`.
 
 ### Ideas before issues
 
-Feature ideas start in the **Feature ideas** section of the spec ("Newton — Product & Architecture
-Spec" in the team Google Drive), grouped by phase, with their open questions next to them. They
+Feature ideas start in the **Feature ideas** section of the spec ([Newton — Product & Architecture
+Spec](https://docs.google.com/document/d/19byJe41PNjezQD93sBnIgbE90bdVzTzWd5ptSrVg5yU/edit) in the team Google Drive), grouped by phase, with their open questions next to them. They
 are not filed as issues yet, so the board only holds work we expect to start soon.
 
 At weekly planning, when a phase is getting close, its ideas are split into PR-sized issues

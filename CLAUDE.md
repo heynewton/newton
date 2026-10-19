@@ -9,7 +9,11 @@ assumes it may become a paid product, so it is multi-boat and multi-owner from d
 
 - Website / domain: heynewton.app
 - Repo: github.com/heynewton/newton (public, AGPL-3.0)
-- Full spec: "Newton — Product & Architecture Spec" in the team Google Drive (heynewton folder)
+- Team Google Drive: [heynewton folder](https://drive.google.com/drive/folders/1O-MYSYuXWingDvfq2jdmDhxgK5rPNn9P)
+  - Full spec: [Newton — Product & Architecture Spec](https://docs.google.com/document/d/19byJe41PNjezQD93sBnIgbE90bdVzTzWd5ptSrVg5yU/edit)
+  - Accounts, domain and expenses: [Newton — Accounts, Domain & Expenses](https://docs.google.com/document/d/1yNKJPDzgc-OO_nyNnlF-x5toDMCzRrqSQ_09dPOFIVA/edit)
+  - These links only open for people the folder is shared with. Keep its sharing on "Restricted":
+    the repo is public, so "Anyone with the link" would make the folder public.
 
 ## Principles (follow these in every change)
 
@@ -71,6 +75,7 @@ We are in **Phase 1**.
 - Commit messages say what changed and why.
 - After each PR, add an entry to `docs/build-log.md`, lightly cleaning the prompt where privacy
   needs it (no real boat data or personal info, per the repo rules above).
+- Each PR also adds a line to `docs/history.md`, the history of PRs by phase and topic.
 - The `ship-change` skill (`.claude/skills/ship-change/SKILL.md`) is the checklist for landing a change.
 - Roles, the project board and the weekly rhythm are in `docs/process.md`. Ready issues are worked
   top-down in board order; move issues across the board as they progress. The Board workflow moves
