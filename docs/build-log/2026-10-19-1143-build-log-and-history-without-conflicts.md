@@ -53,4 +53,4 @@ Move #89 to the top of Ready and start it.
   and then (for example at weekly planning) rather than by every PR. Between regenerations, the
   newest PRs are in `docs/history/` before they show on the page.
 
-**Pull request:** see the history file `docs/history/pr-NNNN.md` added with this PR.
+**Pull request:** [#90](https://github.com/heynewton/newton/pull/90)
