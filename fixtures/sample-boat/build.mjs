@@ -90,26 +90,40 @@ const emails = [
   },
 ];
 
-/** A one-page PDF with the text in Courier, so tables keep their columns. */
+/**
+ * A PDF with the text in Courier, so tables keep their columns. A form feed on its own line
+ * starts a new page. Objects 1-6 are laid out as for a one-page PDF, and each later page adds a
+ * page and a content object after them, so one-page PDFs don't change.
+ */
 function textToPdf(text, title) {
-  const lines = text.replace(/\n$/, "").split("\n");
-  if (lines.length > 56) throw new Error(`${title}: ${lines.length} lines, more than one page`);
+  const pages = text.replace(/\n$/, "").split("\n\f\n");
   const escape = (s) => s.replace(/[\\()]/g, (c) => `\\${c}`);
-  const content = [
-    "BT",
-    "/F1 9.5 Tf",
-    "13 TL",
-    "48 750 Td",
-    ...lines.map((line, i) => `${i === 0 ? "" : "T* "}(${escape(line)}) Tj`),
-    "ET",
-  ].join("\n");
+  const contents = pages.map((page, p) => {
+    const lines = page.split("\n");
+    if (lines.length > 56) throw new Error(`${title}: page ${p + 1} has ${lines.length} lines, more than fit`);
+    const content = [
+      "BT",
+      "/F1 9.5 Tf",
+      "13 TL",
+      "48 750 Td",
+      ...lines.map((line, i) => `${i === 0 ? "" : "T* "}(${escape(line)}) Tj`),
+      "ET",
+    ].join("\n");
+    return `<< /Length ${Buffer.byteLength(content, "latin1")} >>\nstream\n${content}\nendstream`;
+  });
+  // Page p is object 3 (p = 0) or 7 + 2(p - 1); its content follows it.
+  const pageRef = (p) => (p === 0 ? 3 : 7 + 2 * (p - 1));
+  const contentRef = (p) => (p === 0 ? 5 : pageRef(p) + 1);
+  const page = (p) =>
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents ${contentRef(p)} 0 R >>`;
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    `<< /Type /Pages /Kids [${pages.map((_, p) => `${pageRef(p)} 0 R`).join(" ")}] /Count ${pages.length} >>`,
+    page(0),
     "<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>",
-    `<< /Length ${Buffer.byteLength(content, "latin1")} >>\nstream\n${content}\nendstream`,
+    contents[0],
     `<< /Title (${escape(title)}) /Producer (Newton sample fixtures) >>`,
+    ...pages.slice(1).flatMap((_, i) => [page(i + 1), contents[i + 1]]),
   ];
   let pdf = "%PDF-1.4\n";
   const offsets = objects.map((body, i) => {
@@ -166,7 +180,7 @@ mkdirSync(join(here, "documents"), { recursive: true });
 mkdirSync(join(here, "emails"), { recursive: true });
 for (const [name, title] of Object.entries(documents)) {
   const text = readFileSync(join(here, "documents", `${name}.txt`), "latin1");
-  if (/[^\n\x20-\x7e]/.test(text)) throw new Error(`${name}.txt: use plain ASCII only`);
+  if (/[^\n\f\x20-\x7e]/.test(text)) throw new Error(`${name}.txt: use plain ASCII only`);
   pdfs[name] = textToPdf(text, title);
   writeFileSync(join(here, "documents", `${name}.pdf`), pdfs[name]);
 }

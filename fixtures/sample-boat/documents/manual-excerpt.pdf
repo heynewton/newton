@@ -3,7 +3,7 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+<< /Type /Pages /Kids [3 0 R 7 0 R] /Count 2 >>
 endobj
 3 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
@@ -12,7 +12,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Courier >>
 endobj
 5 0 obj
-<< /Length 1789 >>
+<< /Length 1088 >>
 stream
 BT
 /F1 9.5 Tf
@@ -37,8 +37,23 @@ T* (Valve clearance \(check and adjust\)   500 h      -) Tj
 T* (Drive belt \(inspect / replace\)       250 h      24 months) Tj
 T* (Zinc anodes in heat exchanger        100 h      6 months) Tj
 T* (Air intake filter \(clean\)            100 h      12 months) Tj
-T* () Tj
-T* (6.3 Engine oil) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Title (Sample Marine SM-30 owner's manual, maintenance section) /Producer (Newton sample fixtures) >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 721 >>
+stream
+BT
+/F1 9.5 Tf
+13 TL
+48 750 Td
+(6.3 Engine oil) Tj
 T* (Capacity with filter: 4.8 quarts \(4.5 liters\).) Tj
 T* (Use oil rated API CH-4 or better, SAE 15W-40 above 5 C.) Tj
 T* (Check the level every day of use, with the engine stopped and level.) Tj
@@ -54,20 +69,19 @@ T* (in the engine. Flush the raw-water circuit with non-toxic antifreeze.) Tj
 ET
 endstream
 endobj
-6 0 obj
-<< /Title (Sample Marine SM-30 owner's manual, maintenance section) /Producer (Newton sample fixtures) >>
-endobj
 xref
-0 7
+0 9
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000115 00000 n 
-0000000241 00000 n 
-0000000309 00000 n 
-0000002150 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000000315 00000 n 
+0000001455 00000 n 
+0000001576 00000 n 
+0000001702 00000 n 
 trailer
-<< /Size 7 /Root 1 0 R /Info 6 0 R >>
+<< /Size 9 /Root 1 0 R /Info 6 0 R >>
 startxref
-2271
+2474
 %%EOF
