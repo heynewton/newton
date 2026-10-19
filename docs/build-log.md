@@ -1071,4 +1071,4 @@ admin info: [link to the accounts, domain and expenses doc]
   session, so Claude couldn't find the doc without its link. With the links in the repo, later
   sessions can open the spec directly through the Google Docs connector.
 
-**Pull request:** [link added after the PR is opened]
+**Pull request:** [#56](https://github.com/heynewton/newton/pull/56)
