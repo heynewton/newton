@@ -1,0 +1,29 @@
+{
+  "name": "@newton/agent",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Newton's use of Claude: answering from a boat's manuals with sources, and its evals.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary --coverage.reporter=json",
+    "eval:manual-qa": "vitest run --config vitest.eval.config.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
+    "@newton/indexing": "*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22",
+    "@vitest/coverage-v8": "^5.0.5",
+    "eslint": "^9.39.5",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^5.0.5"
+  }
+}

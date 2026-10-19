@@ -27,6 +27,7 @@ Rules for all of them:
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | Project Resend account; that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment |
+| `ANTHROPIC_API_KEY` | secret | Anthropic | `heynewton` org in the Claude Console, one workspace per environment | Manual Q&A (`packages/agent`, #14): the live eval, and the app once it calls it | Local `.env` for the eval; the app's environment later. Not in CI |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
@@ -133,16 +134,19 @@ as Read where possible, and update this table in the same PR.
 
 ## `VOYAGE_API_KEY`
 
-Embeddings for manual search ([decision 0004](decisions/0004-embeddings.md)). Not created yet:
-nothing calls Voyage until the indexing job (#11) or Q&A (#14) runs against a real database.
-Tests and CI use a fake embedder and need no key.
+Embeddings for manual search ([decision 0004](decisions/0004-embeddings.md)). Only the live
+manual Q&A eval uses it until the indexing job (#11) runs against a real database. Tests and CI
+use a fake embedder and need no key.
 
 - **Where:** Voyage AI dashboard (dashboard.voyageai.com) → API keys, signed in as the project
   account (`dev@heynewton.app`).
-- **Name:** `newton-dev`, and a separate `newton-prod` key for prod, so one can be revoked
-  without the other.
-- **Before first use:** opt out of training on our content in the dashboard. It only covers
-  content sent after opting out.
+- **Name:** `newton-dev` exists; a separate `newton-prod` key comes with the indexing job in
+  prod, so one can be revoked without the other.
+- **Payment method:** add one under Billing before using the key. Without it the account is held
+  to 3 requests a minute, too few for the eval, and can't opt out of training. The free tokens
+  still apply, so the eval costs nothing.
+- **Before first real use:** opt out of training on our content. The opt-out is permanent and
+  only covers content sent after it. Done for the project account.
 - **Expiry:** Voyage keys don't expire; revoke and replace them yearly, with a calendar reminder.
 - **Stored in:** `.env` locally (`VOYAGE_API_KEY=…`, git-ignored), and the environment of
   whatever runs the indexing job. Prod's key only in the `production` environment.
@@ -202,6 +206,7 @@ API.
 - **Locally:** `apps/web/.env.local`; call the route with
   `curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/reminders`.
 
+## Supabase project settings chosen at creation
 
 Use the same choices for `newton-prod`:
 
@@ -214,4 +219,22 @@ Use the same choices for `newton-prod`:
 
 Your local stack still exposes new tables by default, so a migration that forgets its `grant`
 lines works on a laptop but not on the hosted projects. Previews on dev (#62) catch that.
-## Supabase project settings chosen at creation
+
+## `ANTHROPIC_API_KEY`
+
+Claude for manual Q&A (#14). Only the live eval (`npm run eval:manual-qa -w @newton/agent`) uses
+it until the app asks questions. Tests and CI use a scripted stand-in.
+
+- **Where:** Claude Console (platform.claude.com), in the `heynewton` organization owned by the
+  project account (`dev@heynewton.app`).
+- **Workspaces:** `newton-dev` and `newton-prod`, each with its own monthly spend limit, so dev
+  runs can't use up prod's budget and one key can be revoked without the other.
+- **Name:** the key is named after its workspace. `newton-dev` exists; `newton-prod`'s key is
+  created when the app calls Claude.
+- **Spend:** one eval run is ten questions on `claude-opus-5-5` at low effort: a few cents.
+- **Expiry:** keys don't expire; rotate yearly with a calendar reminder.
+- **Stored in:** `.env` at the repo root (git-ignored), never in the repo or CI. Vitest doesn't
+  read `.env`, so load it into the shell first:
+  `set -a && source .env && set +a && npm run eval:manual-qa -w @newton/agent`. Without a key the
+  eval is skipped, not failed.
+- **Later:** for prod on Vercel, consider workload identity federation instead of a stored key.

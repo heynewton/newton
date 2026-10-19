@@ -97,6 +97,8 @@ tests (`apps/web/src/lib/email-in`). The sample boat's address is `kittiwake@in.
 | --- | --- |
 | `apps/web` | The web app (Next.js): the Phase 1 screen |
 | `packages/calc` | Deterministic, tested functions for every number Newton reports |
+| `packages/indexing` | Manuals split into pages and chunks, embedded for search |
+| `packages/agent` | Claude: answers from the boat's manuals with their source, and the evals (`npm run eval:manual-qa -w @newton/agent`) |
 | `supabase` | Database migrations, row-level security tests, local Supabase config |
 | `fixtures` | Fake sample data (no real boat data) |
 
