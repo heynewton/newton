@@ -40,4 +40,7 @@ jobs:
       - name: Seed is up to date with fixtures/sample-boat/boat.json
         run: node fixtures/sample-boat/build-seed.mjs && git diff --exit-code supabase/seed.sql
       - run: npx supabase db start
+      # The hosted dev project loads the seed on every push to main, on top of the last run.
+      - name: Seed is safe to re-run
+        run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -q --single-transaction -f supabase/seed.sql
       - run: npm run db:test
