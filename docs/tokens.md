@@ -25,6 +25,8 @@ Rules for all of them:
 | `SUPABASE_DEV_DB_PASSWORD` | secret | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo secrets, and the project password manager |
 | `SUPABASE_DEV_PROJECT_REF` | variable | Supabase | `newton-dev` project | Dev database workflow (#60) | Repo variables (not secret) |
 | `SUPABASE_DEV_URL`, `SUPABASE_DEV_PUBLISHABLE_KEY` | variables | Supabase | `newton-dev` project | `.github/workflows/deploy.yml`: the dev site and previews (#62) | Repo variables (not secret) |
+| `FIXTURE_SIGN_IN` | flag (not secret) | us | — | "Sign in as…" the sample boat's people on the dev site and previews (#97) | `.github/workflows/deploy.yml` (always `1` there); nowhere else |
+| `SUPABASE_SECRET_KEY` of `newton-dev` | secret | Supabase | `newton-dev` project | Fixture sign-in on the dev site and previews (#97), besides email-in and reminders | Vercel env vars of `heynewton-web`, Production (the dev site) and Preview targets |
 | Prod equivalents | secrets | Supabase | `newton-prod` project | Production release (#63) | The `production` environment only |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | Project Resend account; that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment |
@@ -169,6 +171,28 @@ workflow fails if the key doesn't start with `sb_publishable_`.
 - **Expiry:** none. If the key is rotated in Supabase, update the variable and re-run Deploy.
 - **Prod:** never these. heynewton.app gets its own project and keys with #37.
 
+## Fixture sign-in (`FIXTURE_SIGN_IN`, `SUPABASE_SECRET_KEY`)
+
+The sample boat's people (`fixtures/sample-boat`) sign in with addresses on reserved domains, so
+their magic links can't be delivered. On the dev site and previews, `/sign-in` also lists them
+under "Sign in as a sample-boat person" (#97): the server makes a magic link with `newton-dev`'s
+secret key (`auth.admin.generateLink`) and verifies it at once, which sets the session cookie. No
+email is sent.
+
+| Name | What | Where |
+| --- | --- | --- |
+| `FIXTURE_SIGN_IN` | `1` turns it on. Anything else, or unset, hides the option and `/auth/fixture-sign-in` returns 404 | Set to `1` by `.github/workflows/deploy.yml`, at build and run time. That workflow only deploys the dev site and previews; never set it on production or in a local `.env` you don't mean to use it in |
+| `SUPABASE_SECRET_KEY` | `newton-dev`'s **Secret key** (`sb_secret_…`), Supabase → `newton-dev` → Project Settings → API Keys. Server only: bypasses row-level security, and here only makes the sign-in link | Vercel → `heynewton-web` → Settings → Environment Variables, **Production** (the dev site, shared with email-in and reminders) and **Preview** targets, marked Sensitive. Never a `NEXT_PUBLIC_` variable, never in GitHub |
+
+- **Limits:** the route only signs in the four addresses listed in
+  `apps/web/src/lib/db/fixture-sign-in.ts`, and each must be on `example.com/.net/.org` or `.test`.
+  Anything else is refused (403) even with the flag on.
+- **Without the secret key** the option shows but the route answers 503 "not set up here".
+- **Who can use it:** anyone with a preview or dev-site link, since previews are public. They only
+  reach fixture data on `newton-dev`. Previews only run for branches of this repo (not forks), so
+  only people who can push here can run code next to the key.
+- **Prod:** never. heynewton.app gets its own project with #37, deployed without this flag.
+
 `newton-dev`'s Authentication → URL Configuration (set by hand; the access token can't write auth
 settings):
 
@@ -212,7 +236,7 @@ without a signed-in person. Setup steps are in [decision 0003](decisions/0003-em
 | --- | --- | --- | --- |
 | `RESEND_API_KEY` | Resend, key `email-in-newton-dev` (`email-in-newton-prod` for #63) | Must read received emails, which "Sending access" can't; the narrowest that can (not confirmed yet) | Vercel env vars of the deployment it belongs to, marked Sensitive |
 | `RESEND_WEBHOOK_SECRET` | Resend, per webhook endpoint (`whsec_…`) | Checks that a request comes from Resend | Same |
-| `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/email-in.ts` and `lib/db/reminders.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
+| `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/email-in.ts`, `lib/db/reminders.ts` and (dev and previews) `lib/db/fixture-sign-in.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
 | `INBOUND_EMAIL_DOMAIN` | — (not secret) | `boats.heynewton.app` | Same |
 
 - **Expiry:** none of them expire on their own. Rotate yearly with the other Resend keys; a new
@@ -229,7 +253,7 @@ API.
 | --- | --- | --- | --- |
 | `CRON_SECRET` | Us: a random string of 32+ characters (`openssl rand -hex 32`) | Vercel sends it as `Authorization: Bearer …`; the route refuses calls without it | Vercel env vars of `heynewton-web` (Production target), marked Sensitive |
 | `RESEND_API_KEY` | Resend: the same key as email-in (`email-in-newton-dev`, see above), which can also send | Sending from `heynewton.app` | Same |
-| `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/reminders.ts` and `lib/db/email-in.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
+| `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/reminders.ts`, `lib/db/email-in.ts` and (dev and previews) `lib/db/fixture-sign-in.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
 | `SITE_URL` | — (not secret) | Links in the email: `https://heynewton-web.vercel.app` on dev | Same |
 
 - **Expiry:** none of them expire on their own. Rotate yearly with the other keys.

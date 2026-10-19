@@ -51,6 +51,10 @@ jobs:
       # data. Unset, the site builds and deploys anyway and sign-in shows as unavailable.
       SUPABASE_URL: ${{ vars.SUPABASE_DEV_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      # "Sign in as…" the sample boat's people, whose addresses get no email (#97). This workflow
+      # only deploys the dev site and previews, so production never has it. It also needs
+      # SUPABASE_SECRET_KEY of newton-dev in Vercel (docs/tokens.md).
+      FIXTURE_SIGN_IN: "1"
     steps:
       # Only a publishable key may reach a deployment. A secret key bypasses row-level security.
       - name: Check the Supabase key is publishable
@@ -82,17 +86,19 @@ jobs:
             "https://api.vercel.com/v9/projects/$project_id" > /dev/null
 
       - run: vercel pull --yes --environment "$VERCEL_TARGET" --token "$VERCEL_TOKEN"
-      # The build reads SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY from the job's environment.
+      # The build reads SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and FIXTURE_SIGN_IN from the job's
+      # environment.
       - run: vercel build --target "$VERCEL_TARGET" --token "$VERCEL_TOKEN"
 
       # A prebuilt deployment doesn't keep the build's environment, so the server gets the same
-      # two values at run time with --env. Nothing is set in the Vercel dashboard.
+      # values at run time with --env. Secret keys come from the Vercel dashboard (docs/tokens.md).
       - name: Deploy
         id: deploy
         run: |
           runtime_env=()
           if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_PUBLISHABLE_KEY" ]; then
-            runtime_env=(--env "SUPABASE_URL=$SUPABASE_URL" --env "SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY")
+            runtime_env=(--env "SUPABASE_URL=$SUPABASE_URL" --env "SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY"
+              --env "FIXTURE_SIGN_IN=$FIXTURE_SIGN_IN")
           fi
           url=$(vercel deploy --prebuilt --archive=tgz --target "$VERCEL_TARGET" "${runtime_env[@]}" --token "$VERCEL_TOKEN")
           echo "url=$url" >> "$GITHUB_OUTPUT"

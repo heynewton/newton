@@ -36,6 +36,16 @@ document row gives, so the records' "From …pdf" links open. `build-seed.mjs` w
 Storage was slow to come back, `npx supabase seed buckets` uploads the files on their own. The hosted
 dev database gets the rows but not the files yet.
 
+### Signing in as one of them on the dev site or a preview
+
+Their addresses can't receive mail, so the sign-in link never arrives. On the dev site and PR
+previews, `/sign-in` has a "Sign in as a sample-boat person" section: pick Alex, Sam, Jordan or
+Riley and you are signed in straight away and land on Kittiwake's page, with no email sent. It is
+there because the Deploy workflow sets `FIXTURE_SIGN_IN=1`; it needs `newton-dev`'s secret key in
+Vercel (see "Fixture sign-in" in `docs/tokens.md`) and is never on production. Locally, set
+`FIXTURE_SIGN_IN=1` and `SUPABASE_SECRET_KEY` (from `npx supabase status`) in `apps/web/.env.local`
+to get the same option against the local database.
+
 ## Records
 
 | Kind | What's there |
