@@ -234,7 +234,7 @@ without a signed-in person. Setup steps are in [decision 0003](decisions/0003-em
 
 | Variable | Issued by | Permission | Stored in |
 | --- | --- | --- | --- |
-| `RESEND_API_KEY` | Resend, key `email-in-newton-dev` (`email-in-newton-prod` for #63) | Must read received emails, which "Sending access" can't; the narrowest that can (not confirmed yet) | Vercel env vars of the deployment it belongs to, marked Sensitive |
+| `RESEND_API_KEY` | Resend, key `email-in-newton-dev` (`email-in-newton-prod` for #63) | Full access: reading received emails needs more than "Sending access", and Full access is the narrowest that can | Vercel env vars of the deployment it belongs to, marked Sensitive |
 | `RESEND_WEBHOOK_SECRET` | Resend, per webhook endpoint (`whsec_…`) | Checks that a request comes from Resend | Same |
 | `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/email-in.ts`, `lib/db/reminders.ts` and (dev and previews) `lib/db/fixture-sign-in.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
 | `INBOUND_EMAIL_DOMAIN` | — (not secret) | `boats.heynewton.app` | Same |
