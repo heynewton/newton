@@ -1318,4 +1318,4 @@ and shared screenshots of Supabase's token permissions form, asking which permis
   and expiry dates of `VERCEL_TOKEN` and `PROJECT_TOKEN` are what the setup steps suggested, and the
   doc says so, so the maintainer can check them on the token pages.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#65](https://github.com/heynewton/newton/pull/65)
