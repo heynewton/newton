@@ -1607,4 +1607,4 @@ Ok with the 6 and the order you defined.
   when it matters most. Easy to drop (one line in `sentKey`) if the maintainer prefers a single
   reminder.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#77](https://github.com/heynewton/newton/pull/77)
