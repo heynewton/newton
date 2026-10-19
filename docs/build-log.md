@@ -1034,4 +1034,4 @@ write a brief for a new admin / maintainer, I think this is different than contr
 - The "Between maintainers" section (agree direction-changing calls, don't merge your own product
   or settings PR alone) is a proposed default, not an existing rule.
 
-**Pull request:** _pending_
+**Pull request:** [#55](https://github.com/heynewton/newton/pull/55)
