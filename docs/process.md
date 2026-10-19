@@ -18,14 +18,14 @@ explicit "what was not tested" notes.
 
 ## The board
 
-The [Newton project board](https://github.com/orgs/heynewton/projects/1) has five columns:
+The [Newton project board](https://github.com/orgs/heynewton/projects/1/views/4) (Kanban view) has five columns:
 
 **Inbox → Ready → In progress → In review → Done**
 
 - **Inbox**: new issues nobody has looked at yet.
 - **Ready**: issues ready to start, **in priority order**. The top one is next. There are no
   priority labels; the order is the priority.
-- **In progress**: at most two issues at a time.
+- **In progress**: at most four issues at a time (the column limit on the board).
 - **In review**: a PR is open and waiting for review.
 - **Done**: merged.
 
@@ -58,8 +58,8 @@ with `Closes #N`.
 
 ### Ideas before issues
 
-Feature ideas start in the **Feature ideas** section of the spec ("Newton — Product & Architecture
-Spec" in the team Google Drive), grouped by phase, with their open questions next to them. They
+Feature ideas start in the **Feature ideas** section of the spec ([Newton — Product & Architecture
+Spec](https://docs.google.com/document/d/19byJe41PNjezQD93sBnIgbE90bdVzTzWd5ptSrVg5yU/edit) in the team Google Drive), grouped by phase, with their open questions next to them. They
 are not filed as issues yet, so the board only holds work we expect to start soon.
 
 At weekly planning, when a phase is getting close, its ideas are split into PR-sized issues

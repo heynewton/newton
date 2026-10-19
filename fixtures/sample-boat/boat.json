@@ -65,5 +65,115 @@
       "role": "crew",
       "ownershipPercent": 0
     }
+  ],
+  "renewals": [
+    {
+      "id": "00000000-0000-4000-8000-000000000301",
+      "kind": "insurance",
+      "title": "Hull and liability insurance",
+      "reference": "SAMPLE-POL-000123",
+      "expiresOn": "2027-04-30",
+      "sourceDocument": "insurance-certificate"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000302",
+      "kind": "registration",
+      "title": "State vessel registration",
+      "reference": "XX 0000 ZZ",
+      "expiresOn": "2026-12-31",
+      "sourceDocument": "registration"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000303",
+      "kind": "licence",
+      "title": "VHF radio station licence",
+      "reference": "SAMPLE-VHF-0042",
+      "expiresOn": "2028-03-15"
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "00000000-0000-4000-8000-000000000401",
+      "title": "Engine oil and oil filter",
+      "everyMonths": 12,
+      "everyEngineHours": 100,
+      "lastDoneOn": "2026-10-02",
+      "lastDoneEngineHours": 1412,
+      "sourceDocument": "yard-invoice"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000402",
+      "title": "Fuel filter element",
+      "everyMonths": 12,
+      "everyEngineHours": 200,
+      "lastDoneOn": "2026-10-02",
+      "lastDoneEngineHours": 1412,
+      "sourceDocument": "yard-invoice"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000403",
+      "title": "Raw-water pump impeller",
+      "everyMonths": 24,
+      "everyEngineHours": 250,
+      "lastDoneOn": "2026-10-02",
+      "lastDoneEngineHours": 1412,
+      "sourceDocument": "yard-invoice"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000404",
+      "title": "Zinc anodes in heat exchanger",
+      "everyMonths": 6,
+      "everyEngineHours": 100,
+      "lastDoneOn": "2026-04-18",
+      "lastDoneEngineHours": 1371
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000405",
+      "title": "Coolant (replace)",
+      "everyMonths": 24,
+      "everyEngineHours": 1000,
+      "lastDoneOn": "2025-03-20",
+      "lastDoneEngineHours": 1290
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000406",
+      "title": "Valve clearance (check and adjust)",
+      "everyEngineHours": 500,
+      "lastDoneOn": "2025-03-20",
+      "lastDoneEngineHours": 1290
+    }
+  ],
+  "expenses": [
+    {
+      "id": "00000000-0000-4000-8000-000000000501",
+      "description": "Example Point Boatyard: haul-out, bottom paint, engine service",
+      "amountCents": 167690,
+      "spentOn": "2026-10-02",
+      "paidBy": "00000000-0000-4000-8000-000000000102",
+      "sourceDocument": "yard-invoice"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000502",
+      "description": "Insurance premium 2026-27",
+      "amountCents": 128400,
+      "spentOn": "2026-04-14",
+      "paidBy": "00000000-0000-4000-8000-000000000101",
+      "sourceDocument": "insurance-certificate"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000503",
+      "description": "Registration fee, two years",
+      "amountCents": 9800,
+      "spentOn": "2024-12-15",
+      "paidBy": "00000000-0000-4000-8000-000000000103",
+      "sourceDocument": "registration"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000504",
+      "description": "Mooring, October 2026",
+      "amountCents": 42000,
+      "spentOn": "2026-10-01",
+      "paidBy": "00000000-0000-4000-8000-000000000101"
+    }
   ]
 }

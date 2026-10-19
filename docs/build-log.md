@@ -1010,6 +1010,191 @@ start 24, 8 and 9 in 3 parallel sessions
 
 ---
 
+## Add your first boat after signing in
+
+**Prompt**
+
+````text
+can you also start 32 and 37 in parallel or they depend on other items?
+````
+
+**What Claude did**
+
+- Built [#32](https://github.com/heynewton/newton/issues/32) in its own session, in parallel with
+  the sessions on #8, #9 and #24.
+- Added `create_boat(boat_name)`, a SQL function that inserts the boat and the caller's `owner`
+  membership in one transaction, so a boat never exists without an owner. Signed-in people still
+  can't insert boats directly. 14 new pgTAP tests cover it.
+- `/` now sends a signed-in person to `/boats`, which goes on to `/boats/new` (no boat), their one
+  boat, or a picker. `/boats/new` asks only for the name. `/boats/<id>` shows the boat's name and
+  next steps marked "Coming soon".
+- Checked the flow in the running app with made-up people, at 390px, 800px and 1280px, in light
+  and dark mode.
+
+**What changed along the way**
+
+- Two other sessions were changing the database at the same time, so Claude ran its own Supabase
+  stack under a different project name and ports instead of sharing the default one.
+- Testing the picker showed the boat list wasn't sorted: ordering by an embedded table in Supabase
+  only sorts inside each row's embed. The list is now sorted in code.
+- Vercel previews have no database until #37, so the flow was only tested locally.
+
+**Pull request:** [#53](https://github.com/heynewton/newton/pull/53)
+
+---
+
+## Renewals, maintenance and expenses stored per boat
+
+**Prompt**
+
+````text
+start 24, 8 and 9 in 3 parallel sessions
+````
+
+The session that got the prompt started this one with issue #9 and the coordination rules for
+working next to #8: #8 owns the `documents` table and the earlier migration timestamp, this PR owns
+`supabase/seed.sql`, and `document_id` becomes a foreign key once #8 has merged.
+
+**What Claude did**
+
+- Read the inputs of `calc`'s due dates (#40) and cost split (#39) first, then shaped the tables to
+  match: `renewals` with an expiry date, `maintenance_items` with an interval in months and/or engine
+  hours plus the last-done date and reading, `expenses` in integer cents with a currency and a payer.
+  A reader only renames columns.
+- Added `ownership_share` to `memberships`, which the cost split needs and #43 had left for this PR.
+- Row-level security reuses `can_read_boat()` and `can_write_boat()` from #41: the same four
+  policies on each table. 43 new pgTAP tests in `supabase/tests/database/records.test.sql`.
+- Added Kittiwake's renewals, maintenance and expenses to `boat.json`, mostly from the fixture
+  documents (the yard invoice, the insurance certificate, the registration and the manual's
+  intervals), and extended `build-seed.mjs` to write them and the ownership shares into the seed.
+- Checked that the seeded rows go straight into `findDue` and `splitCosts` with a throwaway script.
+
+**What changed along the way**
+
+- Another session already had a local Supabase stack running under the default project name, so
+  Claude ran its database from a scratch copy of `supabase/` with its own project name and ports.
+- The payer is checked by a trigger rather than a foreign key to `memberships`, so an expense stays
+  when its payer later leaves the boat and past splits don't change.
+- #8's PR (#52) hadn't merged when this PR opened, so `document_id` started as a plain column.
+  After #52 merged, Claude rebased, made `document_id` a foreign key and switched the tests to #52's
+  shared `setup/tenancy.psql`. The foreign key covers `(document_id, boat_id)`, so a record can't
+  point at another boat's document, and deleting a document clears only `document_id`
+  (`on delete set null (document_id)`, Postgres 15 and later) and keeps the record.
+- The seed leaves `document_id` null: the sample documents aren't seeded yet.
+
+**Pull request:** [#54](https://github.com/heynewton/newton/pull/54)
+
+---
+
+## Board views, and up to four issues in progress
+
+**Prompt**
+
+````text
+could you change the board design to something easier to visualize? propose a way to group, maybe with columns or whatever is standard for board design. But I find the current table view not easy to follow
+````
+
+Then:
+
+````text
+I've decided to allow max 4 in progress at a time.
+updated on gh, reflect in /docs/
+````
+
+**What Claude did**
+
+- Added two views to the project board through GitHub's REST API:
+  - **Kanban**: issue cards in Status columns, showing the area label, phase, linked PR and
+    assignee. PRs are left out because they already show on the issue they close.
+  - **By phase**: open issues grouped by milestone and sorted by status, for planning.
+- Changed the work-in-progress limit from two to four in `docs/process.md`, `CLAUDE.md` and
+  `CONTRIBUTING.md`, so all three agree with the column limit the maintainer set on the board.
+  `docs/process.md` now links straight to the Kanban view.
+
+**What changed along the way**
+
+- The API can create views but can't edit or delete them. A first board view came out without
+  labels or phase on its cards, so Claude created a corrected "Kanban" view. The maintainer
+  deleted the first one, renamed the original table to "All items", moved Kanban to the first tab
+  and set the column limit in the GitHub UI.
+- The limit also appeared in `CLAUDE.md` and `CONTRIBUTING.md`, outside `docs/`, so Claude updated
+  them in the same PR so the rules don't contradict each other.
+- The main folder had another session's branch checked out, so Claude made this change in a
+  separate git worktree.
+
+**Pull request:** [#44](https://github.com/heynewton/newton/pull/44)
+
+---
+
+## Link the team Drive, spec and admin docs from the repo
+
+**Prompt**
+
+````text
+should we add in the repo the link to the gdrive folder? access is restricted so it shouldn't be an issue for confidentiality?
+[link to the heynewton Drive folder]
+
+spec doc: [link to the spec]
+admin info: [link to the accounts, domain and expenses doc]
+````
+
+**What Claude did**
+
+- Confirmed that a link to a Drive folder or doc shared as "Restricted" only opens for people it
+  is shared with, so it is safe in a public repo. The risk is someone later switching sharing to
+  "Anyone with the link", so `CLAUDE.md` now says to keep it on "Restricted".
+- Added the folder, the spec and the accounts, domain and expenses doc to `CLAUDE.md`, and linked
+  the spec where `docs/architecture.md` and `docs/process.md` mention it.
+- Opened both docs with the Google Docs connector to check the titles. Nothing from them was
+  copied into the repo.
+
+**What changed along the way**
+
+- The session started with a request to edit the spec. Drive search wasn't working in the
+  session, so Claude couldn't find the doc without its link. With the links in the repo, later
+  sessions can open the spec directly through the Google Docs connector.
+
+**Pull request:** [#56](https://github.com/heynewton/newton/pull/56)
+
+---
+
+## History of PRs by phase and topic
+
+**Prompt**
+
+````text
+create a doc that gives an history of the PR grouped by logic categories, maybe the issues milestones? suggest a plan.
+````
+
+````text
+go with the repo, your categories, and update via ship-change
+````
+
+**What Claude did**
+
+- Read every PR and open issue. Every open issue is in the Phase 1 milestone, so grouping by
+  milestone alone would put everything in one bucket. Proposed phase first, then topic, and a
+  repo page over a Google Doc so it updates with each PR.
+- Added `docs/history.md`: Phase 1 merged PRs under seven topics (how we work, architecture and
+  decisions, repo and infrastructure, brand and website, calculations, data and security, web
+  app features), each line with the merge date and the issue it closed. Then the open PRs, and
+  the open Phase 1 issues grouped by what they deliver.
+- Added a step to the `ship-change` skill and a line to `CLAUDE.md` so every PR adds itself to the
+  page.
+
+**What changed along the way**
+
+- Most PRs carry no labels or milestones, so each PR's topic came from the issue it closed, or
+  from its content when it closed none.
+- #44 and #54 merged while this was being written, so `main` was merged in first and both went
+  under their topics.
+- Added to the open PR for the Drive links (#56) rather than a new PR, since this session works
+  on one branch.
+
+**Pull request:** [#56](https://github.com/heynewton/newton/pull/56)
+
+---
+
 ## A brief for new maintainers
 
 **Prompt**

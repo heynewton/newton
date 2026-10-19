@@ -7,8 +7,9 @@ fictional 555-01xx range. Never add real boat data here (see the repo rules in `
 
 ## The boat and its people
 
-`boat.json` holds the boat and who is on it, shaped like the planned `boats`, `people` and
-`memberships` tables (see `docs/architecture.md`).
+`boat.json` holds the boat, who is on it and the boat's records, shaped like the `boats`, `people`,
+`memberships`, `renewals`, `maintenance_items` and `expenses` tables (see `docs/architecture.md`).
+Records filed from a fixture document name it in `sourceDocument`.
 
 | Person | Role | Ownership | Verified sender addresses |
 | --- | --- | --- | --- |
@@ -20,9 +21,18 @@ fictional 555-01xx range. Never add real boat data here (see the repo rules in `
 Kittiwake is a 2009 Example Yachts EY 34 sloop with a Sample Marine SM-30 diesel (1,412 engine
 hours on 2026-10-02). Its inbound address is `kittiwake@in.heynewton.test`.
 
-`supabase/seed.sql` is generated from `boat.json`, so `npm run db:reset` loads the boat, its people
-and their memberships into the local database. Each person signs in with their first verified
-sender address. Ownership shares aren't seeded yet: they wait for the cost-split tables (#9).
+`supabase/seed.sql` is generated from `boat.json`, so `npm run db:reset` loads the boat, its people,
+their memberships with ownership shares, and its records into the local database. Each person signs
+in with their first verified sender address. Seeded records don't link to their documents yet,
+because the sample documents aren't seeded.
+
+## Records
+
+| Kind | What's there |
+| --- | --- |
+| Renewals | Insurance (expires 2027-04-30) and registration (2026-12-31) from the documents, plus a made-up VHF licence (2028-03-15). |
+| Maintenance | Oil and filter, fuel filter and impeller done at the yard on 2026-10-02 at 1,412 hours, with the manual's intervals; made-up history for the heat-exchanger anodes (due 2026-10-18 or 1,471 hours), coolant and valve clearance (hours only). |
+| Expenses | The yard invoice ($1,676.90, Sam), the insurance premium ($1,284.00, Alex), the registration fee ($98.00, Jordan) and a made-up mooring fee ($420.00, Alex), all USD. |
 
 ## Documents
 
