@@ -1285,4 +1285,4 @@ Create the issues from your plan, re-scope #37 as the final cutover with Blocked
   maintainer approved the plan without seeing it. Claude spelled out the plan when creating the
   issues.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#64](https://github.com/heynewton/newton/pull/64)
