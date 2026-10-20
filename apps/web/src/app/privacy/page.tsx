@@ -30,9 +30,15 @@ const processors = [
   },
   {
     name: "Cloudflare",
-    role: "DNS for heynewton.app only. It does not see your data or the content of pages.",
+    role: "DNS for heynewton.app, and forwards mail sent to our contact address to our inbox. It does not see your boat's data or the content of pages.",
     where: "Global network.",
     href: "https://www.cloudflare.com/privacypolicy/",
+  },
+  {
+    name: "Google (Gmail)",
+    role: "Our inbox: holds the messages you send to our contact address, such as privacy requests. It does not see your boat's data.",
+    where: "United States.",
+    href: "https://policies.google.com/privacy",
   },
   {
     name: "Anthropic (Claude API)",
