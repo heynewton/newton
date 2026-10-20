@@ -32,7 +32,7 @@ Rules for all of them:
 | Prod server keys (`SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `CRON_SECRET`) | secrets | Supabase, Resend, us | `newton-prod`; project Resend account | Email-in and reminders on prod (#63) | Vercel env vars of `heynewton-prod`, Production target ([Production](#production)) |
 | Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | Project Resend account; that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment |
-| `ANTHROPIC_API_KEY` | secret | Anthropic | `heynewton` org in the Claude Console, one workspace per environment | Manual Q&A (`packages/agent`, #14): the live eval, and the app once it calls it | Local `.env` for the eval; the app's environment later. Not in CI |
+| `ANTHROPIC_API_KEY` | secret | Anthropic | `heynewton` org in the Claude Console, one workspace per environment | Filing (#11) in the web app (after email-in and the daily `/api/filing` run); the live evals of filing and manual Q&A (`packages/agent`, #11, #14) | Local `.env` for the evals; Vercel env vars of each deployment for filing (without it, filing is off there and documents stay unsorted). Not in CI |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
