@@ -14,6 +14,7 @@ const documents = {
   registration: "Kittiwake registration certificate",
   "yard-invoice": "Example Point Boatyard invoice EPB-2026-0917",
   "manual-excerpt": "Sample Marine SM-30 owner's manual, maintenance section",
+  "sail-loft-invoice": "Voilerie Exemple facture VE-2026-0412",
 };
 
 const emails = [

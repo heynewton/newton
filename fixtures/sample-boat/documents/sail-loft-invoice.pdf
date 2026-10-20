@@ -1,0 +1,62 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+5 0 obj
+<< /Length 1346 >>
+stream
+BT
+/F1 9.5 Tf
+13 TL
+48 750 Td
+(VOILERIE EXEMPLE SARL   \(entreprise fictive - donnees d'exemple\)) Tj
+T* (12 Quai Imaginaire, 00000 Port-Exemple, France) Tj
+T* (Tel. +33 5 55 01 00 77   atelier@voilerie.example.org) Tj
+T* () Tj
+T* (FACTURE                              Facture no. :  VE-2026-0412) Tj
+T* (                                     Date :         03.09.2026) Tj
+T* (                                     Echeance :     03.10.2026) Tj
+T* (Client :   Alex Sample, 1 Imaginary Lane, Port Example, XX 00000) Tj
+T* (Bateau :   Kittiwake, Example Yachts EY 34) Tj
+T* () Tj
+T* (DESIGNATION                               QTE    PRIX UNIT. HT     MONTANT HT) Tj
+T* (Reparation grand-voile \(couture, renforts\)  1         640,00         640,00) Tj
+T* (Remplacement coulisseaux de grand-voile    24           8,50         204,00) Tj
+T* (Lavage et controle genois                   1         206,67         206,67) Tj
+T* () Tj
+T* (                                          Total HT                  1.050,67) Tj
+T* (                                          TVA 20 %                    210,13) Tj
+T* (                                          TOTAL TTC          EUR    1.260,80) Tj
+T* () Tj
+T* (Reglement par virement le 05.09.2026.   Solde : 0,00 EUR) Tj
+T* () Tj
+T* (Merci de votre confiance. Prochaine revision conseillee avant la saison.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Title (Voilerie Exemple facture VE-2026-0412) /Producer (Newton sample fixtures) >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000309 00000 n 
+0000001707 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R /Info 6 0 R >>
+startxref
+1810
+%%EOF

@@ -1,0 +1,75 @@
+{
+  "_note": "Filing eval (#11): the made-up sample boat's documents (fixtures/sample-boat/documents), each filed as if forwarded by a member. `required` records must be saved with these values; anything else saved must match one of `optional`; a list of values means any of them. `boat` gives records the boat already has, for matching and duplicates. Run live with `npm run eval:filing -w @newton/agent`.",
+  "fixtures": "../../../fixtures/sample-boat/documents/",
+  "cases": [
+    {
+      "id": "insurance-certificate",
+      "file": "insurance-certificate.pdf",
+      "emailSubject": "Fwd: Your policy documents SAMPLE-POL-000123",
+      "type": "insurance",
+      "required": [
+        { "table": "renewals", "kind": "insurance", "expires_on": "2027-04-30", "reference": "SAMPLE-POL-000123" }
+      ],
+      "optional": [{ "table": "expenses", "amount_cents": 128400, "currency": "USD" }]
+    },
+    {
+      "id": "registration",
+      "file": "registration.pdf",
+      "emailSubject": "Registration certificate",
+      "type": "registration",
+      "required": [{ "table": "renewals", "kind": "registration", "expires_on": "2026-12-31", "reference": "XX 0000 ZZ" }],
+      "optional": [{ "table": "expenses", "amount_cents": 9800, "currency": "USD" }]
+    },
+    {
+      "id": "yard-invoice",
+      "file": "yard-invoice.pdf",
+      "emailSubject": "Fwd: Invoice EPB-2026-0917 - Kittiwake",
+      "type": "invoice",
+      "required": [
+        { "table": "expenses", "amount_cents": 167690, "currency": "USD", "spent_on": ["2026-10-02", "2026-10-03"] },
+        {
+          "table": "maintenance_new",
+          "last_done_on": ["2026-10-02", "2026-09-28"],
+          "last_done_engine_hours": 1412,
+          "every_months": 12,
+          "every_engine_hours": 100
+        }
+      ],
+      "optional": [{ "table": "maintenance_new", "last_done_on": ["2026-10-02", "2026-09-28"] }]
+    },
+    {
+      "id": "yard-invoice-already-recorded",
+      "file": "yard-invoice.pdf",
+      "emailSubject": "Fwd: Invoice EPB-2026-0917 - Kittiwake",
+      "type": "invoice",
+      "boat": {
+        "maintenance": [
+          { "id": "oil", "title": "Engine oil and filter", "lastDoneOn": "2025-10-02", "lastDoneEngineHours": 1312, "everyMonths": 12, "everyEngineHours": 100 },
+          { "id": "rigging", "title": "Standing rigging inspection", "lastDoneOn": "2026-04-01", "lastDoneEngineHours": null, "everyMonths": 12, "everyEngineHours": null }
+        ],
+        "renewals": [],
+        "expenses": [{ "amountCents": 167690, "currency": "USD", "spentOn": "2026-10-02" }]
+      },
+      "status": "needs_review",
+      "required": [{ "table": "maintenance_done", "id": "oil", "last_done_on": ["2026-10-02", "2026-09-28"], "last_done_engine_hours": 1412 }],
+      "optional": [{ "table": "maintenance_new", "last_done_on": ["2026-10-02", "2026-09-28"] }]
+    },
+    {
+      "id": "manual-excerpt",
+      "file": "manual-excerpt.pdf",
+      "emailSubject": "Engine manual, maintenance pages",
+      "type": "manual",
+      "status": "filed",
+      "required": [],
+      "optional": []
+    },
+    {
+      "id": "sail-loft-invoice-european",
+      "file": "sail-loft-invoice.pdf",
+      "emailSubject": "Fwd: Facture VE-2026-0412",
+      "type": "invoice",
+      "required": [{ "table": "expenses", "amount_cents": 126080, "currency": "EUR", "spent_on": ["2026-09-03", "2026-09-05"] }],
+      "optional": []
+    }
+  ]
+}

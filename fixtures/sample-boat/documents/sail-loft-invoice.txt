@@ -1,0 +1,22 @@
+VOILERIE EXEMPLE SARL   (entreprise fictive - donnees d'exemple)
+12 Quai Imaginaire, 00000 Port-Exemple, France
+Tel. +33 5 55 01 00 77   atelier@voilerie.example.org
+
+FACTURE                              Facture no. :  VE-2026-0412
+                                     Date :         03.09.2026
+                                     Echeance :     03.10.2026
+Client :   Alex Sample, 1 Imaginary Lane, Port Example, XX 00000
+Bateau :   Kittiwake, Example Yachts EY 34
+
+DESIGNATION                               QTE    PRIX UNIT. HT     MONTANT HT
+Reparation grand-voile (couture, renforts)  1         640,00         640,00
+Remplacement coulisseaux de grand-voile    24           8,50         204,00
+Lavage et controle genois                   1         206,67         206,67
+
+                                          Total HT                  1.050,67
+                                          TVA 20 %                    210,13
+                                          TOTAL TTC          EUR    1.260,80
+
+Reglement par virement le 05.09.2026.   Solde : 0,00 EUR
+
+Merci de votre confiance. Prochaine revision conseillee avant la saison.
