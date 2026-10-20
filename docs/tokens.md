@@ -30,8 +30,8 @@ Rules for all of them:
 | `SUPABASE_PROD_ACCESS_TOKEN`, `SUPABASE_PROD_DB_PASSWORD` | secrets | Supabase | Project Supabase account; `newton-prod` project | `.github/workflows/production.yml` (#63) | The `production` environment only |
 | `SUPABASE_PROD_PROJECT_REF`, `SUPABASE_PROD_URL`, `SUPABASE_PROD_PUBLISHABLE_KEY`, `PROD_SITE_URL` | variables | Supabase, Vercel | `newton-prod`; `heynewton-prod` | `.github/workflows/production.yml` (#63) | The `production` environment only (environment variables, not repo variables) |
 | Prod server keys (`SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `CRON_SECRET`) | secrets | Supabase, Resend, us | `newton-prod`; project Resend account | Email-in and reminders on prod (#63) | Vercel env vars of `heynewton-prod`, Production target ([Production](#production)) |
-| Resend SMTP keys | secret | Resend | Project Resend account (Free) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
-| `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | Project Resend account; that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment |
+| Resend SMTP keys | secret | Resend | The prod or dev Resend team (Free), one key each (#109) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
+| `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | That environment's Resend team (#109); that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment: the dev site's on `heynewton-web` Production only, never Preview |
 | `ANTHROPIC_API_KEY` | secret | Anthropic | `heynewton` org in the Claude Console, one workspace per environment | Manual Q&A (`packages/agent`, #14): the live eval, and the app once it calls it | Local `.env` for the eval; the app's environment later. Not in CI |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
@@ -210,6 +210,112 @@ there. Setup, by the maintainer, in this order so every sign-in link has somewhe
 To undo: remove the domain from `heynewton-web`, and put the Site URL, `SITE_URL` and the webhook
 back on `https://heynewton-web.vercel.app`. The DNS record can stay; it points at nothing else.
 
+## Dev Resend team (#109)
+
+Dev and prod have separate Resend teams, so nothing in dev can read real boat mail
+([decision 0003, update](decisions/0003-email-provider.md#update-20-october-2026-dev-gets-its-own-resend-team-109)).
+
+| | Prod team (the original one) | Dev team `newton-dev` |
+| --- | --- | --- |
+| Login | `dev@heynewton.app` | `resend-dev@heynewton.app`, a separate free account (a second team on one login is a paid feature) |
+| Sending domain | `heynewton.app` (`noreply@heynewton.app`) | `dev.heynewton.app` (`noreply@dev.heynewton.app`) |
+| Inbound domain | `boats.heynewton.app` | `boats.dev.heynewton.app` |
+| SMTP key (Sending access, sending domain only) | `supabase-newton-prod` → `newton-prod` | `supabase-newton-dev` → `newton-dev` |
+| Email-in and reminders key (Full access) | `email-in-newton-prod` → `heynewton-prod` | `email-in-newton-dev` → `heynewton-web`, Production target only |
+| Webhook (`email.received`) | `https://heynewton-prod.vercel.app/api/email-in` | `https://dev.heynewton.app/api/email-in` |
+
+**What each place can reach.** A PR preview (code from any branch) has `newton-dev`'s keys and
+no Resend key: email-in answers 503 "Email-in is not set up here", reminders aren't scheduled
+there, sign-in mail is sent by `newton-dev`'s Supabase, from the dev team. The dev site (only
+`main`) has the dev team's key, which reads only mail sent to `boats.dev.heynewton.app`. Only
+`heynewton-prod` has a prod-team key.
+
+Setup, by the maintainer, in this order (dev email-in is down from step 7 to step 9; nothing on
+prod changes until step 11, which only deletes what prod doesn't use). Every value is copied
+from the provider's screen into the next one, never into a chat or file.
+
+- [x] 0. **Quick fix, first:** Vercel → `heynewton-web` → Settings → Environment Variables:
+      remove `RESEND_API_KEY` and `RESEND_WEBHOOK_SECRET` from the **Preview** target (keep them on
+      Production for now). New previews then answer 503 on `/api/email-in`; existing previews keep
+      the old values until they're redeployed, so redeploy any open PR's preview (or close it).
+      (Done 20 October with `vercel env rm <name> -e preview`; a fresh preview answered 503.)
+- [x] 1. **Dev team.** Resend, signed in as `dev@heynewton.app` → team switcher (top left) →
+      **Create team** `newton-dev`. If it offers Free, take it. If it requires a paid plan, cancel
+      and instead: Cloudflare → `heynewton.app` → Email → Email Routing → add the address
+      `resend-dev@heynewton.app`, forwarding to the project Gmail; then sign up at resend.com with
+      that address (Free), name the team `newton-dev`, turn on two-factor authentication, and save
+      the login in the password manager as "Resend dev". (Done 20 October: a second team is a
+      paid feature, so dev is a separate free account; Cloudflare forwards `resend-dev@` like `dev@`.)
+- [x] 2. **Sending domain.** In the dev team: Domains → Add domain → `dev.heynewton.app`, region US
+      East (`us-east-1`). In Cloudflare → `heynewton.app` → DNS, add exactly the records Resend
+      shows. They should all be *below* `dev` (`resend._domainkey.dev`, MX and TXT `send.dev`, and
+      any CNAME), proxy **off**. If Resend asks for a record on `dev` itself, stop: that would
+      clash with the Vercel CNAME; use `mail.dev.heynewton.app` instead and tell the PR. Don't
+      touch the `dev` CNAME, the root's MX/SPF, `send`, `resend._domainkey`, `_dmarc` or `boats`.
+      Verify, then turn **off** click and open tracking. (Done 20 October with Resend's **Auto
+      configure** for Cloudflare: TXT `resend._domainkey.dev`, CNAMEs `send.dev` and `rsend.dev` →
+      `*.forge.rmta.net`, proxy off. Nothing on `dev` itself.)
+- [x] 3. **Inbound domain.** Add domain → `boats.dev.heynewton.app`, same region; add its records
+      the same way, then turn **receiving on** and add the **MX** on `boats.dev` it shows (the only
+      MX there). Wait for **Verified**. (Records added 20 October by Auto configure, run again
+      after turning receiving on: the same three as step 2 under `boats.dev`, plus **MX**
+      `boats.dev` → `inbound-smtp.us-east-1.amazonaws.com`, priority 10. Resend took a while to
+      verify the MX after it resolved publicly; Restart in Resend re-runs the check. A test email
+      showed up in the dev account only.) Send a test email to `test@boats.dev.heynewton.app` and
+      check it appears under Emails → Receiving in the **dev** team and not in the prod team.
+- [x] 4. **Keys.** Dev team → API Keys → Create:
+  - `supabase-newton-dev`: **Sending access**, domain `dev.heynewton.app` only.
+  - `email-in-newton-dev`: **Full access** (reading received mail needs it). (Done 20 October
+    with the Resend CLI, its token piped straight into Vercel's `RESEND_API_KEY`: see step 7.)
+- [x] 5. **`newton-dev` SMTP.** Supabase → `newton-dev` → Authentication → Emails → SMTP
+      Settings: **Sender email** `noreply@dev.heynewton.app`, sender name `Hey Newton`, host
+      `smtp.resend.com`, port `465`, user `resend`, password the new `supabase-newton-dev` key.
+      Save. (`newton-prod`'s SMTP doesn't change.) (Done 20 October with the Resend CLI and the
+      Supabase Management API, `PATCH /v1/projects/<ref>/config/auth`, the key piped from one to
+      the other; only the SMTP fields changed.)
+- [x] 6. **Dev webhook.** Dev team → Webhooks → Add endpoint `https://dev.heynewton.app/api/email-in`,
+      event `email.received` only. Copy its signing secret for the next step. (Done 20 October
+      with `resend webhooks create`, the secret piped straight into `RESEND_WEBHOOK_SECRET`.)
+- [x] 7. **Vercel `heynewton-web`** → Settings → Environment Variables, secrets marked Sensitive:
+  - `RESEND_API_KEY` = the new `email-in-newton-dev` key, **Production** only.
+  - `RESEND_WEBHOOK_SECRET` = the dev webhook's secret, **Production** only.
+  - `INBOUND_EMAIL_DOMAIN` = `boats.dev.heynewton.app`, Production **and** Preview (previews show
+    the address; mail to it is filed by the dev site into `newton-dev`, which previews share).
+  - `REMINDERS_FROM` = `Hey Newton <noreply@dev.heynewton.app>`, Production (dev's reminders
+    would otherwise send from `heynewton.app`, which the dev team can't).
+  - Check `RESEND_API_KEY` and `RESEND_WEBHOOK_SECRET` are **not** on Preview (step 0).
+  - (Done 20 October with the Vercel CLI: `vercel env update <name> -e production` reading the
+    value from stdin, so no secret was printed. A Resend CLI login with a temporary Full-access
+    key `cli-newton-dev` made the dev key and webhook; delete that key when the setup is done.)
+- [x] 8. Actions → the latest **Deploy** run on `main` → Re-run all jobs, so the dev site picks
+      up the new values.
+- [x] 9. **Test dev.** Sign in on `https://dev.heynewton.app` by email link with a team member's
+      address: the email comes from `noreply@dev.heynewton.app` and passes SPF, DKIM and DMARC
+      ("Show original" in Gmail). On a test boat, the page shows `…@boats.dev.heynewton.app`;
+      email it a PDF from that address: it appears under Documents, and the dev team's webhook
+      shows the delivery with 200. (20 October: the sign-in email came from
+      `noreply@dev.heynewton.app` with DKIM, SPF and DMARC pass; a test email to the sample boat
+      got 200 `held` from the dev webhook.)
+- [x] 10. Tell the PR, so Claude can check from outside (step 12).
+- [x] 11. **Clean the prod team.** Switch to the prod team in Resend: delete the API keys
+      `supabase-newton-dev` and `email-in-newton-dev`, and the webhook
+      `https://dev.heynewton.app/api/email-in`. The prod team then holds only `heynewton.app`,
+      `boats.heynewton.app`, `supabase-newton-prod`, `email-in-newton-prod` and prod's webhook.
+      (20 October: `email-in-newton-dev` and the dev webhook deleted from the prod team.
+      The prod team's `supabase-newton-dev` followed once step 5 was tested.)
+- [ ] 12. **Checks** (recorded on the PR):
+  - Email a prod boat's `…@boats.heynewton.app` address: the prod team shows one webhook
+    delivery (prod's, 200), and the dev team shows nothing received.
+  - The dev key can't see prod's mail. With the `email-in-newton-dev` key pasted at the prompt,
+    not on the command line:
+    `read -s KEY && curl -s -H "Authorization: Bearer $KEY" "https://api.resend.com/emails/receiving?limit=100" | grep -c boats.heynewton.app`
+    prints `0` (only `boats.dev.heynewton.app` mail is listed).
+  - A fresh preview answers 503 to `POST /api/email-in`.
+
+To undo before step 11: put the old prod-team key and secret back on `heynewton-web`,
+`INBOUND_EMAIL_DOMAIN` back to `boats.heynewton.app`, remove `REMINDERS_FROM`, and `newton-dev`'s
+SMTP back to `noreply@heynewton.app`. After step 11 there's nothing to go back to; fix forward.
+
 ## Fixture sign-in (`FIXTURE_SIGN_IN`, `SUPABASE_SECRET_KEY`)
 
 The sample boat's people (`fixtures/sample-boat`) sign in with addresses on reserved domains, so
@@ -256,11 +362,13 @@ data, so that is acceptable here; prod allows only its own domain.
 ## Resend SMTP keys
 
 Supabase sends sign-in emails through Resend ([decision](decisions/0003-email-provider.md)). One
-key per Supabase project, so revoking one doesn't break the other.
+key per Supabase project, so revoking one doesn't break the other, each in its own Resend team
+since #109 ([Dev Resend team](#dev-resend-team-109)).
 
-- **Where:** Resend → API Keys → Create API key, signed in as the project account.
-- **Names:** `supabase-newton-dev`, and `supabase-newton-prod` for #63.
-- **Permission:** Sending access (not Full access), domain `heynewton.app` only.
+- **Where:** Resend → API Keys → Create API key, in that environment's team.
+- **Names:** `supabase-newton-prod` (prod team), `supabase-newton-dev` (dev team).
+- **Permission:** Sending access (not Full access), domain `heynewton.app` (prod) or
+  `dev.heynewton.app` (dev) only. The sender is `noreply@` that domain.
 - **Expiry:** Resend keys don't expire. Rotate yearly; put the date in the project calendar.
 - **Stored in:** pasted straight into Supabase → that project → Authentication → Emails → SMTP
   Settings (password field), with host `smtp.resend.com`, port `465`, user `resend`. Not saved
@@ -273,10 +381,10 @@ without a signed-in person. Setup steps are in [decision 0003](decisions/0003-em
 
 | Variable | Issued by | Permission | Stored in |
 | --- | --- | --- | --- |
-| `RESEND_API_KEY` | Resend, key `email-in-newton-dev` (`email-in-newton-prod` for #63) | Full access: reading received emails needs more than "Sending access", and Full access is the narrowest that can | Vercel env vars of the deployment it belongs to, marked Sensitive |
+| `RESEND_API_KEY` | Resend, key `email-in-newton-prod` in the prod team, `email-in-newton-dev` in the dev team (#109) | Full access: reading received emails needs more than "Sending access", and Full access is the narrowest that can. It reads only its own team's received mail | Vercel env vars of the deployment it belongs to, marked Sensitive. On `heynewton-web`, the Production target (the dev site) only: previews have no Resend key and answer 503 |
 | `RESEND_WEBHOOK_SECRET` | Resend, per webhook endpoint (`whsec_…`) | Checks that a request comes from Resend | Same |
 | `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/email-in.ts`, `lib/db/reminders.ts` and (dev and previews) `lib/db/fixture-sign-in.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
-| `INBOUND_EMAIL_DOMAIN` | — (not secret) | `boats.heynewton.app` | Same |
+| `INBOUND_EMAIL_DOMAIN` | — (not secret) | `boats.heynewton.app` on prod, `boats.dev.heynewton.app` on the dev site and previews (#109) | Same; on `heynewton-web`, Production and Preview |
 
 - **Expiry:** none of them expire on their own. Rotate yearly with the other Resend keys; a new
   webhook secret is made with Resend's rotate button.
@@ -291,7 +399,8 @@ API.
 | Variable | Issued by | Permission | Stored in |
 | --- | --- | --- | --- |
 | `CRON_SECRET` | Us: a random string of 32+ characters (`openssl rand -hex 32`) | Vercel sends it as `Authorization: Bearer …`; the route refuses calls without it | Vercel env vars of `heynewton-web` (Production target), marked Sensitive |
-| `RESEND_API_KEY` | Resend: the same key as email-in (`email-in-newton-dev`, see above), which can also send | Sending from `heynewton.app` | Same |
+| `RESEND_API_KEY` | Resend: the same key as email-in (see above), which can also send | Sending from that team's domain | Same |
+| `REMINDERS_FROM` | — (not secret) | The sender. Unset: `Hey Newton <noreply@heynewton.app>` (prod). The dev site: `Hey Newton <noreply@dev.heynewton.app>`, the dev team's domain (#109) | Same |
 | `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/reminders.ts`, `lib/db/email-in.ts` and (dev and previews) `lib/db/fixture-sign-in.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
 | `SITE_URL` | — (not secret) | Links in the email: `https://dev.heynewton.app` on dev (#106), `https://heynewton.app` on prod | Same |
 
