@@ -63,6 +63,32 @@ isOneToOne: false
       referencedColumns: ["id","boat_id"]
     }
                   ]
+                },"document_filings": {
+                  Row: {
+                    "attempts": number,"boat_id": string,"confidence": string | null,"created_at": string,"document_id": string,"document_type": Database["public"]['Enums']["document_type"] | null,"flags": NonNullable<Json>,"id": string,"last_error": string | null,"model": string | null,"proposal": Json | null,"status": Database["public"]['Enums']["filing_status"],"summary": string | null,"updated_at": string,"vendor": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attempts"?: number,"boat_id": string,"confidence"?: string | null,"created_at"?: string,"document_id": string,"document_type"?: Database["public"]['Enums']["document_type"] | null,"flags"?: NonNullable<Json>,"id"?: string,"last_error"?: string | null,"model"?: string | null,"proposal"?: Json | null,"status": Database["public"]['Enums']["filing_status"],"summary"?: string | null,"updated_at"?: string,"vendor"?: string | null
+                  }
+                  Update: {
+                    "attempts"?: number,"boat_id"?: string,"confidence"?: string | null,"created_at"?: string,"document_id"?: string,"document_type"?: Database["public"]['Enums']["document_type"] | null,"flags"?: NonNullable<Json>,"id"?: string,"last_error"?: string | null,"model"?: string | null,"proposal"?: Json | null,"status"?: Database["public"]['Enums']["filing_status"],"summary"?: string | null,"updated_at"?: string,"vendor"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "document_filings_boat_id_fkey"
+      columns: ["boat_id"]
+isOneToOne: false
+      referencedRelation: "boats"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "document_filings_document_id_boat_id_fkey"
+      columns: ["document_id","boat_id"]
+isOneToOne: false
+      referencedRelation: "documents"
+      referencedColumns: ["id","boat_id"]
+    }
+                  ]
                 },"documents": {
                   Row: {
                     "added_by": string | null,"boat_id": string,"content_type": string | null,"created_at": string,"filename": string | null,"id": string,"inbound_email_id": string | null,"received_at": string,"size_bytes": number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type": Database["public"]['Enums']["document_type"]
@@ -312,6 +338,27 @@ isOneToOne: false
 "current_person_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"documents_to_file":
+{ Args: { "max_attempts": number,"max_rows": number }; Returns: {
+              "added_by": string | null,
+"boat_id": string,
+"content_type": string | null,
+"created_at": string,
+"filename": string | null,
+"id": string,
+"inbound_email_id": string | null,
+"received_at": string,
+"size_bytes": number | null,
+"source": Database["public"]['Enums']["document_source"],
+"storage_path": string,
+"type": Database["public"]['Enums']["document_type"]
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "documents"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "match_inbound_email":
 { Args: { "alias": string,"sender": string }; Returns: {
               "boat_id": string,"person_id": string
@@ -323,6 +370,14 @@ isOneToOne: false
 "new_email_alias":
 { Args: { "boat_name": string }; Returns: string
                            },
+"record_document_filing_failure":
+{ Args: { "document_id": string,"error": string,"model": string }; Returns: undefined
+                           },
+"save_document_filing":
+{ Args: { "confidence": string,"document_id": string,"document_type": Database["public"]['Enums']["document_type"],"flags": Json,"model": string,"proposal": Json,"records": Json,"status": Database["public"]['Enums']["filing_status"],"summary": string,"vendor": string }; Returns: {
+              "already_filed": boolean,"filing_id": string
+            }[]
+                           },
 "search_document_chunks":
 { Args: { "match_count"?: number,"model": string,"only_boat_id"?: string,"query_embedding": string }; Returns: {
               "boat_id": string,"chunk_id": string,"content": string,"document_id": string,"document_received_at": string,"filename": string,"indexed_at": string,"page": number,"similarity": number
@@ -333,7 +388,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "document_source": "email"|"upload","document_type": "unsorted"|"email"|"invoice"|"receipt"|"insurance"|"registration"|"manual"|"contract"|"survey"|"other","inbound_email_status": "filed"|"held","membership_role": "owner"|"co_owner"|"crew"|"read_only","reminder_item_type": "renewal"|"maintenance","reminder_status": "due_soon"|"overdue","renewal_kind": "insurance"|"registration"|"licence"|"other"
+            "document_source": "email"|"upload","document_type": "unsorted"|"email"|"invoice"|"receipt"|"insurance"|"registration"|"manual"|"contract"|"survey"|"other","filing_status": "filed"|"needs_review"|"failed","inbound_email_status": "filed"|"held","membership_role": "owner"|"co_owner"|"crew"|"read_only","reminder_item_type": "renewal"|"maintenance","reminder_status": "due_soon"|"overdue","renewal_kind": "insurance"|"registration"|"licence"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -453,7 +508,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "document_source": ["email", "upload"],"document_type": ["unsorted", "email", "invoice", "receipt", "insurance", "registration", "manual", "contract", "survey", "other"],"inbound_email_status": ["filed", "held"],"membership_role": ["owner", "co_owner", "crew", "read_only"],"reminder_item_type": ["renewal", "maintenance"],"reminder_status": ["due_soon", "overdue"],"renewal_kind": ["insurance", "registration", "licence", "other"]
+            "document_source": ["email", "upload"],"document_type": ["unsorted", "email", "invoice", "receipt", "insurance", "registration", "manual", "contract", "survey", "other"],"filing_status": ["filed", "needs_review", "failed"],"inbound_email_status": ["filed", "held"],"membership_role": ["owner", "co_owner", "crew", "read_only"],"reminder_item_type": ["renewal", "maintenance"],"reminder_status": ["due_soon", "overdue"],"renewal_kind": ["insurance", "registration", "licence", "other"]
           }
         }
 } as const
