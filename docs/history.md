@@ -27,6 +27,7 @@ Workflow, board and process: how changes land, how issues are picked up, and how
 - [#67](https://github.com/heynewton/newton/pull/67) · 2026-10-19 · No limit on issues in progress
 - [#90](https://github.com/heynewton/newton/pull/90) · 2026-10-19 · Build log and history are one file per entry, so open PRs stop conflicting · closes [#89](https://github.com/heynewton/newton/issues/89)
 - [#102](https://github.com/heynewton/newton/pull/102) · 2026-10-19 · PRs that close no issue show on the Kanban view · closes [#101](https://github.com/heynewton/newton/issues/101)
+- [#119](https://github.com/heynewton/newton/pull/119) · 2026-10-20 · Claude runs the service CLIs instead of asking for dashboard steps
 
 ### Architecture and decisions
 
@@ -57,6 +58,8 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#105](https://github.com/heynewton/newton/pull/105) · 2026-10-19 · Production checklist: first-release checks done
 - [#107](https://github.com/heynewton/newton/pull/107) · 2026-10-20 · heynewton.app moves to production: cutover checklist and docs · closes [#37](https://github.com/heynewton/newton/issues/37)
 - [#108](https://github.com/heynewton/newton/pull/108) · 2026-10-20 · The dev site moves to dev.heynewton.app and tells search engines not to index it · closes [#106](https://github.com/heynewton/newton/issues/106)
+- [#110](https://github.com/heynewton/newton/pull/110) · 2026-10-20 · Production checklist: heynewton.app sign-in checked
+- [#121](https://github.com/heynewton/newton/pull/121) · 2026-10-20 · Production releases on merge without a click, with approval only when migrations are pending · closes [#120](https://github.com/heynewton/newton/issues/120)
 
 ### Brand and website
 
@@ -64,6 +67,7 @@ The Hey Newton logo and the public homepage.
 
 - [#20](https://github.com/heynewton/newton/pull/20) · 2026-10-18 · Hey Newton logo, with the web app favicon
 - [#34](https://github.com/heynewton/newton/pull/34) · 2026-10-18 · Homepage that explains Hey Newton, a shared footer, and the screen-size decision · closes [#31](https://github.com/heynewton/newton/issues/31)
+- [#113](https://github.com/heynewton/newton/pull/113) · 2026-10-20 · Draft privacy policy and terms at /privacy and /terms, with the open choices marked for the maintainer to decide
 
 ### Calculations
 
