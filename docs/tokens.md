@@ -263,14 +263,16 @@ from the provider's screen into the next one, never into a chat or file.
       verify the MX after it resolved publicly; Restart in Resend re-runs the check. A test email
       showed up in the dev account only.) Send a test email to `test@boats.dev.heynewton.app` and
       check it appears under Emails → Receiving in the **dev** team and not in the prod team.
-- [ ] 4. **Keys.** Dev team → API Keys → Create:
+- [x] 4. **Keys.** Dev team → API Keys → Create:
   - `supabase-newton-dev`: **Sending access**, domain `dev.heynewton.app` only.
   - `email-in-newton-dev`: **Full access** (reading received mail needs it). (Done 20 October
     with the Resend CLI, its token piped straight into Vercel's `RESEND_API_KEY`: see step 7.)
-- [ ] 5. **`newton-dev` SMTP.** Supabase → `newton-dev` → Authentication → Emails → SMTP
+- [x] 5. **`newton-dev` SMTP.** Supabase → `newton-dev` → Authentication → Emails → SMTP
       Settings: **Sender email** `noreply@dev.heynewton.app`, sender name `Hey Newton`, host
       `smtp.resend.com`, port `465`, user `resend`, password the new `supabase-newton-dev` key.
-      Save. (`newton-prod`'s SMTP doesn't change.)
+      Save. (`newton-prod`'s SMTP doesn't change.) (Done 20 October with the Resend CLI and the
+      Supabase Management API, `PATCH /v1/projects/<ref>/config/auth`, the key piped from one to
+      the other; only the SMTP fields changed.)
 - [x] 6. **Dev webhook.** Dev team → Webhooks → Add endpoint `https://dev.heynewton.app/api/email-in`,
       event `email.received` only. Copy its signing secret for the next step. (Done 20 October
       with `resend webhooks create`, the secret piped straight into `RESEND_WEBHOOK_SECRET`.)
@@ -287,18 +289,20 @@ from the provider's screen into the next one, never into a chat or file.
     key `cli-newton-dev` made the dev key and webhook; delete that key when the setup is done.)
 - [x] 8. Actions → the latest **Deploy** run on `main` → Re-run all jobs, so the dev site picks
       up the new values.
-- [ ] 9. **Test dev.** Sign in on `https://dev.heynewton.app` by email link with a team member's
+- [x] 9. **Test dev.** Sign in on `https://dev.heynewton.app` by email link with a team member's
       address: the email comes from `noreply@dev.heynewton.app` and passes SPF, DKIM and DMARC
       ("Show original" in Gmail). On a test boat, the page shows `…@boats.dev.heynewton.app`;
       email it a PDF from that address: it appears under Documents, and the dev team's webhook
-      shows the delivery with 200.
-- [ ] 10. Tell the PR, so Claude can check from outside (step 12).
-- [ ] 11. **Clean the prod team.** Switch to the prod team in Resend: delete the API keys
+      shows the delivery with 200. (20 October: the sign-in email came from
+      `noreply@dev.heynewton.app` with DKIM, SPF and DMARC pass; a test email to the sample boat
+      got 200 `held` from the dev webhook.)
+- [x] 10. Tell the PR, so Claude can check from outside (step 12).
+- [x] 11. **Clean the prod team.** Switch to the prod team in Resend: delete the API keys
       `supabase-newton-dev` and `email-in-newton-dev`, and the webhook
       `https://dev.heynewton.app/api/email-in`. The prod team then holds only `heynewton.app`,
       `boats.heynewton.app`, `supabase-newton-prod`, `email-in-newton-prod` and prod's webhook.
       (20 October: `email-in-newton-dev` and the dev webhook deleted from the prod team.
-      `supabase-newton-dev` waits until `newton-dev`'s SMTP uses the dev account's key, step 5.)
+      The prod team's `supabase-newton-dev` followed once step 5 was tested.)
 - [ ] 12. **Checks** (recorded on the PR):
   - Email a prod boat's `…@boats.heynewton.app` address: the prod team shows one webhook
     delivery (prod's, 200), and the dev team shows nothing received.
