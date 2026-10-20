@@ -233,10 +233,11 @@ Setup, by the maintainer, in this order (dev email-in is down from step 7 to ste
 prod changes until step 11, which only deletes what prod doesn't use). Every value is copied
 from the provider's screen into the next one, never into a chat or file.
 
-- [ ] 0. **Quick fix, first:** Vercel → `heynewton-web` → Settings → Environment Variables:
+- [x] 0. **Quick fix, first:** Vercel → `heynewton-web` → Settings → Environment Variables:
       remove `RESEND_API_KEY` and `RESEND_WEBHOOK_SECRET` from the **Preview** target (keep them on
       Production for now). New previews then answer 503 on `/api/email-in`; existing previews keep
       the old values until they're redeployed, so redeploy any open PR's preview (or close it).
+      (Done 20 October with `vercel env rm <name> -e preview`; a fresh preview answered 503.)
 - [ ] 1. **Dev team.** Resend, signed in as `dev@heynewton.app` → team switcher (top left) →
       **Create team** `newton-dev`. If it offers Free, take it. If it requires a paid plan, cancel
       and instead: Cloudflare → `heynewton.app` → Email → Email Routing → add the address
