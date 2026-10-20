@@ -60,6 +60,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#108](https://github.com/heynewton/newton/pull/108) · 2026-10-20 · The dev site moves to dev.heynewton.app and tells search engines not to index it · closes [#106](https://github.com/heynewton/newton/issues/106)
 - [#110](https://github.com/heynewton/newton/pull/110) · 2026-10-20 · Production checklist: heynewton.app sign-in checked
 - [#121](https://github.com/heynewton/newton/pull/121) · 2026-10-20 · Production releases on merge without a click, with approval only when migrations are pending · closes [#120](https://github.com/heynewton/newton/issues/120)
+- [#125](https://github.com/heynewton/newton/pull/125) · 2026-10-20 · One Node version everywhere, Node 24, and npm install refuses any other · closes [#118](https://github.com/heynewton/newton/issues/118)
 
 ### Brand and website
 
@@ -93,6 +94,8 @@ The Supabase schema, row-level security, sign-in, storage and the sample boat.
 - [#92](https://github.com/heynewton/newton/pull/92) · 2026-10-19 · Document links open their PDFs on the dev site too · closes [#91](https://github.com/heynewton/newton/issues/91)
 - [#99](https://github.com/heynewton/newton/pull/99) · 2026-10-19 · Sign in as a sample-boat person on the dev site and previews, with no email · closes [#97](https://github.com/heynewton/newton/issues/97)
 - [#104](https://github.com/heynewton/newton/pull/104) · 2026-10-19 · Dev sign-in redirect URLs checked, prod domain removed from dev
+- [#123](https://github.com/heynewton/newton/pull/123) · 2026-10-20 · A person's stored email follows their sign-in email, and email-in matches the current address · closes [#117](https://github.com/heynewton/newton/issues/117)
+- [#127](https://github.com/heynewton/newton/pull/127) · 2026-10-20 · Owners can delete a boat, and its files in Storage go with it · closes [#115](https://github.com/heynewton/newton/issues/115)
 
 ### Email-in and filing
 
