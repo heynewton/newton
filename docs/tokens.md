@@ -254,11 +254,13 @@ from the provider's screen into the next one, never into a chat or file.
       Verify, then turn **off** click and open tracking. (Done 20 October with Resend's **Auto
       configure** for Cloudflare: TXT `resend._domainkey.dev`, CNAMEs `send.dev` and `rsend.dev` →
       `*.forge.rmta.net`, proxy off. Nothing on `dev` itself.)
-- [ ] 3. **Inbound domain.** Add domain → `boats.dev.heynewton.app`, same region; add its records
+- [x] 3. **Inbound domain.** Add domain → `boats.dev.heynewton.app`, same region; add its records
       the same way, then turn **receiving on** and add the **MX** on `boats.dev` it shows (the only
       MX there). Wait for **Verified**. (Records added 20 October by Auto configure, run again
       after turning receiving on: the same three as step 2 under `boats.dev`, plus **MX**
-      `boats.dev` → `inbound-smtp.us-east-1.amazonaws.com`, priority 10.) Send a test email to `test@boats.dev.heynewton.app` and
+      `boats.dev` → `inbound-smtp.us-east-1.amazonaws.com`, priority 10. Resend took a while to
+      verify the MX after it resolved publicly; Restart in Resend re-runs the check. A test email
+      showed up in the dev account only.) Send a test email to `test@boats.dev.heynewton.app` and
       check it appears under Emails → Receiving in the **dev** team and not in the prod team.
 - [ ] 4. **Keys.** Dev team → API Keys → Create:
   - `supabase-newton-dev`: **Sending access**, domain `dev.heynewton.app` only.
