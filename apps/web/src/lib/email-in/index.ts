@@ -72,7 +72,7 @@ export interface EmailInStore {
 }
 
 export type ReceiveResult =
-  | { outcome: "filed"; boatId: string; documents: number }
+  | { outcome: "filed"; boatId: string; inboundEmailId: string; documents: number }
   | { outcome: "held"; boatId: string }
   | { outcome: "duplicate"; boatId: string }
   | { outcome: "unknown_address" };
@@ -205,5 +205,5 @@ export async function receiveEmail(
 
   await store.storeFiles(email, inboundEmailId, files);
   await store.finishFiling(inboundEmailId);
-  return { outcome: "filed", boatId: match.boatId, documents: files.length };
+  return { outcome: "filed", boatId: match.boatId, inboundEmailId, documents: files.length };
 }

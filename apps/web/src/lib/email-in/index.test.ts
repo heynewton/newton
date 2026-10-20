@@ -153,7 +153,7 @@ describe("receiveEmail with the sample boat's emails", () => {
     const { messages, store, receive } = await setup(file);
     const result = await receive(messages[0]);
 
-    expect(result).toEqual({ outcome: "filed", boatId: BOAT_ID, documents: 2 });
+    expect(result).toEqual({ outcome: "filed", boatId: BOAT_ID, inboundEmailId: expect.any(String), documents: 2 });
     expect(store.emails).toHaveLength(1);
     expect(store.emails[0]).toMatchObject({ status: "filed", personId: sender, completed: true, attachmentCount: 1 });
 
@@ -204,7 +204,7 @@ describe("receiveEmail with the sample boat's emails", () => {
     expect(store.files.size).toBe(1);
 
     store.failStoringAfter = null;
-    expect(await receive(messages[0])).toEqual({ outcome: "filed", boatId: BOAT_ID, documents: 2 });
+    expect(await receive(messages[0])).toEqual({ outcome: "filed", boatId: BOAT_ID, inboundEmailId: expect.any(String), documents: 2 });
     expect(store.emails).toHaveLength(1);
     expect(store.files.size).toBe(2);
   });

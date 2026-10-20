@@ -3,8 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
-  // packages/calc is TypeScript source, shared with the other workspaces.
-  transpilePackages: ["@newton/calc"],
+  // The workspace packages are TypeScript source, shared with the other workspaces.
+  transpilePackages: ["@newton/agent", "@newton/calc", "@newton/indexing"],
   partialPrefetching: true,
   // The dev site and PR previews (NOINDEX=1, set only by .github/workflows/deploy.yml) ask search
   // engines not to index them, so they never compete with heynewton.app (#106).
