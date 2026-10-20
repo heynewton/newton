@@ -202,6 +202,7 @@ export type BoatDocument = {
   source: "email" | "upload";
   filename: string | null;
   receivedAt: string;
+  sizeBytes: number | null;
 };
 
 export type BoatMember = {
@@ -227,7 +228,7 @@ export async function getBoatRecords(boatId: string): Promise<BoatRecords> {
   const [documents, renewals, maintenance, expenses, members] = await Promise.all([
     supabase
       .from("documents")
-      .select("id, type, source, filename, received_at")
+      .select("id, type, source, filename, received_at, size_bytes")
       .eq("boat_id", boatId)
       .order("received_at", { ascending: false }),
     supabase
@@ -257,6 +258,7 @@ export async function getBoatRecords(boatId: string): Promise<BoatRecords> {
       source: d.source,
       filename: d.filename,
       receivedAt: d.received_at,
+      sizeBytes: d.size_bytes,
     })),
     renewals: renewals.data!,
     maintenance: maintenance.data!,

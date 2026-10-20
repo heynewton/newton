@@ -11,6 +11,7 @@ import {
   type Schedule,
   type ScheduledItem,
 } from "@/lib/records";
+import { Contact } from "../../legal-page";
 
 // The boat page's read-only record sections. Every date and amount shown here was computed by
 // packages/calc (through @/lib/records); these components only lay them out, with the basis
@@ -316,6 +317,51 @@ export function Documents({
           ))}
         </ul>
       )}
+    </section>
+  );
+}
+
+// Owners and co-owners download the whole boat (#16, docs/export.md). Others don't see this.
+export function ExportData({
+  boatId,
+  fileBytes,
+  maxFileBytes,
+}: {
+  boatId: string;
+  fileBytes: number;
+  maxFileBytes: number;
+}) {
+  const megabytes = (bytes: number) =>
+    bytes < 1024 * 1024 ? `${Math.ceil(bytes / 1024)} KB` : `${Math.ceil(bytes / 1024 / 1024)} MB`;
+  return (
+    <section aria-labelledby="export" className="flex flex-col gap-4">
+      <h2 id="export" className="text-xl font-semibold">
+        Your boat&apos;s data
+      </h2>
+      <div className={`${card} flex flex-col gap-3`}>
+        <p className="text-zinc-700 dark:text-zinc-300">
+          Download every record and file of the boat in one zip, to keep a copy or move it elsewhere. The
+          records are JSON files,{" "}
+          <a className="underline" href="https://github.com/heynewton/newton/blob/main/docs/export.md">
+            described here
+          </a>
+          .
+        </p>
+        {fileBytes > maxFileBytes ? (
+          <p className={muted}>
+            The boat&apos;s files ({megabytes(fileBytes)}) are more than one download can hold (
+            {megabytes(maxFileBytes)}). Write to <Contact /> and we&apos;ll send the archive another way.
+          </p>
+        ) : (
+          <a
+            href={`/boats/${boatId}/export`}
+            download
+            className="flex min-h-11 w-fit items-center rounded-full border border-black/15 px-5 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+          >
+            Download all data ({megabytes(fileBytes)} of files)
+          </a>
+        )}
+      </div>
     </section>
   );
 }
