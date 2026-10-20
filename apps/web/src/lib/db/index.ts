@@ -162,7 +162,7 @@ const STORAGE_REMOVE_BATCH = 1000;
 // policy, which all run as the signed-in person. The name must be typed exactly as confirmation.
 //
 // Marks the boat first, then removes the files, then the rows (see
-// supabase/migrations/20261022120000_boat_delete.sql for why). Every step is safe to repeat, so a
+// supabase/migrations/20261022140000_boat_delete.sql for why). Every step is safe to repeat, so a
 // failure at any point is fixed by running it again.
 export async function deleteBoat(person: Person, boatId: string, typedName: string): Promise<DeleteBoatResult> {
   const boat = await getMyBoat(person, boatId);
