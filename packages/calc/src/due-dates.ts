@@ -176,3 +176,15 @@ export function findDue(items: DueItem[], window: DueWindow): { overdue: DueResu
   }
   return { overdue, dueSoon };
 }
+
+/**
+ * The whole number of calendar months from one date to a later one, or null when `to` isn't a
+ * whole number of months after `from` (by `addMonths`). Turns "done 2026-10-02, next due
+ * 2027-10-02" from a document into an interval of 12 months.
+ */
+export function wholeMonthsBetween(from: string, to: string): number | null {
+  const start = new Date(parseDate(from));
+  const end = new Date(parseDate(to));
+  const months = (end.getUTCFullYear() - start.getUTCFullYear()) * 12 + end.getUTCMonth() - start.getUTCMonth();
+  return months > 0 && addMonths(from, months) === to ? months : null;
+}

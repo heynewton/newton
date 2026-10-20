@@ -1,7 +1,9 @@
 export { toCents, formatCents } from "./money";
+export { parseDocumentAmount, parseDocumentDate, parseDocumentNumber } from "./document-values";
+export type { DateOrder, DecimalSeparator, ParsedAmount } from "./document-values";
 export { splitCosts } from "./cost-split";
 export type { Expense, OwnershipShare, CoOwnerBalance } from "./cost-split";
-export { addDays, addMonths, nextDue, findDue } from "./due-dates";
+export { addDays, addMonths, nextDue, findDue, wholeMonthsBetween } from "./due-dates";
 export type { DueRule, NextDue, DueItem, DueWindow, DueStatus, DueResult } from "./due-dates";
 export { tideHeightAt } from "./tide";
 export type { TideExtreme, TideAt } from "./tide";
