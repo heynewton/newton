@@ -59,6 +59,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#107](https://github.com/heynewton/newton/pull/107) · 2026-10-20 · heynewton.app moves to production: cutover checklist and docs · closes [#37](https://github.com/heynewton/newton/issues/37)
 - [#108](https://github.com/heynewton/newton/pull/108) · 2026-10-20 · The dev site moves to dev.heynewton.app and tells search engines not to index it · closes [#106](https://github.com/heynewton/newton/issues/106)
 - [#110](https://github.com/heynewton/newton/pull/110) · 2026-10-20 · Production checklist: heynewton.app sign-in checked
+- [#121](https://github.com/heynewton/newton/pull/121) · 2026-10-20 · Production releases on merge without a click, with approval only when migrations are pending · closes [#120](https://github.com/heynewton/newton/issues/120)
 
 ### Brand and website
 
