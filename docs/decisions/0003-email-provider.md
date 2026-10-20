@@ -1,6 +1,6 @@
 # 0003: Resend for sign-in mail and email-in
 
-**Status:** Decided, 2026-10-18. Setup in progress: both domains added to Resend and their DNS records in Cloudflare (2026-10-19); the SMTP key and Supabase settings are next. **Issues:** #61, #10, #12, #63.
+**Status:** Decided, 2026-10-18. Setup in progress: both domains added to Resend and their DNS records in Cloudflare (2026-10-19); the SMTP key and Supabase settings are next. Updated 2026-10-20: dev gets its own Resend team ([below](#update-20-october-2026-dev-gets-its-own-resend-team-109)). **Issues:** #61, #10, #12, #63, #109.
 
 ## Context
 
@@ -104,6 +104,76 @@ Resend's API calls in one module in `apps/web`, the way the database is reached 
 - Account data (logs, message metadata) is in the US whatever the sending region. The privacy
   policy (#33) lists Resend as a processor.
 
+## Update, 20 October 2026: dev gets its own Resend team (#109)
+
+**Problem.** Dev and prod shared one Resend team. Every message to `boats.heynewton.app`, real
+boats' included, landed in it, and each webhook endpoint got every `email.received` event (the
+first prod release on #63 saw prod mail reach dev's endpoint, which answered `unknown_address`).
+Dev's email-in key needs Full access to read received mail, and a Full-access key reads **all**
+the team's received mail. That key was set on `heynewton-web` for Production and Preview, and
+previews run code from any branch. That breaks the rule behind #37: dev and previews never reach
+real boat data or prod keys.
+
+**What Resend offers** (checked 20 October 2026):
+
+- A **team** is the boundary: "A Resend Team is the environment where your API keys, domains, and
+  email data are stored", and one login can belong to several teams
+  ([accounts vs teams](https://resend.com/docs/knowledge-base/how-can-i-delete-my-resend-account#understanding-accounts-vs-teams),
+  [managing teams](https://resend.com/docs/dashboard/settings/team)). Each team has its own API
+  keys, billing and usage ([merging teams](https://resend.com/docs/guides/account/can-i-merge-accounts-or-teams)),
+  and a domain can be active on only one team at a time ([claiming a domain](https://resend.com/docs/dashboard/domains/claim)).
+- **Received mail is per team:** List Received Emails "only returns emails received by your team"
+  ([API](https://resend.com/docs/api-reference/emails/list-received-emails)). So a dev-team key,
+  even with Full access, can't list or fetch prod's mail. To be checked once set up (below).
+- **A second team may cost money.** Resend's announcement says that after naming a new team you
+  "choose a paid transactional or marketing plan" ([multiple teams](https://resend.com/blog/multiple-teams),
+  updated July 2026). Pro is $20 a month ([pricing](https://resend.com/pricing)). The docs don't
+  say whether a free second team is possible today; the dashboard will.
+- **Free plan limits** apply per account/team: 100 emails a day and 3,000 a month, sent and
+  received together, 3 domains, 30 days of data
+  ([quotas](https://resend.com/docs/knowledge-base/account-quotas-and-limits)). The API rate limit
+  is per team. A dev team on its own free plan also stops dev's test mail eating prod's daily 100.
+- One domain can **send and receive**: receiving is a toggle plus one MX record on a verified
+  domain ([custom receiving domains](https://resend.com/docs/dashboard/receiving/custom-domains)).
+
+**Decision.** A separate Resend team for dev, with its own domains, keys and webhook; the
+existing team becomes prod's only.
+
+- **How the team is made:** first try Resend → team switcher → **Create team** `newton-dev` on the
+  project login (`dev@heynewton.app`). If it offers the Free plan, take it. If it asks for a paid
+  plan, don't pay $20 a month for test mail: create a **separate free Resend account** instead,
+  signed up with a new project address `resend-dev@heynewton.app` (a Cloudflare Email Routing
+  address forwarding to the project Gmail, like `dev@`). Resend's terms don't limit the number of
+  accounts ([terms](https://resend.com/legal/terms-of-service)). Either way the isolation is the
+  same, because the boundary is the team; a separate account only adds a second login to the
+  password manager.
+- **Dev sending domain: `dev.heynewton.app`**, sender `Hey Newton <noreply@dev.heynewton.app>`.
+  `dev` is a CNAME to Vercel (#106), so it can't hold any other record itself, but Resend's sending
+  records all sit *below* it (`resend._domainkey.dev`, `send.dev`), not on `dev`. The sender then
+  matches the dev site's address, and sign-in and reminder emails say plainly that they come from
+  dev.
+- **Dev inbound domain: `boats.dev.heynewton.app`**, receiving on. Receiving needs an MX record
+  on the domain itself, which `dev` can't have next to its CNAME, so it's a subdomain; the name
+  mirrors prod's `boats.heynewton.app`, so a dev boat's address reads as dev at a glance
+  (`kittiwake-…@boats.dev.heynewton.app`). Its records are on `boats.dev` and below, separate from
+  prod's `boats` MX and from the root's Cloudflare Email Routing MX.
+- **Two domains of the free plan's three.** One domain doing both (sending from
+  `noreply@boats.dev.heynewton.app`) would save one but reads oddly in a sign-in email; the third
+  stays spare.
+- **Region:** US East (`us-east-1`), like prod and `newton-dev`.
+- **Previews get no Resend key at all**, even from the dev team. Resend's webhook only calls the dev
+  site, so a preview never receives mail, and its `/api/email-in` answers 503 "Email-in is not set
+  up here". The dev key stays on the dev site only (Production target of `heynewton-web`), where
+  only `main` runs. A contributor's preview reaches `newton-dev` (fixture data) and nothing in
+  Resend; the dev site reaches the dev team (test mail only); nothing in dev reaches the prod team.
+- **Prod team after the split:** domains `heynewton.app` and `boats.heynewton.app`, keys
+  `supabase-newton-prod` and `email-in-newton-prod`, one webhook (prod's). Nothing else.
+
+The setup, in order, is in `docs/tokens.md`, [Dev Resend team](../tokens.md#dev-resend-team-109).
+The code didn't need to change: the inbound domain (`INBOUND_EMAIL_DOMAIN`) and the reminders
+sender (`REMINDERS_FROM`) were already per deployment, and boats store only their alias, so dev's
+boats move to the new domain with the variable.
+
 ## Setup
 
 For the maintainer. Accounts, DNS and keys are done in the providers' dashboards; nothing here
@@ -170,7 +240,8 @@ where it runs, and the Supabase URL and keys from #62. Real boats' mail must onl
       the webhook (200, `held`), and nothing new appears on the page.
 - [ ] Prod (#63) gets its own endpoint, key and secret. Both webhooks receive every message on
       `boats.heynewton.app`; each one ignores addresses that aren't its own boats' (it answers
-      200 `unknown_address` and downloads nothing).
+      200 `unknown_address` and downloads nothing). Since #109 dev has its own Resend team, inbound
+      domain `boats.dev.heynewton.app` and webhook, and the dev endpoint no longer gets prod's mail.
 
 ### 4. SMTP key for `newton-dev`
 
