@@ -65,6 +65,7 @@ The Hey Newton logo and the public homepage.
 
 - [#20](https://github.com/heynewton/newton/pull/20) · 2026-10-18 · Hey Newton logo, with the web app favicon
 - [#34](https://github.com/heynewton/newton/pull/34) · 2026-10-18 · Homepage that explains Hey Newton, a shared footer, and the screen-size decision · closes [#31](https://github.com/heynewton/newton/issues/31)
+- [#113](https://github.com/heynewton/newton/pull/113) · 2026-10-20 · Draft privacy policy and terms at /privacy and /terms, with the open choices marked for the maintainer to decide
 
 ### Calculations
 
