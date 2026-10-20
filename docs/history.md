@@ -105,6 +105,7 @@ Mail forwarded to a boat's own address, filed as documents.
 - [#73](https://github.com/heynewton/newton/pull/73) · 2026-10-19 · Every boat gets its own email address, and mail from its members is filed as documents · closes [#10](https://github.com/heynewton/newton/issues/10)
 - [#100](https://github.com/heynewton/newton/pull/100) · 2026-10-19 · Email-in setup on the dev site: webhook, key and settings in place
 - [#112](https://github.com/heynewton/newton/pull/112) · 2026-10-20 · Dev gets its own Resend team and domains, so dev and previews can't read real boats' mail · closes [#109](https://github.com/heynewton/newton/issues/109)
+- [#128](https://github.com/heynewton/newton/pull/128) · 2026-10-20 · Forwarded documents are filed into renewals, expenses and maintenance by Claude, with calc reading every date and amount (European formats too) and anything unsure flagged for review · closes [#11](https://github.com/heynewton/newton/issues/11)
 
 ### Web app features
 
