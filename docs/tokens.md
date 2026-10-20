@@ -181,17 +181,18 @@ keeps working as a fallback. The dev site and previews send `X-Robots-Tag: noind
 set only by `.github/workflows/deploy.yml`); the Production workflow fails if `NOINDEX` is set
 there. Setup, by the maintainer, in this order so every sign-in link has somewhere valid to land:
 
-- [ ] 1. Vercel → `heynewton-web` → Settings → Domains → Add: `dev.heynewton.app`, Production
+- [x] 1. Vercel → `heynewton-web` → Settings → Domains → Add: `dev.heynewton.app`, Production
       (connected to the production target, no redirect). Vercel shows the record it wants,
       usually a **CNAME** `dev` → a `…vercel-dns-….com` target. Set exactly that in Cloudflare →
       `heynewton.app` → DNS, proxy **off** (grey cloud), like the apex. Leave the mail records
-      (MX, SPF, DKIM, `_dmarc`, `boats`) alone. Wait for **Valid Configuration**.
+      (MX, SPF, DKIM, `_dmarc`, `boats`) alone. Wait for **Valid Configuration**. (Done: CNAME
+      `dev` → `a49833141f4b58b5.vercel-dns-017.com`, the same target as the apex and `www`.)
 - [ ] 2. Supabase → `newton-dev` → Authentication → URL Configuration: **Site URL**
       `https://dev.heynewton.app`; Redirect URLs: **add** `https://dev.heynewton.app/**`, keeping
       `https://heynewton-web.vercel.app/**` and `https://heynewton-*-hey-newton.vercel.app/**`.
-- [ ] 3. Vercel → `heynewton-web` → Settings → Environment Variables: `SITE_URL` =
+- [x] 3. Vercel → `heynewton-web` → Settings → Environment Variables: `SITE_URL` =
       `https://dev.heynewton.app` (Production). It applies from the next deploy (5).
-- [ ] 4. Resend → Webhooks → the dev endpoint (`https://heynewton-web.vercel.app/api/email-in`) →
+- [x] 4. Resend → Webhooks → the dev endpoint (`https://heynewton-web.vercel.app/api/email-in`) →
       Edit: endpoint URL `https://dev.heynewton.app/api/email-in`, event `email.received` as
       before. The signing secret stays the same; if Resend makes a new endpoint instead, put its
       secret in `RESEND_WEBHOOK_SECRET` on `heynewton-web` (Production and Preview) and delete the
