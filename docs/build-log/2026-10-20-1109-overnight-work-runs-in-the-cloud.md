@@ -22,4 +22,4 @@ overnight work should always run on cloud update claude and /docs
   unreachable even though the network was up. That stalls local sessions, and is the case this rule
   avoids. This PR was prepared offline from the last fetched `main` and pushed once DNS came back.
 
-**Pull request:** see this PR's history file in `docs/history/`.
+**Pull request:** [#124](https://github.com/heynewton/newton/pull/124)
