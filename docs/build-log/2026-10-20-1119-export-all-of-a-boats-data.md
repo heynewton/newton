@@ -52,4 +52,4 @@ Tests: unit tests for the archive building, and a check against the local stack 
 - The manifest has a format version rather than the database's migration version, so other
   PRs adding migrations don't have to touch the export.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#126](https://github.com/heynewton/newton/pull/126)
