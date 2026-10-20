@@ -297,6 +297,8 @@ from the provider's screen into the next one, never into a chat or file.
       `supabase-newton-dev` and `email-in-newton-dev`, and the webhook
       `https://dev.heynewton.app/api/email-in`. The prod team then holds only `heynewton.app`,
       `boats.heynewton.app`, `supabase-newton-prod`, `email-in-newton-prod` and prod's webhook.
+      (20 October: `email-in-newton-dev` and the dev webhook deleted from the prod team.
+      `supabase-newton-dev` waits until `newton-dev`'s SMTP uses the dev account's key, step 5.)
 - [ ] 12. **Checks** (recorded on the PR):
   - Email a prod boat's `…@boats.heynewton.app` address: the prod team shows one webhook
     delivery (prod's, 200), and the dev team shows nothing received.
