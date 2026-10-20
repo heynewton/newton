@@ -201,7 +201,7 @@ settings):
 | Setting | Value |
 | --- | --- |
 | Site URL | `https://heynewton-web.vercel.app` |
-| Redirect URLs | `https://heynewton-web.vercel.app/**`, `https://heynewton-*-hey-newton.vercel.app/**` (PR previews), `https://heynewton.app/**` (serves the dev site until #37; remove it then) |
+| Redirect URLs | `https://heynewton-web.vercel.app/**`, `https://heynewton-*-hey-newton.vercel.app/**` (PR previews). Not `https://heynewton.app/**`: since #37 that is prod |
 
 The preview pattern also matches any `*-hey-newton` Vercel team. A magic link sent somewhere else
 is useless without the PKCE cookie in the browser that asked for it, and dev holds only fixture
@@ -256,7 +256,7 @@ API.
 | `CRON_SECRET` | Us: a random string of 32+ characters (`openssl rand -hex 32`) | Vercel sends it as `Authorization: Bearer …`; the route refuses calls without it | Vercel env vars of `heynewton-web` (Production target), marked Sensitive |
 | `RESEND_API_KEY` | Resend: the same key as email-in (`email-in-newton-dev`, see above), which can also send | Sending from `heynewton.app` | Same |
 | `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/reminders.ts`, `lib/db/email-in.ts` and (dev and previews) `lib/db/fixture-sign-in.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
-| `SITE_URL` | — (not secret) | Links in the email: `https://heynewton-web.vercel.app` on dev | Same |
+| `SITE_URL` | — (not secret) | Links in the email: `https://heynewton-web.vercel.app` on dev, `https://heynewton.app` on prod | Same |
 
 - **Expiry:** none of them expire on their own. Rotate yearly with the other keys.
 - **Locally:** `apps/web/.env.local`; call the route with
@@ -298,7 +298,9 @@ it until the app asks questions. Tests and CI use a scripted stand-in.
 ## Production
 
 Everything prod needs, set up once by the maintainer for #63. Same names and settings as dev
-unless a step says otherwise; **never reuse a dev key or value**. Done on 19 October 2026 (results on #63).
+unless a step says otherwise; **never reuse a dev key or value**. Steps 1–5 were done on 19 October 2026
+(results on #63). Step 6 moved heynewton.app to prod on 20 October 2026 (#37); steps 1–3 show the values as first set
+up, at the prod `vercel.app` URL, and step 6 says what changes.
 
 **1. Supabase `newton-prod`**
 
@@ -309,7 +311,7 @@ unless a step says otherwise; **never reuse a dev key or value**. Done on 19 Oct
       [Supabase access tokens](#supabase-access-tokens-supabase_dev_access_token-supabase_prod_access_token).
 - [x] Authentication → URL Configuration: **Site URL** `https://heynewton-prod.vercel.app`,
       **Redirect URLs** `https://heynewton-prod.vercel.app/**` only (no previews, no dev site).
-      #37 changes both to `https://heynewton.app`.
+      Step 6 changes both to `https://heynewton.app`.
 - [x] Authentication → Emails → SMTP: decision 0003, [step 6](decisions/0003-email-provider.md#6-supabase-newton-prod-63)
       (key `supabase-newton-prod`).
 
@@ -320,7 +322,7 @@ unless a step says otherwise; **never reuse a dev key or value**. Done on 19 Oct
 - [x] Environment secrets: `SUPABASE_PROD_ACCESS_TOKEN`, `SUPABASE_PROD_DB_PASSWORD`.
 - [x] Environment variables: `SUPABASE_PROD_PROJECT_REF`, `SUPABASE_PROD_URL`
       (`https://<ref>.supabase.co`), `SUPABASE_PROD_PUBLISHABLE_KEY` (`sb_publishable_…`),
-      `PROD_SITE_URL` (`https://heynewton-prod.vercel.app`).
+      `PROD_SITE_URL` (`https://heynewton-prod.vercel.app`; `https://heynewton.app` after step 6).
 - [x] Nothing prod in repo-level secrets or variables, where any workflow could read it.
 
 **3. Vercel `heynewton-prod`**
@@ -337,7 +339,7 @@ unless a step says otherwise; **never reuse a dev key or value**. Done on 19 Oct
 | `RESEND_WEBHOOK_SECRET` | The signing secret of the prod webhook (step 4) |
 | `INBOUND_EMAIL_DOMAIN` | `boats.heynewton.app` |
 | `CRON_SECRET` | A new `openssl rand -hex 32`, not dev's |
-| `SITE_URL` | `https://heynewton-prod.vercel.app` (heynewton.app after #37) |
+| `SITE_URL` | `https://heynewton-prod.vercel.app` (`https://heynewton.app` after step 6) |
 
 - [x] Never `FIXTURE_SIGN_IN`: the Production workflow fails if it's there.
 
@@ -362,3 +364,46 @@ unless a step says otherwise; **never reuse a dev key or value**. Done on 19 Oct
       its documents, emails and memberships), its files in Supabase → Storage → `documents` →
       `<boat id>/`, since SQL can't delete storage objects. A team member's own account stays: it
       is their real prod login.
+
+**6. Switch heynewton.app to prod (#37)**
+
+In this order, so the domain is only off for the seconds between b and c, and every sign-in link
+has somewhere valid to land. DNS shouldn't need to change: both projects are in the same Vercel
+team, and the records on Cloudflare (apex **A** `216.198.79.65` and `64.29.17.65`, `www`
+**CNAME** `a49833141f4b58b5.vercel-dns-017.com`, proxy off) belong to the domain, not a project.
+
+- [x] a. Prepare prod. Nothing anyone sees changes yet:
+  - Supabase → `newton-prod` → Authentication → URL Configuration → Redirect URLs: **add**
+    `https://heynewton.app/**`, keeping `https://heynewton-prod.vercel.app/**` for now.
+  - Vercel → `heynewton-prod` → Settings → Environment Variables: `SITE_URL` =
+    `https://heynewton.app` (Production). It applies from the next deploy (e).
+  - GitHub → Settings → Environments → `production` → variable `PROD_SITE_URL` =
+    `https://heynewton.app`.
+- [x] b. Vercel → `heynewton-web` → Settings → Domains: remove `www.heynewton.app` and
+      `heynewton.app`. Or, with no gap at all, move it: done on 20 October with the Vercel API
+      (`POST /v1/projects/heynewton-web/domains/heynewton.app/move`, body `{"projectId": <heynewton-prod's id>}`),
+      which took `www` and its redirect along.
+- [x] c. Straight away, Vercel → `heynewton-prod` → Settings → Domains → Add: `heynewton.app`
+      (Production), then `www.heynewton.app` set to **redirect** to `heynewton.app` (308), as
+      today. Both should show **Valid Configuration**. If Vercel asks for different records, set
+      exactly those in Cloudflare → `heynewton.app` → DNS, proxy **off** (grey cloud), and leave
+      the mail records (MX, SPF, DKIM, `_dmarc`, `boats`) alone.
+- [x] d. Supabase → `newton-prod` → URL Configuration: **Site URL** `https://heynewton.app`;
+      Redirect URLs `https://heynewton.app/**` only (remove the `vercel.app` one, so every link
+      comes back to the public address). Supabase → `newton-dev` → Redirect URLs: remove
+      `https://heynewton.app/**`.
+- [x] e. Actions → the latest **Production** run → Re-run all jobs → approve. It redeploys with the
+      new `SITE_URL` and checks that `/auth/fixture-sign-in` answers 404 on `https://heynewton.app`.
+- [x] f. Check from outside: `https://heynewton.app` and `www` serve prod (fixture sign-in 404, no
+      "Sign in as" on `/sign-in`); `https://heynewton-web.vercel.app` still serves dev with "Sign
+      in as".
+- [ ] g. Sign in on `https://heynewton.app` with a team member's address: the email link opens
+      `https://heynewton.app/auth/callback` and lands on your boats. A test boat made there shows
+      up in `newton-prod` and not in `newton-dev`. Delete it as in step 5.
+
+Unchanged by the switch: Resend's sending domain and the SMTP settings (the sender is
+`noreply@heynewton.app` either way, and the sign-in email's link is `{{ .ConfirmationURL }}`, built
+from the redirect URL the site sends); the prod email-in webhook at
+`https://heynewton-prod.vercel.app/api/email-in`, a URL that stays prod's; the reminders cron,
+which runs on whichever deployment is production; and everything on dev. To undo, put both domains
+back on `heynewton-web` and `https://heynewton.app/**` back on `newton-dev`'s redirect list.
