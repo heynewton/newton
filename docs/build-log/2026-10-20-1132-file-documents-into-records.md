@@ -40,8 +40,8 @@ Run npm run check, the database tests on the local stack, and the build. Add you
 **What changed along the way**
 
 - Claude is asked for values as printed, not as numbers or ISO dates, so code can check them
-  against the document's text before calc reads them. A first version also trusted the model's
-  currency; it now has to be shown on the document too.
+  against the document's text before calc reads them. The currency code it gives has to be
+  shown on the document too.
 - The issue's comment proposed normalising amounts by the document's language. Claude names the
   document's decimal separator and date order instead, and calc refuses an amount or date that
   contradicts them, which also covers a French invoice in a US boat's mail.
