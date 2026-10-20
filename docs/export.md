@@ -11,7 +11,8 @@ The code is `apps/web/src/lib/export/archive.ts` (the archive) and `apps/web/src
 ## Who can export
 
 Only the boat's **owners and co-owners**. Crew and read-only members don't see the button, and the
-route answers 403 if they call it; someone who isn't on the boat gets 404, like the boat's page.
+route answers 403 if they call it; someone who isn't on the boat gets 404, like the boat's page. A
+boat that is being deleted can't be exported (409): its files are already going.
 
 The export reads the database and the file store as the person exporting, never with the server's
 secret key, so row-level security applies to every query: the archive can only contain rows and
@@ -30,7 +31,8 @@ kittiwake-export-2026-10-20.zip
 │   ├── renewals.json
 │   ├── maintenance_items.json
 │   ├── expenses.json
-│   └── inbound_emails.json
+│   ├── inbound_emails.json
+│   └── document_filings.json
 ├── files/
 │   └── <boat_id>/…            every stored file, at its storage path
 └── manifest.json              written last
@@ -47,7 +49,7 @@ those of the database; the migrations in `supabase/migrations/` describe each on
 
 | File | What it holds |
 | --- | --- |
-| `boat.json` | The boat: `id`, `name`, `email_alias` (the part of its Newton email address before the @), `created_at`. |
+| `boat.json` | The boat: `id`, `name`, `email_alias` (the part of its Newton email address before the @), `created_at`, `deleting_since` (always empty in an export). |
 | `people.json` | Everyone the other files refer to (members, expense payers, who added a document, who sent filed mail): `id` and `display_name` only. A former member who is no longer on any of the exporter's boats appears as an ID in the other files without a row here. |
 | `memberships.json` | Who is on the boat: `person_id`, `role` (`owner`, `co_owner`, `crew`, `read_only`), `ownership_share` (only the ratio between shares matters), `created_at`. |
 | `documents.json` | One row per stored file: `id`, `storage_path`, `type`, `source` (`email` or `upload`), `received_at`, `filename` (as sent), `content_type`, `size_bytes`, `added_by`, `inbound_email_id`. |
@@ -55,6 +57,7 @@ those of the database; the migrations in `supabase/migrations/` describe each on
 | `maintenance_items.json` | `title`, `every_months` and/or `every_engine_hours`, `last_done_on`, `last_done_engine_hours`, `notes`, `document_id`. |
 | `expenses.json` | `description`, `amount_cents` (integer, negative for a refund), `currency` (ISO 4217), `spent_on`, `paid_by` (a person ID), `notes`, `document_id`. |
 | `inbound_emails.json` | Mail sent to the boat's address: sender address and name, subject, `received_at`, `status` (`filed` or `held`), the member who sent it, attachment count. Held mail's content was never downloaded, so only this row exists for it. |
+| `document_filings.json` | What automatic filing made of each document: `document_id`, `status` (`filed`, `needs_review`, `failed`), the type and confidence Claude gave, `summary`, `vendor`, Claude's `proposal` as it came back, the `flags` code didn't accept, the `model`, attempts and the last error. The records that passed are in the record files, linked by `document_id`. |
 
 Conventions: IDs are UUIDs; `document_id`, `paid_by` and the like point at the `id` of a row in
 another file. Dates (`expires_on`, `spent_on`, `last_done_on`) are calendar dates, `YYYY-MM-DD`.

@@ -28,6 +28,7 @@ Workflow, board and process: how changes land, how issues are picked up, and how
 - [#90](https://github.com/heynewton/newton/pull/90) · 2026-10-19 · Build log and history are one file per entry, so open PRs stop conflicting · closes [#89](https://github.com/heynewton/newton/issues/89)
 - [#102](https://github.com/heynewton/newton/pull/102) · 2026-10-19 · PRs that close no issue show on the Kanban view · closes [#101](https://github.com/heynewton/newton/issues/101)
 - [#119](https://github.com/heynewton/newton/pull/119) · 2026-10-20 · Claude runs the service CLIs instead of asking for dashboard steps
+- [#124](https://github.com/heynewton/newton/pull/124) · 2026-10-20 · Overnight work runs in cloud sessions, never on a maintainer's machine
 
 ### Architecture and decisions
 
@@ -60,6 +61,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#108](https://github.com/heynewton/newton/pull/108) · 2026-10-20 · The dev site moves to dev.heynewton.app and tells search engines not to index it · closes [#106](https://github.com/heynewton/newton/issues/106)
 - [#110](https://github.com/heynewton/newton/pull/110) · 2026-10-20 · Production checklist: heynewton.app sign-in checked
 - [#121](https://github.com/heynewton/newton/pull/121) · 2026-10-20 · Production releases on merge without a click, with approval only when migrations are pending · closes [#120](https://github.com/heynewton/newton/issues/120)
+- [#125](https://github.com/heynewton/newton/pull/125) · 2026-10-20 · One Node version everywhere, Node 24, and npm install refuses any other · closes [#118](https://github.com/heynewton/newton/issues/118)
 
 ### Brand and website
 
@@ -93,6 +95,8 @@ The Supabase schema, row-level security, sign-in, storage and the sample boat.
 - [#92](https://github.com/heynewton/newton/pull/92) · 2026-10-19 · Document links open their PDFs on the dev site too · closes [#91](https://github.com/heynewton/newton/issues/91)
 - [#99](https://github.com/heynewton/newton/pull/99) · 2026-10-19 · Sign in as a sample-boat person on the dev site and previews, with no email · closes [#97](https://github.com/heynewton/newton/issues/97)
 - [#104](https://github.com/heynewton/newton/pull/104) · 2026-10-19 · Dev sign-in redirect URLs checked, prod domain removed from dev
+- [#123](https://github.com/heynewton/newton/pull/123) · 2026-10-20 · A person's stored email follows their sign-in email, and email-in matches the current address · closes [#117](https://github.com/heynewton/newton/issues/117)
+- [#127](https://github.com/heynewton/newton/pull/127) · 2026-10-20 · Owners can delete a boat, and its files in Storage go with it · closes [#115](https://github.com/heynewton/newton/issues/115)
 
 ### Email-in and filing
 
@@ -100,6 +104,8 @@ Mail forwarded to a boat's own address, filed as documents.
 
 - [#73](https://github.com/heynewton/newton/pull/73) · 2026-10-19 · Every boat gets its own email address, and mail from its members is filed as documents · closes [#10](https://github.com/heynewton/newton/issues/10)
 - [#100](https://github.com/heynewton/newton/pull/100) · 2026-10-19 · Email-in setup on the dev site: webhook, key and settings in place
+- [#112](https://github.com/heynewton/newton/pull/112) · 2026-10-20 · Dev gets its own Resend team and domains, so dev and previews can't read real boats' mail · closes [#109](https://github.com/heynewton/newton/issues/109)
+- [#128](https://github.com/heynewton/newton/pull/128) · 2026-10-20 · Forwarded documents are filed into renewals, expenses and maintenance by Claude, with calc reading every date and amount (European formats too) and anything unsure flagged for review · closes [#11](https://github.com/heynewton/newton/issues/11)
 
 ### Web app features
 

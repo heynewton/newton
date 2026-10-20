@@ -2,7 +2,7 @@
   "name": "@newton/agent",
   "version": "0.0.0",
   "private": true,
-  "description": "Newton's use of Claude: answering from a boat's manuals with sources, and its evals.",
+  "description": "Newton's use of Claude: answering from a boat's manuals with sources, filing documents into records, and their evals.",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -11,15 +11,17 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary --coverage.reporter=json",
-    "eval:manual-qa": "vitest run --config vitest.eval.config.ts"
+    "eval:manual-qa": "vitest run --config vitest.eval.config.ts evals/manual-qa.eval.ts",
+    "eval:filing": "vitest run --config vitest.eval.config.ts evals/filing.eval.ts --silent=false"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",
+    "@newton/calc": "*",
     "@newton/indexing": "*"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^22",
+    "@types/node": "^24",
     "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^9.39.5",
     "typescript": "^6.0.3",

@@ -32,6 +32,11 @@ const fakeClient = {
   },
   rpc: vi.fn(async (fn: string, args?: unknown) => (calls.push({ method: `rpc.${fn}`, args: [args] }), answer(`rpc.${fn}`))),
   from: (table: string) => query(table),
+  storage: {
+    from: (bucket: string) => ({
+      remove: async (paths: string[]) => (calls.push({ method: `storage.${bucket}.remove`, args: [paths] }), answer(`storage.${bucket}.remove`)),
+    }),
+  },
 };
 
 const createServerClient = vi.fn<(...args: unknown[]) => typeof fakeClient>(() => fakeClient);
@@ -203,6 +208,71 @@ describe("listMyBoats and getMyBoat", () => {
     calls.length = 0;
     expect(await db.getMyBoat(ALEX, "not-a-uuid")).toBeNull();
     expect(calls).toEqual([]);
+  });
+});
+
+describe("deleteBoat", () => {
+  const owner = { role: "owner", boats: { id: BOAT_ID, name: "Kittiwake", email_alias: "kittiwake", deleting_since: null } };
+  const paths = [`${BOAT_ID}/a.pdf`, `${BOAT_ID}/email/1/0-b.pdf`];
+  const rows = { documents: 2, memberships: 1 };
+
+  it("marks the boat, removes its files, then deletes its rows, and reports what went", async () => {
+    results.memberships = { data: owner };
+    results["rpc.begin_boat_deletion"] = { data: paths };
+    results["storage.documents.remove"] = { data: paths.map((name) => ({ name })) };
+    results["rpc.delete_boat"] = { data: rows };
+    expect(await db.deleteBoat(ALEX, BOAT_ID, " Kittiwake ")).toEqual({ ok: true, removed: { files: 2, rows } });
+    expect(calls.filter((c) => !c.method.startsWith("memberships."))).toEqual([
+      { method: "rpc.begin_boat_deletion", args: [{ boat: BOAT_ID }] },
+      { method: "storage.documents.remove", args: [paths] },
+      { method: "rpc.delete_boat", args: [{ boat: BOAT_ID }] },
+    ]);
+  });
+
+  it("removes files in batches of 1000", async () => {
+    const many = Array.from({ length: 2001 }, (_, i) => `${BOAT_ID}/${i}.pdf`);
+    results.memberships = { data: owner };
+    results["rpc.begin_boat_deletion"] = { data: many };
+    results["storage.documents.remove"] = { data: [{ name: "x" }] };
+    results["rpc.delete_boat"] = { data: rows };
+    await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake");
+    const batches = calls.filter((c) => c.method === "storage.documents.remove").map((c) => (c.args[0] as string[]).length);
+    expect(batches).toEqual([1000, 1000, 1]);
+  });
+
+  it.each(["co_owner", "crew", "read_only"])("refuses a %s without touching anything", async (role) => {
+    results.memberships = { data: { ...owner, role } };
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake")).toEqual({ ok: false, reason: "not_owner" });
+    expect(calls.some((c) => c.method.startsWith("rpc.") || c.method.startsWith("storage."))).toBe(false);
+  });
+
+  it("refuses a boat the person isn't on", async () => {
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake")).toEqual({ ok: false, reason: "not_owner" });
+  });
+
+  it("refuses when the typed name doesn't match exactly", async () => {
+    results.memberships = { data: owner };
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "kittiwake")).toEqual({ ok: false, reason: "name_mismatch" });
+    expect(calls.some((c) => c.method.startsWith("rpc."))).toBe(false);
+  });
+
+  it("stops before deleting rows when removing files fails", async () => {
+    results.memberships = { data: owner };
+    results["rpc.begin_boat_deletion"] = { data: paths };
+    results["storage.documents.remove"] = { error: { message: "storage down" } };
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake")).toEqual({ ok: false, reason: "failed" });
+    expect(calls.some((c) => c.method === "rpc.delete_boat")).toBe(false);
+  });
+
+  it.each([
+    ["55000", "files_left"],
+    ["42501", "not_owner"],
+    ["XX000", "failed"],
+  ])("maps delete_boat error %s to %s", async (code, reason) => {
+    results.memberships = { data: owner };
+    results["rpc.begin_boat_deletion"] = { data: [] };
+    results["rpc.delete_boat"] = { error: { message: "no", code } };
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake")).toEqual({ ok: false, reason });
   });
 });
 

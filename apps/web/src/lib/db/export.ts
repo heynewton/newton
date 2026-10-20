@@ -28,6 +28,7 @@ const BOAT_TABLES = [
   "maintenance_items",
   "expenses",
   "inbound_emails",
+  "document_filings",
 ] as const;
 
 type BoatTable = (typeof BOAT_TABLES)[number];
@@ -35,7 +36,7 @@ type Row = Record<string, unknown>;
 
 export type BoatExport =
   | { ok: true; input: ExportInput }
-  | { ok: false; reason: "not_found" | "forbidden" | "too_large"; fileBytes?: number };
+  | { ok: false; reason: "not_found" | "forbidden" | "being_deleted" | "too_large"; fileBytes?: number };
 
 export function canExport(role: string): boolean {
   return (EXPORT_ROLES as readonly string[]).includes(role);
@@ -45,6 +46,8 @@ export async function loadBoatExport(person: Person, boatId: string, now = new D
   const boat = await getMyBoat(person, boatId);
   if (!boat) return { ok: false, reason: "not_found" };
   if (!canExport(boat.role)) return { ok: false, reason: "forbidden" };
+  // Deletion removes the files first (#115), so an export now would fail partway or miss files.
+  if (boat.deletingSince) return { ok: false, reason: "being_deleted" };
 
   const supabase = await createClient();
   if (!supabase) return { ok: false, reason: "not_found" };

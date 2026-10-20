@@ -61,6 +61,7 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
   if (!person) redirect("/sign-in");
   const [boat, boats] = await Promise.all([getMyBoat(person, boatId), listMyBoats(person)]);
   if (!boat) notFound();
+  if (boat.deletingSince) return <BeingDeleted boatId={boat.boatId} boatName={boat.boatName} isOwner={boat.role === "owner"} />;
 
   const records = await getBoatRecords(boat.boatId);
   const today = todayUtc(new Date());
@@ -143,9 +144,38 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
           <Link href="/boats/new" className="flex min-h-11 items-center font-medium underline">
             Add another boat
           </Link>
+          {boat.role === "owner" && (
+            <Link
+              href={`/boats/${boat.boatId}/delete`}
+              className="flex min-h-11 items-center font-medium text-red-700 underline dark:text-red-400"
+            >
+              Delete this boat
+            </Link>
+          )}
         </nav>
         <SignOut person={person} />
       </footer>
     </>
+  );
+}
+
+// A boat whose deletion started but didn't finish (#115). Some of its files may already be gone,
+// so its records aren't shown; an owner can finish deleting it.
+function BeingDeleted({ boatId, boatName, isOwner }: { boatId: string; boatName: string; isOwner: boolean }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h1 className="text-3xl font-semibold break-words sm:text-4xl">{boatName}</h1>
+      <p className="text-zinc-700 dark:text-zinc-300">This boat is being deleted.</p>
+      <nav className="flex flex-wrap gap-x-6">
+        {isOwner && (
+          <Link href={`/boats/${boatId}/delete`} className="flex min-h-11 items-center font-medium underline">
+            Finish deleting it
+          </Link>
+        )}
+        <Link href="/boats" className="flex min-h-11 items-center font-medium underline">
+          Your boats
+        </Link>
+      </nav>
+    </section>
   );
 }

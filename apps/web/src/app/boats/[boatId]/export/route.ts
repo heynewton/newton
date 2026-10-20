@@ -21,7 +21,9 @@ export async function GET(request: Request, { params }: RouteContext<"/boats/[bo
         ? [404, "Boat not found"]
         : result.reason === "forbidden"
           ? [403, "Only the boat's owners and co-owners can export its data."]
-          : [
+          : result.reason === "being_deleted"
+            ? [409, "This boat is being deleted, so its data can't be exported."]
+            : [
               413,
               `This boat's files are over the ${EXPORT_MAX_FILE_BYTES / 1024 / 1024} MB a download can hold. ` +
                 `Write to ${CONTACT_EMAIL} and we'll send the archive another way.`,

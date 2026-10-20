@@ -25,6 +25,8 @@ export type BoatMembership = {
 export type MyBoat = BoatMembership & {
   // The part of the boat's email address before the @ (#10).
   emailAlias: string;
+  // When an owner started deleting it (#115), or null. A boat being deleted takes no new records.
+  deletingSince: string | null;
 };
 
 export type SignInLinkResult =
@@ -129,14 +131,67 @@ export async function getMyBoat(person: Person, boatId: string): Promise<MyBoat 
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("memberships")
-    .select("role, boats!inner(id, name, email_alias)")
+    .select("role, boats!inner(id, name, email_alias, deleting_since)")
     .eq("person_id", person.id)
     .eq("boat_id", boatId)
     .maybeSingle();
   if (error) throw new Error(`Could not load the boat: ${error.message}`);
   return data
-    ? { boatId: data.boats.id, boatName: data.boats.name, role: data.role, emailAlias: data.boats.email_alias }
+    ? {
+        boatId: data.boats.id,
+        boatName: data.boats.name,
+        role: data.role,
+        emailAlias: data.boats.email_alias,
+        deletingSince: data.boats.deleting_since,
+      }
     : null;
+}
+
+// What deleting a boat removed: files from Storage, and rows by table.
+export type BoatRemoved = { files: number; rows: Record<string, number> };
+
+export type DeleteBoatResult =
+  | { ok: true; removed: BoatRemoved }
+  | { ok: false; reason: "not_owner" | "name_mismatch" | "files_left" | "failed" };
+
+// The Storage API removes at most this many files per call.
+const STORAGE_REMOVE_BATCH = 1000;
+
+// Deletes one of the signed-in person's boats, its rows and every file in its Storage folder
+// (#115). Owners only: checked here, and again by the database functions and the bucket's delete
+// policy, which all run as the signed-in person. The name must be typed exactly as confirmation.
+//
+// Marks the boat first, then removes the files, then the rows (see
+// supabase/migrations/20261022140000_boat_delete.sql for why). Every step is safe to repeat, so a
+// failure at any point is fixed by running it again.
+export async function deleteBoat(person: Person, boatId: string, typedName: string): Promise<DeleteBoatResult> {
+  const boat = await getMyBoat(person, boatId);
+  if (!boat || boat.role !== "owner") return { ok: false, reason: "not_owner" };
+  if (typedName.trim() !== boat.boatName) return { ok: false, reason: "name_mismatch" };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, reason: "failed" };
+
+  const { data: paths, error: beginError } = await supabase.rpc("begin_boat_deletion", { boat: boatId });
+  if (beginError) return { ok: false, reason: beginError.code === "42501" ? "not_owner" : "failed" };
+
+  let files = 0;
+  for (let i = 0; i < paths.length; i += STORAGE_REMOVE_BATCH) {
+    const { data: removed, error } = await supabase.storage
+      .from("documents")
+      .remove(paths.slice(i, i + STORAGE_REMOVE_BATCH));
+    // A file the policy doesn't let us delete comes back missing, not as an error: delete_boat
+    // then finds it and refuses.
+    if (error) return { ok: false, reason: "failed" };
+    files += removed.length;
+  }
+
+  const { data: rows, error: deleteError } = await supabase.rpc("delete_boat", { boat: boatId });
+  if (deleteError) {
+    if (deleteError.code === "55000") return { ok: false, reason: "files_left" };
+    if (deleteError.code === "42501") return { ok: false, reason: "not_owner" };
+    return { ok: false, reason: "failed" };
+  }
+  return { ok: true, removed: { files, rows: rows as Record<string, number> } };
 }
 
 export type DocumentType = Database["public"]["Enums"]["document_type"];
