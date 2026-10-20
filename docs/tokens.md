@@ -216,7 +216,7 @@ Dev and prod have separate Resend teams, so nothing in dev can read real boat ma
 
 | | Prod team (the original one) | Dev team `newton-dev` |
 | --- | --- | --- |
-| Login | `dev@heynewton.app` | `dev@heynewton.app`, or `resend-dev@heynewton.app` if Resend wants a paid plan for a second team |
+| Login | `dev@heynewton.app` | `resend-dev@heynewton.app`, a separate free account (a second team on one login is a paid feature) |
 | Sending domain | `heynewton.app` (`noreply@heynewton.app`) | `dev.heynewton.app` (`noreply@dev.heynewton.app`) |
 | Inbound domain | `boats.heynewton.app` | `boats.dev.heynewton.app` |
 | SMTP key (Sending access, sending domain only) | `supabase-newton-prod` → `newton-prod` | `supabase-newton-dev` → `newton-dev` |
@@ -238,22 +238,27 @@ from the provider's screen into the next one, never into a chat or file.
       Production for now). New previews then answer 503 on `/api/email-in`; existing previews keep
       the old values until they're redeployed, so redeploy any open PR's preview (or close it).
       (Done 20 October with `vercel env rm <name> -e preview`; a fresh preview answered 503.)
-- [ ] 1. **Dev team.** Resend, signed in as `dev@heynewton.app` → team switcher (top left) →
+- [x] 1. **Dev team.** Resend, signed in as `dev@heynewton.app` → team switcher (top left) →
       **Create team** `newton-dev`. If it offers Free, take it. If it requires a paid plan, cancel
       and instead: Cloudflare → `heynewton.app` → Email → Email Routing → add the address
       `resend-dev@heynewton.app`, forwarding to the project Gmail; then sign up at resend.com with
       that address (Free), name the team `newton-dev`, turn on two-factor authentication, and save
-      the login in the password manager as "Resend dev".
-- [ ] 2. **Sending domain.** In the dev team: Domains → Add domain → `dev.heynewton.app`, region US
+      the login in the password manager as "Resend dev". (Done 20 October: a second team is a
+      paid feature, so dev is a separate free account; Cloudflare forwards `resend-dev@` like `dev@`.)
+- [x] 2. **Sending domain.** In the dev team: Domains → Add domain → `dev.heynewton.app`, region US
       East (`us-east-1`). In Cloudflare → `heynewton.app` → DNS, add exactly the records Resend
       shows. They should all be *below* `dev` (`resend._domainkey.dev`, MX and TXT `send.dev`, and
       any CNAME), proxy **off**. If Resend asks for a record on `dev` itself, stop: that would
       clash with the Vercel CNAME; use `mail.dev.heynewton.app` instead and tell the PR. Don't
       touch the `dev` CNAME, the root's MX/SPF, `send`, `resend._domainkey`, `_dmarc` or `boats`.
-      Verify, then turn **off** click and open tracking.
+      Verify, then turn **off** click and open tracking. (Done 20 October with Resend's **Auto
+      configure** for Cloudflare: TXT `resend._domainkey.dev`, CNAMEs `send.dev` and `rsend.dev` →
+      `*.forge.rmta.net`, proxy off. Nothing on `dev` itself.)
 - [ ] 3. **Inbound domain.** Add domain → `boats.dev.heynewton.app`, same region; add its records
       the same way, then turn **receiving on** and add the **MX** on `boats.dev` it shows (the only
-      MX there). Wait for **Verified**. Send a test email to `test@boats.dev.heynewton.app` and
+      MX there). Wait for **Verified**. (Records added 20 October by Auto configure, run again
+      after turning receiving on: the same three as step 2 under `boats.dev`, plus **MX**
+      `boats.dev` → `inbound-smtp.us-east-1.amazonaws.com`, priority 10.) Send a test email to `test@boats.dev.heynewton.app` and
       check it appears under Emails → Receiving in the **dev** team and not in the prod team.
 - [ ] 4. **Keys.** Dev team → API Keys → Create:
   - `supabase-newton-dev`: **Sending access**, domain `dev.heynewton.app` only.

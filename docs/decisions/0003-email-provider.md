@@ -146,7 +146,8 @@ existing team becomes prod's only.
   address forwarding to the project Gmail, like `dev@`). Resend's terms don't limit the number of
   accounts ([terms](https://resend.com/legal/terms-of-service)). Either way the isolation is the
   same, because the boundary is the team; a separate account only adds a second login to the
-  password manager.
+  password manager. **Outcome (20 October):** Resend asked for a paid plan, so dev is a separate
+  free account on `resend-dev@heynewton.app`.
 - **Dev sending domain: `dev.heynewton.app`**, sender `Hey Newton <noreply@dev.heynewton.app>`.
   `dev` is a CNAME to Vercel (#106), so it can't hold any other record itself, but Resend's sending
   records all sit *below* it (`resend._domainkey.dev`, `send.dev`), not on `dev`. The sender then
