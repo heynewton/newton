@@ -37,4 +37,4 @@ Work on issue #33, "Write the privacy policy and terms before sign-up opens". Yo
   as long as the boat, deleting a boat in SQL leaves its files in Storage, and a person who paid
   an expense can't be deleted without deciding what happens to that expense.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#113](https://github.com/heynewton/newton/pull/113)
