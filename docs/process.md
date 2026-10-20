@@ -203,6 +203,25 @@ sign-in link always comes back there.
 | Weekly | **Review**: demo what merged, on real boat data kept locally. A short update to contributors, based on the build log. | Maintainers, contributors |
 | Monthly | **Retro**: what slowed us down, what broke, what to change. Changes go into CLAUDE.md or the skill. | Everyone |
 
+### Overnight work
+
+Work that runs while nobody is watching (overnight, or "while I'm away") starts as **cloud sessions**
+(Claude Code on the web), never as sessions on a maintainer's machine. A local session stops when the
+machine sleeps, its lid closes or it loses its network, and it competes with the maintainer's own use of it.
+
+Each overnight session:
+
+- picks an issue that needs no account, key or dashboard step and no product decision;
+- is assigned to its issue and opens a PR with `Closes #N`, so the Board workflow moves its cards
+  (cloud sessions can't reach the board themselves);
+- relies on CI for the database tests (the `database` job), since the local Supabase stack may not
+  run in the cloud;
+- opens a PR and stops: no merges, since a merge to `main` releases to production;
+- writes any decision only a maintainer can make as a question in its PR, picks the safest default
+  and carries on.
+
+The maintainer reviews the PRs in the morning.
+
 ## Order of work
 
 From [CLAUDE.md](../CLAUDE.md#issues-are-the-todo-list): first what is blocked by nothing, then
