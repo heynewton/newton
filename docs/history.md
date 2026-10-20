@@ -94,6 +94,7 @@ The Supabase schema, row-level security, sign-in, storage and the sample boat.
 - [#92](https://github.com/heynewton/newton/pull/92) · 2026-10-19 · Document links open their PDFs on the dev site too · closes [#91](https://github.com/heynewton/newton/issues/91)
 - [#99](https://github.com/heynewton/newton/pull/99) · 2026-10-19 · Sign in as a sample-boat person on the dev site and previews, with no email · closes [#97](https://github.com/heynewton/newton/issues/97)
 - [#104](https://github.com/heynewton/newton/pull/104) · 2026-10-19 · Dev sign-in redirect URLs checked, prod domain removed from dev
+- [#123](https://github.com/heynewton/newton/pull/123) · 2026-10-20 · A person's stored email follows their sign-in email, and email-in matches the current address · closes [#117](https://github.com/heynewton/newton/issues/117)
 
 ### Email-in and filing
 
