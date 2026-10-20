@@ -64,6 +64,14 @@ the quickest way to see what was asked, what was built and what changed along th
 
 - A local session can move board cards by hand; a cloud session can't, and relies on the board
   workflow ([Cards move by themselves](process.md#cards-move-by-themselves)).
+- **Claude runs the service CLIs, not you.** For GitHub, Supabase, Vercel, Cloudflare and Resend,
+  Claude makes the change itself with the signed-in CLI or API (`gh`, `supabase`, `vercel`,
+  `wrangler`, Resend's API or connector) instead of asking you to click through a dashboard:
+  repo settings and secrets, migrations, env vars, DNS records, webhooks, deploys. It asks you to
+  use a dashboard only for what no CLI or API can do, such as creating an account or the first
+  access token a CLI needs, and says why. Secret values go straight from the service or a
+  generator into their destination (for example `openssl rand -hex 32 | vercel env add …`), so
+  they never appear in the conversation. Anything hard to undo on prod still waits for your yes.
 - When Claude gets something wrong in a way that will happen again, fix the instructions
   (`CLAUDE.md`, the skill or `process.md`) in a PR, not just the code.
 

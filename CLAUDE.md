@@ -79,6 +79,12 @@ We are in **Phase 1**.
 - Each PR also adds its own file in `docs/history/` (one per PR); `docs/history.md`, the history of
   PRs by phase and topic, is rebuilt from them by the History workflow after every merge. PRs only add files, never
   edit shared logs, so open PRs don't conflict with each other.
+- **Claude runs the service CLIs itself** (`gh`, `supabase`, `vercel`, `wrangler` for Cloudflare,
+  and Resend's API or connector): settings, env vars, secrets, DNS, deploys. Don't hand the
+  maintainer a list of dashboard steps when a command can do it. Ask in the dashboard only for what
+  no CLI or API covers (for example creating an account or its first access token), and say why.
+  Secret values are piped from the service or a generator into their destination, never shown in
+  the conversation. Confirm before anything hard to undo on prod. Details in `docs/maintainers.md`.
 - The `ship-change` skill (`.claude/skills/ship-change/SKILL.md`) is the checklist for landing a change.
 - Roles, the project board and the weekly rhythm are in `docs/process.md`. Ready issues are worked
   top-down in board order; move issues across the board as they progress. The Board workflow moves
