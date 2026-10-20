@@ -153,15 +153,27 @@ sign-in link always comes back there.
 
 - **Release path.** Merge to `main` → the Dev database workflow migrates and seeds `newton-dev` →
   when that succeeds, the **Production** workflow (`.github/workflows/production.yml`) starts on
-  the same commit and waits for the maintainer's approval (Actions → the run → **Review
-  deployments** → `production`). Approved, it lists the migrations it will apply, applies them to
-  `newton-prod` (migrations only, no seed), then builds and deploys the web app to
-  `heynewton-prod`. Every PR's preview has already exercised the change against dev.
-- **What to check before approving:** the run's commit, and whether its migrations are safe on
-  data that already exists (dev's seed resets its rows, prod's don't). Leave a run waiting, or
-  reject it, to hold a release; a newer commit waiting for approval replaces it.
-- **Every merge asks**, docs-only ones included, because the Dev database workflow runs on every
-  push. Approving one of those just redeploys the same app.
+  the same commit. Its first job checks the prod settings and lists the migrations `newton-prod`
+  hasn't applied (in the run summary). Then:
+  - **No migration pending:** it releases straight away, no click: builds and deploys the web app
+    to `heynewton-prod`. Most merges, docs-only ones included, take this path; a docs-only one
+    just redeploys the same app.
+  - **Migrations pending:** it waits for the maintainer's approval on `production-migrations`
+    (Actions → the run → **Review deployments**). Approved, it applies exactly those migrations to
+    `newton-prod` (migrations only, no seed), then deploys. Rejected, nothing is released.
+
+  Every PR's preview has already exercised the change against dev. Production is never released
+  from a PR or another branch: the workflow only runs after a push to `main`, and the
+  `production` environment, which holds the prod keys, only allows `main` (#120).
+- **What to look at before approving:** the migrations the run summary lists (each links to its
+  file at that commit), and whether each is safe on data that already exists: dev's seed resets
+  its rows, prod's don't, and a dropped or rewritten column can't be undone. Code can: revert and
+  the next release puts the old app back. Leave a run waiting, or reject it, to hold a release.
+  While one waits, later merges queue behind it (only the newest is kept) and release once it is
+  approved or rejected; a rejected migration is still on `main`, so the next run asks again.
+- **A failed release** leaves prod as it was, or with the migrations applied and the old app if
+  it failed after them. Fix on `main`; the next merge releases. To try again without a merge:
+  Actions → the run → **Re-run all jobs** (it checks and asks again as needed).
 - **Fixture sign-in is never on:** the workflow fails if `FIXTURE_SIGN_IN` is set anywhere for
   production, and after deploying checks that `/auth/fixture-sign-in` answers 404.
 - **Email-in and reminders** run on prod from the `heynewton-prod` project's own env vars: its
@@ -169,7 +181,17 @@ sign-in link always comes back there.
   ([tokens.md](tokens.md#production)). Vercel Cron calls `/api/reminders` on prod daily, as on dev.
 - **The `production` environment** holds every prod value: the Supabase access token and database
   password (secrets), the project ref, URL, publishable key and site URL (variables). Its
-  deployment protection rule requires the maintainer's review and only allows `main`.
+  deployment branch policy only allows `main`. Since #120 it has no required reviewer: that is on
+  **`production-migrations`**, which holds nothing and only gates migrations. Any workflow on
+  `main` could now use the prod keys without a click, so a PR that adds one to the `production`
+  environment needs the same care as one that changes `production.yml`.
+- **Approving every release again.** Repo settings → Environments → `production` → Required
+  reviewers: add the maintainer back. The workflow needs no change: the check and the release
+  jobs each wait for that approval, so a release takes two clicks (three with migrations, the
+  gate in between). Do this **before anyone outside the
+  team can sign up (#33) or the app ships to an app store**: it's step 8 of the
+  [prod setup checklist](tokens.md#production). To go back to releasing without a click, remove
+  the reviewer again.
 - **Setup** (once, by the maintainer): the checklist in [tokens.md](tokens.md#production).
 
 ## Rhythm

@@ -121,8 +121,8 @@ Supabase rates this "High risk" because a migration can run any SQL. That is wha
 needs. Supabase's [token docs](https://supabase.com/docs/guides/platform/personal-access-tokens) list Project Settings, API
 Keys and API Key Secrets (all Read) as what `supabase link` needs. So the token can read the
 project's API keys, including the secret ones that bypass RLS, but can't change them. For dev that
-exposes only fixture data; for prod it's a reason to keep the token in the approval-gated
-`production` environment. It can't read auth settings or signing keys, can't manage backups or
+exposes only fixture data; for prod it's a reason to keep the token in the `production`
+environment, which only `main` can use. It can't read auth settings or signing keys, can't manage backups or
 network settings, and can't see any other project.
 
 If a workflow run fails on a missing permission, the error names it: add only that capability,
@@ -133,8 +133,9 @@ as Read where possible, and update this table in the same PR.
 - **Name:** `github-actions-newton-prod`
 - **Resource access:** `newton-prod` only, never both projects in one token.
 - **Stored in:** the GitHub environment `production` (Settings → Environments → production →
-  Environment secrets) as `SUPABASE_PROD_ACCESS_TOKEN`. The environment needs the maintainer's approval,
-  so a dev workflow or a PR can never use it.
+  Environment secrets) as `SUPABASE_PROD_ACCESS_TOKEN`. The environment only allows `main`, so
+  a dev workflow on another branch or a PR can never use it. Since #120 it needs no approval:
+  migrations wait for it on `production-migrations` instead ([Production](#production), step 7).
 - **Expiry:** the same, with its own calendar reminder.
 
 ## `VOYAGE_API_KEY`
@@ -354,7 +355,8 @@ up, at the prod `vercel.app` URL, and step 6 says what changes.
 **2. GitHub environment `production`**
 
 - [x] Repo settings → Environments → New environment `production`. Deployment protection rules:
-      **Required reviewers** the maintainer, **Deployment branches** `main` only.
+      **Required reviewers** the maintainer, **Deployment branches** `main` only. Step 7 moved the
+      reviewer to `production-migrations` (#120).
 - [x] Environment secrets: `SUPABASE_PROD_ACCESS_TOKEN`, `SUPABASE_PROD_DB_PASSWORD`.
 - [x] Environment variables: `SUPABASE_PROD_PROJECT_REF`, `SUPABASE_PROD_URL`
       (`https://<ref>.supabase.co`), `SUPABASE_PROD_PUBLISHABLE_KEY` (`sb_publishable_…`),
@@ -443,3 +445,28 @@ from the redirect URL the site sends); the prod email-in webhook at
 `https://heynewton-prod.vercel.app/api/email-in`, a URL that stays prod's; the reminders cron,
 which runs on whichever deployment is production; and everything on dev. To undo, put both domains
 back on `heynewton-web` and `https://heynewton.app/**` back on `newton-dev`'s redirect list.
+
+**7. Approval only when migrations are pending (#120)**
+
+The Production workflow's first job (environment `production`) checks the settings and lists the
+migrations `newton-prod` hasn't applied; a gate job in `production-migrations` waits for approval
+only when there are some; the release job (environment `production`) applies them and deploys
+([process.md](process.md#production)). In this order, so migrations never release without a gate:
+
+- [ ] a. Before merging the #120 PR: Repo settings → Environments → New environment
+      `production-migrations`. **Required reviewers** the maintainer; **Deployment branches**
+      `main` only; no secrets, no variables. It must exist first: a workflow that names a missing
+      environment creates it with no protection.
+- [ ] b. Merge the #120 PR. Its own release still asks on `production` (on the check and on the
+      release job) and, if a migration is pending, on `production-migrations` too.
+- [ ] c. Only then: Environments → `production` → remove the required reviewer. Keep
+      **Deployment branches** `main` only and every secret and variable.
+- [ ] d. The next merge with no migration reaches heynewton.app without a click (run summary:
+      "No migrations pending"). The next one with a migration waits on `production-migrations`
+      and its summary lists the files.
+
+**8. Before anyone outside the team signs up, or an app-store release**
+
+- [ ] Approve every release again: Environments → `production` → **Required reviewers**: add the
+      maintainer. The gate on `production-migrations` stays as it is. Do this before sign-up opens
+      to outsiders (#33) or the app ships to an app store, and note the date here.
