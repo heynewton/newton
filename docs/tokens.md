@@ -433,7 +433,7 @@ team, and the records on Cloudflare (apex **A** `216.198.79.65` and `64.29.17.65
 - [x] f. Check from outside: `https://heynewton.app` and `www` serve prod (fixture sign-in 404, no
       "Sign in as" on `/sign-in`); `https://heynewton-web.vercel.app` still serves dev with "Sign
       in as".
-- [ ] g. Sign in on `https://heynewton.app` with a team member's address: the email link opens
+- [x] g. Sign in on `https://heynewton.app` with a team member's address: the email link opens
       `https://heynewton.app/auth/callback` and lands on your boats. A test boat made there shows
       up in `newton-prod` and not in `newton-dev`. Delete it as in step 5.
 
