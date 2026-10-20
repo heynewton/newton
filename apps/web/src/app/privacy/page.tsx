@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Privacy · Hey Newton" };
 
 // When the text changes, change this date too. What each part is based on (tables, providers,
 // regions) is in docs/architecture.md, docs/tokens.md and docs/decisions/.
-const LAST_UPDATED = "2026-10-19";
+const LAST_UPDATED = "2026-10-20";
 
 // The services that see Newton's data on our behalf. Keep in step with docs/architecture.md.
 const processors = [
@@ -240,8 +240,10 @@ export default function Privacy() {
         <List>
           <li>
             <strong>Get a copy</strong> of your data, or of your whole boat&apos;s records and files
-            if you are an owner or co-owner. Today you ask us and we send an archive; a download
-            button for owners and co-owners is planned.
+            if you are an owner or co-owner. Owners and co-owners can download the boat&apos;s
+            archive from its page at any time; it holds every record and file, with each member
+            named but without their email address. For a copy of your own account&apos;s data, or
+            a boat too large to download, ask us and we send it.
           </li>
           <li>
             <strong>Correct</strong> anything that is wrong.
