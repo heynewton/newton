@@ -44,4 +44,4 @@ Run npm run check and the database tests on the local stack. Add your build-log 
 - `npm run check` failed under the shell's default Node 18 (Next.js needs 20.9 or later, the
   repo asks for 22); it passes under Node 22.
 
-**Pull request:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**Pull request:** [#123](https://github.com/heynewton/newton/pull/123)
