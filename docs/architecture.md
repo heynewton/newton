@@ -186,7 +186,7 @@ dev site is only at its `vercel.app` URL. There is no agent in the app yet.
 
 ```mermaid
 flowchart LR
-  subgraph Repo["npm workspaces (Node 22)"]
+  subgraph Repo["npm workspaces (Node 24)"]
     Web["apps/web<br/>Next.js 16, App Router,<br/>Tailwind 4, TypeScript"]
     Calc["packages/calc<br/>TypeScript, Vitest<br/>money, cost split, due dates"]
     Indexing["packages/indexing<br/>PDF pages, chunks,<br/>embedder interface"]
