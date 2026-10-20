@@ -41,7 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.event_name == 'push' && 'dev' || 'preview' }}
-      url: ${{ steps.deploy.outputs.url }}
+      # The dev site's address (#106); previews link to their own deployment.
+      url: ${{ github.event_name == 'push' && 'https://dev.heynewton.app' || steps.deploy.outputs.url }}
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       # main deploys to Vercel's "production" target, which has the stable URL; it is our dev site.
@@ -55,6 +56,9 @@ jobs:
       # only deploys the dev site and previews, so production never has it. It also needs
       # SUPABASE_SECRET_KEY of newton-dev in Vercel (docs/tokens.md).
       FIXTURE_SIGN_IN: "1"
+      # X-Robots-Tag: noindex on every page (next.config.ts), so search engines skip the dev site
+      # and previews (#106). Read at build time only. Production never sets it.
+      NOINDEX: "1"
     steps:
       # Only a publishable key may reach a deployment. A secret key bypasses row-level security.
       - name: Check the Supabase key is publishable
@@ -86,8 +90,8 @@ jobs:
             "https://api.vercel.com/v9/projects/$project_id" > /dev/null
 
       - run: vercel pull --yes --environment "$VERCEL_TARGET" --token "$VERCEL_TOKEN"
-      # The build reads SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and FIXTURE_SIGN_IN from the job's
-      # environment.
+      # The build reads SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, FIXTURE_SIGN_IN and NOINDEX from the
+      # job's environment.
       - run: vercel build --target "$VERCEL_TARGET" --token "$VERCEL_TOKEN"
 
       # A prebuilt deployment doesn't keep the build's environment, so the server gets the same
