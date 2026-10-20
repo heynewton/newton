@@ -265,14 +265,16 @@ from the provider's screen into the next one, never into a chat or file.
       check it appears under Emails → Receiving in the **dev** team and not in the prod team.
 - [ ] 4. **Keys.** Dev team → API Keys → Create:
   - `supabase-newton-dev`: **Sending access**, domain `dev.heynewton.app` only.
-  - `email-in-newton-dev`: **Full access** (reading received mail needs it).
+  - `email-in-newton-dev`: **Full access** (reading received mail needs it). (Done 20 October
+    with the Resend CLI, its token piped straight into Vercel's `RESEND_API_KEY`: see step 7.)
 - [ ] 5. **`newton-dev` SMTP.** Supabase → `newton-dev` → Authentication → Emails → SMTP
       Settings: **Sender email** `noreply@dev.heynewton.app`, sender name `Hey Newton`, host
       `smtp.resend.com`, port `465`, user `resend`, password the new `supabase-newton-dev` key.
       Save. (`newton-prod`'s SMTP doesn't change.)
-- [ ] 6. **Dev webhook.** Dev team → Webhooks → Add endpoint `https://dev.heynewton.app/api/email-in`,
-      event `email.received` only. Copy its signing secret for the next step.
-- [ ] 7. **Vercel `heynewton-web`** → Settings → Environment Variables, secrets marked Sensitive:
+- [x] 6. **Dev webhook.** Dev team → Webhooks → Add endpoint `https://dev.heynewton.app/api/email-in`,
+      event `email.received` only. Copy its signing secret for the next step. (Done 20 October
+      with `resend webhooks create`, the secret piped straight into `RESEND_WEBHOOK_SECRET`.)
+- [x] 7. **Vercel `heynewton-web`** → Settings → Environment Variables, secrets marked Sensitive:
   - `RESEND_API_KEY` = the new `email-in-newton-dev` key, **Production** only.
   - `RESEND_WEBHOOK_SECRET` = the dev webhook's secret, **Production** only.
   - `INBOUND_EMAIL_DOMAIN` = `boats.dev.heynewton.app`, Production **and** Preview (previews show
@@ -280,7 +282,10 @@ from the provider's screen into the next one, never into a chat or file.
   - `REMINDERS_FROM` = `Hey Newton <noreply@dev.heynewton.app>`, Production (dev's reminders
     would otherwise send from `heynewton.app`, which the dev team can't).
   - Check `RESEND_API_KEY` and `RESEND_WEBHOOK_SECRET` are **not** on Preview (step 0).
-- [ ] 8. Actions → the latest **Deploy** run on `main` → Re-run all jobs, so the dev site picks
+  - (Done 20 October with the Vercel CLI: `vercel env update <name> -e production` reading the
+    value from stdin, so no secret was printed. A Resend CLI login with a temporary Full-access
+    key `cli-newton-dev` made the dev key and webhook; delete that key when the setup is done.)
+- [x] 8. Actions → the latest **Deploy** run on `main` → Re-run all jobs, so the dev site picks
       up the new values.
 - [ ] 9. **Test dev.** Sign in on `https://dev.heynewton.app` by email link with a team member's
       address: the email comes from `noreply@dev.heynewton.app` and passes SPF, DKIM and DMARC
