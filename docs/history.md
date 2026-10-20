@@ -28,6 +28,7 @@ Workflow, board and process: how changes land, how issues are picked up, and how
 - [#90](https://github.com/heynewton/newton/pull/90) · 2026-10-19 · Build log and history are one file per entry, so open PRs stop conflicting · closes [#89](https://github.com/heynewton/newton/issues/89)
 - [#102](https://github.com/heynewton/newton/pull/102) · 2026-10-19 · PRs that close no issue show on the Kanban view · closes [#101](https://github.com/heynewton/newton/issues/101)
 - [#119](https://github.com/heynewton/newton/pull/119) · 2026-10-20 · Claude runs the service CLIs instead of asking for dashboard steps
+- [#124](https://github.com/heynewton/newton/pull/124) · 2026-10-20 · Overnight work runs in cloud sessions, never on a maintainer's machine
 
 ### Architecture and decisions
 
