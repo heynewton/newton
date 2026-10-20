@@ -37,4 +37,35 @@ Work on issue #33, "Write the privacy policy and terms before sign-up opens". Yo
   as long as the boat, deleting a boat in SQL leaves its files in Storage, and a person who paid
   an expense can't be deleted without deciding what happens to that expense.
 
+- The maintainer answered the open questions:
+
+  ````text
+  1 - Hey Newton, [postal address], NY NY 10028
+  2 - privacy@heynewton.app, can be public
+  3 - NY
+  4 - ok
+  5 - scope US users
+  6 - ?
+  7 - ok w/ suggestions. log and backup kept 30 days
+  8 - questions stored with user, not boat
+  9 - former member will show as former member
+  10 - production data restricted to support or incident
+  11 - 18
+  12 - ok
+  13 - reasonable notice
+  14 - reasonable effort to answer, notify and warn
+  15 - see 1
+  ````
+
+  Claude filled every marker from those answers: New York law and courts, US users only (so the
+  EU transfer paragraph and the complaint to a data protection authority went), held mail
+  deleted after 90 days, deletion within 30 days, logs and backups up to 30 days, questions kept
+  with the person's account, "former member" on their old records, access only for support or
+  an incident, 18 and over, a liability cap, and "reasonable effort" for answering, notifying and
+  warning. For question 6 it looked up Vercel's default function region (Washington, D.C., since
+  `vercel.json` sets none) and Anthropic's API retention (deleted within 30 days). The pages
+  switched to US spelling and dates, the address and contact live in one place in
+  `legal-page.tsx`, and a test now fails if a "To decide" marker is left. The draft notice stays
+  until the maintainer signs off.
+
 **Pull request:** [#113](https://github.com/heynewton/newton/pull/113)

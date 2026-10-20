@@ -13,7 +13,11 @@ describe.each(pages)("/$name", ({ Page, title }) => {
 
   it("has its title and a last-updated date", () => {
     expect(html).toContain(`<h1 class="text-3xl font-semibold">${title}</h1>`);
-    expect(html).toMatch(/Last updated <time datetime="\d{4}-\d{2}-\d{2}">\d{1,2} [A-Z][a-z]+ \d{4}<\/time>/i);
+    expect(html).toMatch(/Last updated <time datetime="\d{4}-\d{2}-\d{2}">[A-Z][a-z]+ \d{1,2}, \d{4}<\/time>/i);
+  });
+
+  it("has no open \"To decide\" markers left", () => {
+    expect(html).not.toContain("data-to-decide");
   });
 
   it("gives every section a heading the page can link to", () => {

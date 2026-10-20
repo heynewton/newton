@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LegalPage, List, Section, ToDecide } from "../legal-page";
+import { ADDRESS, Contact, LegalPage, List, Section } from "../legal-page";
 
 export const metadata: Metadata = { title: "Privacy · Hey Newton" };
 
@@ -19,7 +19,7 @@ const processors = [
   {
     name: "Vercel",
     role: "Hosts the website and runs the daily reminder job. Every page request passes through it.",
-    where: <ToDecide>Vercel&apos;s function region for heynewton.app (to check)</ToDecide>,
+    where: "United States (US East, Washington, D.C.).",
     href: "https://vercel.com/legal/privacy-policy",
   },
   {
@@ -37,7 +37,8 @@ const processors = [
   {
     name: "Anthropic (Claude API)",
     role: "Coming soon, not used by the website yet: reading filed documents to propose records, and answering questions from excerpts of the boat's manuals.",
-    where: <ToDecide>Anthropic&apos;s processing region and retention for API data (to check)</ToDecide>,
+    where:
+      "United States. Anthropic deletes what we send within 30 days, unless it must keep it longer to enforce its usage policy or by law.",
     href: "https://www.anthropic.com/legal/privacy",
   },
   {
@@ -54,10 +55,9 @@ export default function Privacy() {
       <Section id="who" title="Who we are">
         <p>
           Hey Newton (&ldquo;Newton&rdquo;, &ldquo;we&rdquo;) is a free hobby project that keeps a
-          boat&apos;s documents, maintenance and co-owner costs organised. It is run by{" "}
-          <ToDecide>the name of the person or organisation responsible, and a postal address</ToDecide>
-          . For anything about your data, write to{" "}
-          <ToDecide>the contact email address</ToDecide>.
+          boat&apos;s documents, maintenance and co-owner costs organized, for people in the
+          United States. It is run by Hey Newton, {ADDRESS}. For anything about your data, write
+          to <Contact />.
         </p>
         <p>
           Newton&apos;s code is open source, so you can read exactly how your data is handled on{" "}
@@ -128,8 +128,9 @@ export default function Privacy() {
           </li>
           <li>
             <strong>Questions (coming soon).</strong> When you ask Newton a question, the question
-            and the few manual passages it found are sent to Claude to write the answer.{" "}
-            <ToDecide>whether questions and answers are stored, and for how long</ToDecide>
+            and the few manual passages it found are sent to Claude to write the answer. Your
+            questions and Newton&apos;s answers are saved with your account, not with the boat, so
+            the boat&apos;s other members don&apos;t see them.
           </li>
           <li>
             <strong>Technical logs.</strong> Our providers keep short-lived logs of requests (time,
@@ -138,12 +139,11 @@ export default function Privacy() {
         </List>
         <p>
           We use all of this only to provide Newton to you and your boat, to keep it secure, and to
-          fix problems. Under data protection law, that is to perform our agreement with you (the{" "}
+          fix problems: that is our agreement with you (the{" "}
           <Link className="underline" href="/terms">
             terms
           </Link>
-          ) and our legitimate interest in running a secure service.{" "}
-          <ToDecide>confirm these legal bases, and the law that applies</ToDecide>
+          ) and our legitimate interest in running a secure service.
         </p>
       </Section>
 
@@ -170,8 +170,8 @@ export default function Privacy() {
             co-owners can delete documents. The database enforces this, not just the website.
           </li>
           <li>
-            <strong>The people who run Newton,</strong> only when needed to fix a problem or answer
-            your request. <ToDecide>who on the team has access to production data</ToDecide>
+            <strong>The people who run Newton,</strong> only to give support you ask for or to
+            handle an incident.
           </li>
           <li>
             <strong>The providers below,</strong> only to do their part of running Newton.
@@ -195,14 +195,7 @@ export default function Privacy() {
             </li>
           ))}
         </ul>
-        <p>
-          These providers are mostly in the United States, so your data leaves the European Union.{" "}
-          <ToDecide>
-            the safeguard for each transfer (for example the providers&apos; data processing
-            agreements with standard contractual clauses, or the EU–US Data Privacy Framework), and
-            whether to move to EU regions
-          </ToDecide>
-        </p>
+        <p>Newton is offered to people in the United States, and your data is stored and processed there.</p>
       </Section>
 
       <Section id="retention" title="How long we keep it">
@@ -216,20 +209,22 @@ export default function Privacy() {
           </li>
           <li>
             <strong>Held mail</strong> (the sender, subject and attachment count of mail from
-            non-members) is kept with the boat today.{" "}
-            <ToDecide>a shorter limit, for example 90 days</ToDecide>
+            non-members) is deleted after 90 days.
           </li>
           <li>
             <strong>Copies at Resend</strong> of mail sent to a boat&apos;s address are deleted
             after 30 days.
           </li>
           <li>
-            <strong>Logs and backups</strong> are kept by our providers for their standard periods.{" "}
-            <ToDecide>the log and backup periods on our plans</ToDecide>
+            <strong>Your questions and answers</strong> are kept with your account until you delete
+            them or the account.
           </li>
           <li>
-            When we delete an account or a boat at your request, we do it within{" "}
-            <ToDecide>a number of days, for example 30</ToDecide>, including its files.
+            <strong>Logs and backups</strong> are kept for up to 30 days.
+          </li>
+          <li>
+            When we delete an account or a boat at your request, we do it within 30 days,
+            including its files. Copies in backups and logs disappear as those expire.
           </li>
         </List>
       </Section>
@@ -248,17 +243,15 @@ export default function Privacy() {
           <li>
             <strong>Delete</strong> your account, or a boat and everything filed for it if you are
             its owner. When you delete your account, the boat&apos;s records you added stay with the
-            boat for its other members.{" "}
-            <ToDecide>how a former member is shown on records they added, such as expenses they paid</ToDecide>
+            boat for its other members, shown as added or paid by a &ldquo;former member&rdquo;.
           </li>
           <li>
             <strong>Object to</strong> or <strong>restrict</strong> how we use your data.
           </li>
         </List>
         <p>
-          Write to <ToDecide>the contact email address</ToDecide> from the address you sign in
-          with. We answer within one month. If you aren&apos;t satisfied, you can complain to{" "}
-          <ToDecide>the data protection authority that applies</ToDecide>.
+          Write to <Contact /> from the address you sign in with. We make a reasonable effort to
+          answer within one month.
         </p>
         <p>
           When a boat is sold, its record is meant to move to the new owner with its history.
@@ -276,15 +269,14 @@ export default function Privacy() {
 
       <Section id="children" title="Children">
         <p>
-          Newton is not meant for children. You must be at least{" "}
-          <ToDecide>a minimum age, for example 16</ToDecide> to create an account.
+          Newton is not meant for children. You must be at least 18 to create an account.
         </p>
       </Section>
 
       <Section id="changes" title="Changes to this policy">
         <p>
           When this policy changes, we update the date at the top. If a change affects how your
-          data is used, we email account holders before it applies.
+          data is used, we make a reasonable effort to email account holders before it applies.
         </p>
       </Section>
     </LegalPage>

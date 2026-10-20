@@ -4,7 +4,19 @@ import type { ReactNode } from "react";
 // The layout shared by /privacy and /terms. The texts live in each page as plain sections, so
 // updating one is an edit to its page and a new `lastUpdated` date.
 
-const dateFormat = new Intl.DateTimeFormat("en-GB", {
+// Who runs the service and how to reach them, used by both pages.
+export const ADDRESS = "61 E 86th Street, Suite 74, New York, NY 10028";
+export const CONTACT_EMAIL = "privacy@heynewton.app";
+
+export function Contact() {
+  return (
+    <a className="underline" href={`mailto:${CONTACT_EMAIL}`}>
+      {CONTACT_EMAIL}
+    </a>
+  );
+}
+
+const dateFormat = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "long",
   year: "numeric",
@@ -37,9 +49,8 @@ export function LegalPage({
           role="note"
           className="rounded-2xl border border-spinnaker/60 bg-spinnaker/10 p-4 text-sm text-zinc-800 dark:text-zinc-200"
         >
-          <strong>Draft.</strong> This text is being reviewed and is not final yet. Parts marked
-          &ldquo;To decide&rdquo; are still open. Accounts aren&apos;t open to the public until it
-          is.
+          <strong>Draft.</strong> This text is being reviewed and is not final yet. Accounts
+          aren&apos;t open to the public until it is.
         </p>
       )}
       <div className="flex flex-col gap-8 break-words">{children}</div>
