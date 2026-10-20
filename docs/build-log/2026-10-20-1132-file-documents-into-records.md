@@ -49,5 +49,11 @@ Run npm run check, the database tests on the local stack, and the build. Add you
   it, and the PR asks the maintainer whether that is right.
 - The live eval showed certificates print a premium or fee without a payment date, so those
   expenses are flagged for review rather than dated by guess.
+- The migration was renamed to `20261022150000_document_filing.sql`, after the email sync
+  (#123) and boat deletion (#127) migrations landed first: the Supabase CLI won't apply a
+  migration dated before the last one a database has applied.
+- CodeQL flagged five regular expressions in the new calc parsers that a crafted value could
+  make backtrack for a long time. They were rewritten as plain prefix and suffix checks, every
+  parser refuses input over 64 characters, and tests feed them a million characters.
 
 **Pull request:** [#128](https://github.com/heynewton/newton/pull/128)
