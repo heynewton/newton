@@ -90,6 +90,10 @@ We are in **Phase 1**.
   top-down in board order; move issues across the board as they progress. The Board workflow moves
   most cards: assign the issue when you start it, and open the PR with `Closes #N`. Cloud sessions
   can't reach the board at all, so they rely on that (see "Cards move by themselves" in `docs/process.md`).
+- **Overnight and unattended work runs in cloud sessions, never local ones**, so it doesn't depend on
+  a maintainer's machine staying awake and online. Cloud sessions open PRs only, rely on CI's
+  `database` job for database tests, and leave any maintainer decision as a question in the PR (see
+  "Overnight work" in `docs/process.md`).
 
 ### Issues are the todo list
 
