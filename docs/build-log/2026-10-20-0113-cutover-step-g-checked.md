@@ -18,4 +18,4 @@ Earlier in the same session: "can you implement the changes needed?", then "Both
 
 - The first Production run was cancelled before it ran. It was re-run and passed.
 
-**Pull request:** see `docs/history/` for this PR's number.
+**Pull request:** [#110](https://github.com/heynewton/newton/pull/110)
