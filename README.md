@@ -65,7 +65,18 @@ What has landed so far, and what's next in Phase 1: [docs/history.md](docs/histo
 
 ## Development
 
-You need Node.js 22 (see `.nvmrc`).
+You need Node.js 24, the version in `.nvmrc`. With [nvm](https://github.com/nvm-sh/nvm), from the
+repo root:
+
+```bash
+nvm install      # once: installs the version in .nvmrc
+nvm use          # in each new shell (or set it as your default: nvm alias default 24)
+```
+
+`npm install` refuses to run on any other version (`engine-strict` in `.npmrc`): if it fails with
+`EBADENGINE` and `Required: {"node":"24.x"}`, run `nvm use` and try again. CI, the deploys and
+Vercel use the same version.
+
 
 ```bash
 npm install      # install every workspace
