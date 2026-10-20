@@ -187,7 +187,7 @@ there. Setup, by the maintainer, in this order so every sign-in link has somewhe
       `heynewton.app` → DNS, proxy **off** (grey cloud), like the apex. Leave the mail records
       (MX, SPF, DKIM, `_dmarc`, `boats`) alone. Wait for **Valid Configuration**. (Done: CNAME
       `dev` → `a49833141f4b58b5.vercel-dns-017.com`, the same target as the apex and `www`.)
-- [ ] 2. Supabase → `newton-dev` → Authentication → URL Configuration: **Site URL**
+- [x] 2. Supabase → `newton-dev` → Authentication → URL Configuration: **Site URL**
       `https://dev.heynewton.app`; Redirect URLs: **add** `https://dev.heynewton.app/**`, keeping
       `https://heynewton-web.vercel.app/**` and `https://heynewton-*-hey-newton.vercel.app/**`.
 - [x] 3. Vercel → `heynewton-web` → Settings → Environment Variables: `SITE_URL` =
@@ -197,12 +197,12 @@ there. Setup, by the maintainer, in this order so every sign-in link has somewhe
       before. The signing secret stays the same; if Resend makes a new endpoint instead, put its
       secret in `RESEND_WEBHOOK_SECRET` on `heynewton-web` (Production and Preview) and delete the
       old endpoint. The prod endpoint doesn't change.
-- [ ] 5. Actions → the latest **Deploy** run on `main` → Re-run all jobs. It redeploys the dev
+- [x] 5. Actions → the latest **Deploy** run on `main` → Re-run all jobs. It redeploys the dev
       site with the new `SITE_URL`.
 - [ ] 6. Check from outside: `https://dev.heynewton.app` serves dev, with "Sign in as" on
       `/sign-in` and `X-Robots-Tag: noindex`; `https://heynewton.app` has no `X-Robots-Tag` and
       `/auth/fixture-sign-in` answers 404 there.
-- [ ] 7. Sign in by email link on `https://dev.heynewton.app` with a team member's address: the
+- [x] 7. Sign in by email link on `https://dev.heynewton.app` with a team member's address: the
       link comes back to `https://dev.heynewton.app/auth/callback`. Email a PDF to a test boat's
       address: Resend shows the dev webhook delivery at the new URL with 200.
 
