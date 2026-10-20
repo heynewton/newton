@@ -1,8 +1,13 @@
 # Releases main to production (#63): newton-prod gets the checked-in migrations, then the web app
 # is deployed to the Vercel project heynewton-prod against it. It starts once the Dev database
-# workflow has migrated and seeded dev from the same commit, and waits for the maintainer's
-# approval on the `production` environment, which holds every prod key. newton-prod is never
-# seeded. Fixture sign-in is never on here: the job fails if anything sets FIXTURE_SIGN_IN.
+# workflow has migrated and seeded dev from the same commit. newton-prod is never seeded. Fixture
+# sign-in is never on here: the release fails if anything sets FIXTURE_SIGN_IN.
+#
+# Approval only when migrations are pending (#120). `check` lists the migrations newton-prod hasn't
+# applied; if there are any, `gate` waits for the maintainer's approval on the
+# `production-migrations` environment (required reviewer, no secrets). `release` runs after the
+# check, and after the gate when it ran. Every prod key stays in the `production` environment, which
+# only main can use.
 name: Production
 
 on:
@@ -15,7 +20,8 @@ permissions:
   contents: read
   deployments: write
 
-# One release at a time. A newer commit waiting for approval replaces an older one that waits.
+# One release at a time. While one runs or waits for approval, the next one queues behind it; a
+# newer commit replaces an older one in the queue.
 concurrency:
   group: production
   cancel-in-progress: false
@@ -25,8 +31,8 @@ env:
   VERCEL_TELEMETRY_DISABLED: 1
 
 jobs:
-  release:
-    name: Migrate and deploy production
+  check:
+    name: Check settings and list pending migrations
     # Only after dev took the same commit, and only from a push to main (not a manual dev run on
     # another branch).
     if: >-
@@ -34,9 +40,8 @@ jobs:
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: ${{ vars.PROD_SITE_URL }}
+    # For the prod keys. The environment only allows main; it has no required reviewer since #120.
+    environment: production
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_PROD_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_PROD_DB_PASSWORD }}
@@ -44,6 +49,9 @@ jobs:
       # Environment variables of `production`, not repo variables: dev's values never reach here.
       SUPABASE_URL: ${{ vars.SUPABASE_PROD_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PROD_PUBLISHABLE_KEY }}
+    outputs:
+      count: ${{ steps.pending.outputs.count }}
+      migrations: ${{ steps.pending.outputs.migrations }}
     steps:
       - name: Check the prod settings
         env:
@@ -80,6 +88,92 @@ jobs:
 
       - name: Link newton-prod
         run: npx supabase link --project-ref "${{ vars.SUPABASE_PROD_PROJECT_REF }}"
+
+      - name: Migrations newton-prod hasn't applied
+        id: pending
+        run: |
+          pending=$(.github/scripts/pending-migrations.sh --linked)
+          count=$(grep -c . <<<"$pending" || true)
+          {
+            echo "count=$count"
+            echo "migrations<<END_OF_LIST"
+            echo "$pending"
+            echo "END_OF_LIST"
+          } >> "$GITHUB_OUTPUT"
+          {
+            if [ "$count" = 0 ]; then
+              echo "No migrations pending on newton-prod: releasing without approval."
+            else
+              echo "**$count migration(s) pending on newton-prod.** The release waits for approval on \`production-migrations\`:"
+              echo
+              while read -r name; do
+                echo "- [$name]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$SHA/supabase/migrations/$name)"
+              done <<<"$pending"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+
+  gate:
+    name: Approve pending migrations
+    needs: check
+    if: needs.check.outputs.count != '0'
+    runs-on: ubuntu-latest
+    # Required reviewer: the maintainer. No secrets: this job only waits for the approval.
+    environment: production-migrations
+    steps:
+      - name: Approved migrations
+        env:
+          MIGRATIONS: ${{ needs.check.outputs.migrations }}
+        run: |
+          echo "Approved for newton-prod:"
+          echo "$MIGRATIONS"
+
+  release:
+    name: Migrate and deploy production
+    needs: [check, gate]
+    # After the check, and after the gate when migrations are pending. The gate is only allowed to
+    # be skipped when none are, and a rejected gate stops here. Not always(): a cancelled run
+    # must not release.
+    if: >-
+      !cancelled() &&
+      needs.check.result == 'success' &&
+      (needs.gate.result == 'success' ||
+       (needs.gate.result == 'skipped' && needs.check.outputs.count == '0'))
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.PROD_SITE_URL }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_PROD_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_PROD_DB_PASSWORD }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # Environment variables of `production`, not repo variables: dev's values never reach here.
+      SUPABASE_URL: ${{ vars.SUPABASE_PROD_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PROD_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Link newton-prod
+        run: npx supabase link --project-ref "${{ vars.SUPABASE_PROD_PROJECT_REF }}"
+      # Exactly what the check listed (and the gate approved, if it ran), or nothing.
+      - name: Pending migrations are unchanged since the check
+        env:
+          CHECKED: ${{ needs.check.outputs.migrations }}
+        run: |
+          pending=$(.github/scripts/pending-migrations.sh --linked)
+          # Blank lines aside: an empty list may come back from the job output as one.
+          if [ "$(grep . <<<"$pending" || true)" != "$(grep . <<<"$CHECKED" || true)" ]; then
+            echo "::error::newton-prod's pending migrations changed since the check. Re-run the workflow."
+            exit 1
+          fi
       - name: Migrations that will apply
         run: npx supabase db push --linked --dry-run --yes
       # Migrations only. Never --include-seed, never psql -f seed.sql, never seed buckets.
