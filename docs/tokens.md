@@ -398,10 +398,12 @@ up, at the prod `vercel.app` URL, and step 6 says what changes.
       answers 200, and Vercel → `heynewton-prod` → Cron Jobs lists the daily job.
 - [x] List env vars on both Vercel projects: no `newton-prod` key on `heynewton-web`, no
       `newton-dev` key on `heynewton-prod`.
-- [x] Delete the test boat from `newton-prod`: its rows with SQL (deleting the boat cascades to
-      its documents, emails and memberships), its files in Supabase → Storage → `documents` →
-      `<boat id>/`, since SQL can't delete storage objects. A team member's own account stays: it
-      is their real prod login.
+- [x] Delete the test boat from `newton-prod`. Since #115, as its owner on the site: the boat's
+      page → **Delete this boat** (`/boats/<boat id>/delete`), type its name. That removes its files
+      from Storage and then its rows, and lists what it removed. (Before #115 this was by hand:
+      the rows with SQL, the files in Supabase → Storage → `documents` → `<boat id>/`, since SQL
+      can't delete storage objects; don't do that any more, a plain SQL delete leaves the files.)
+      A team member's own account stays: it is their real prod login.
 
 **6. Switch heynewton.app to prod (#37)**
 
