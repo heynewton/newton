@@ -15,7 +15,9 @@
     "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary --coverage.reporter=json"
   },
   "dependencies": {
+    "@newton/agent": "*",
     "@newton/calc": "*",
+    "@newton/indexing": "*",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "next": "16.4.2",

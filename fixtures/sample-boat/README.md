@@ -67,6 +67,7 @@ search tests can check page numbers.
 | `registration` | Renewal: expires 2026-12-31, soon after the fixture's "today" in October 2026. |
 | `yard-invoice` | Expense: $1,676.90 paid by Sam, which doesn't split evenly 40/35/25. Maintenance: next oil change at 1,512 hours or 2027-10-02. |
 | `manual-excerpt` | Q&A over manuals: maintenance intervals by hours and months, oil capacity. |
+| `sail-loft-invoice` | Filing eval only (not in `boat.json` or the seed): a French invoice written the European way, `EUR 1.260,80` on `03.09.2026`, so filing has to read the document's separators and date order. |
 
 ## Emails
 
