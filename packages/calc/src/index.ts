@@ -1,5 +1,5 @@
 export { toCents, formatCents } from "./money";
-export { parseDocumentAmount, parseDocumentDate, parseDocumentNumber } from "./document-values";
+export { MAX_VALUE_LENGTH, parseDocumentAmount, parseDocumentDate, parseDocumentNumber } from "./document-values";
 export type { DateOrder, DecimalSeparator, ParsedAmount } from "./document-values";
 export { splitCosts } from "./cost-split";
 export type { Expense, OwnershipShare, CoOwnerBalance } from "./cost-split";

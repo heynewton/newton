@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDocumentAmount, parseDocumentDate, parseDocumentNumber } from "./document-values";
+import { MAX_VALUE_LENGTH, parseDocumentAmount, parseDocumentDate, parseDocumentNumber } from "./document-values";
 import { wholeMonthsBetween } from "./due-dates";
 
 describe("parseDocumentAmount", () => {
@@ -135,5 +135,63 @@ describe("wholeMonthsBetween", () => {
     ["2026-10-02", "2025-10-02"],
   ])("from %s to %s is not a whole number of months", (from, to) => {
     expect(wholeMonthsBetween(from, to)).toBeNull();
+  });
+});
+
+// The text comes from forwarded documents, so a crafted value must not make a parser hang
+// (polynomial backtracking). Long inputs are refused before any pattern runs; the worst inputs
+// that fit under the limit finish at once.
+describe("hostile input", () => {
+  const parsers = [
+    (t: string) => parseDocumentAmount(t),
+    (t: string) => parseDocumentAmount(t, { decimalSeparator: "," }),
+    (t: string) => parseDocumentNumber(t),
+    (t: string) => parseDocumentDate(t),
+    (t: string) => parseDocumentDate(t, { order: "DMY" }),
+  ];
+  const runs = (t: string) => {
+    const start = performance.now();
+    for (const parse of parsers) {
+      try {
+        parse(t);
+      } catch {
+        // Refusing is fine; hanging isn't.
+      }
+    }
+    return performance.now() - start;
+  };
+
+  it.each([
+    ["spaces", " ".repeat(1_000_000)],
+    ["spaces then a code", `${" ".repeat(1_000_000)}USD`],
+    ["a code then spaces", `USD${" ".repeat(1_000_000)}x`],
+    ["spaces then a symbol", `1${"\u00a0".repeat(1_000_000)}€`],
+    ["spaces then hours", `1${" ".repeat(1_000_000)}hours`],
+    ["digits and separators", "1.".repeat(500_000)],
+    ["digits", "9".repeat(1_000_000)],
+  ])("refuses a million characters of %s quickly", (_name, text) => {
+    expect(() => parseDocumentAmount(text)).toThrow("Too long");
+    expect(() => parseDocumentNumber(text)).toThrow("Too long");
+    expect(() => parseDocumentDate(text)).toThrow("Too long");
+    expect(runs(text)).toBeLessThan(100);
+  });
+
+  it.each([
+    ["spaces before a code", `${" ".repeat(MAX_VALUE_LENGTH - 4)}USD`],
+    ["spaces after a code", `USD${" ".repeat(MAX_VALUE_LENGTH - 4)}x`],
+    ["no-break spaces before a symbol", `1${"\u00a0".repeat(MAX_VALUE_LENGTH - 2)}€`],
+    ["spaces before hours", `1${" ".repeat(MAX_VALUE_LENGTH - 6)}hours`],
+    ["groups of digits", "1 234".repeat(MAX_VALUE_LENGTH / 5) + "x"],
+    ["separators", "1.".repeat(MAX_VALUE_LENGTH / 2)],
+    ["codes and symbols", "USD€$".repeat(MAX_VALUE_LENGTH / 5)],
+    ["a date-like run", "1/".repeat(MAX_VALUE_LENGTH / 2)],
+  ])("finishes at once on %s just under the limit", (_name, text) => {
+    expect(text.length).toBeLessThanOrEqual(MAX_VALUE_LENGTH);
+    expect(runs(text)).toBeLessThan(50);
+  });
+
+  it("still reads a value padded with spaces inside the limit", () => {
+    expect(parseDocumentAmount(`EUR${" ".repeat(20)}1.260,80`).cents).toBe(126080);
+    expect(parseDocumentNumber(`1,412${" ".repeat(20)}h`, { decimalSeparator: "." })).toBe(1412);
   });
 });

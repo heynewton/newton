@@ -31,7 +31,22 @@ const CURRENCY_SYMBOLS: Record<string, string> = { "€": "EUR", "£": "GBP" };
 // Spaces documents put between groups of thousands: plain, no-break, narrow no-break, thin.
 const GROUP_SPACES = /[ \u00a0\u202f\u2009]/g;
 // Apostrophes used for thousands in Switzerland (1'234.50).
-const GROUP_APOSTROPHES = /['’]/g;
+const GROUP_APOSTROPHES = /['\u2019]/g;
+// Currency symbols, longest first so "US$" wins over "$".
+const SYMBOLS = ["US$", "$", "€", "£"];
+// Units after an engine-hour reading, longest first.
+const HOUR_UNITS = ["hours.", "hours", "hour.", "hour", "hrs.", "hrs", "hr.", "hr", "h.", "h"];
+
+/**
+ * The longest value a document prints that these functions read. The text comes from forwarded
+ * documents, so anything longer is refused before any pattern runs on it.
+ */
+export const MAX_VALUE_LENGTH = 64;
+
+function bounded(text: string): string {
+  if (text.length > MAX_VALUE_LENGTH) throw new Error(`Too long to be a value (${text.length} characters)`);
+  return text;
+}
 
 /**
  * Reads a printed number with the given (or detected) decimal separator. Returns the digits
@@ -94,7 +109,7 @@ function readDecimal(
  * decimals; without it, "1,234" and "1.234" are refused as ambiguous.
  */
 export function parseDocumentAmount(text: string, options: { decimalSeparator?: DecimalSeparator } = {}): ParsedAmount {
-  let rest = text.trim();
+  let rest = bounded(text).trim();
   let negative = false;
   if (rest.startsWith("(") && rest.endsWith(")")) {
     negative = true;
@@ -109,10 +124,18 @@ export function parseDocumentAmount(text: string, options: { decimalSeparator?: 
   };
 
   // A three-letter code before or after the number (USD 12.00, 12,00 EUR).
-  const code = /^([A-Z]{3})\s*|\s*([A-Z]{3})$/;
-  for (let match = code.exec(rest); match; match = code.exec(rest)) {
-    named((match[1] ?? match[2])!);
-    rest = rest.slice(0, match.index) + rest.slice(match.index + match[0].length);
+  for (let found = true; found; ) {
+    found = false;
+    if (/^[A-Z]{3}$/.test(rest.slice(0, 3))) {
+      named(rest.slice(0, 3));
+      rest = rest.slice(3).trimStart();
+      found = true;
+    }
+    if (/^[A-Z]{3}$/.test(rest.slice(-3))) {
+      named(rest.slice(-3));
+      rest = rest.slice(0, -3).trimEnd();
+      found = true;
+    }
   }
   rest = rest.trim();
   if (rest.startsWith("-")) {
@@ -120,13 +143,25 @@ export function parseDocumentAmount(text: string, options: { decimalSeparator?: 
     rest = rest.slice(1).trim();
   }
   // A symbol before or after the number, possibly with a sign between (−$5, US$5, 5 €).
-  const symbol = /^(US\$|\$|€|£)\s*|\s*(US\$|\$|€|£)$/;
-  for (let match = symbol.exec(rest); match; match = symbol.exec(rest)) {
-    const s = (match[1] ?? match[2])!;
+  const symbol = (s: string) => {
     if (s === "US$") named("USD");
     else if (s === "$") dollarSign = true;
     else named(CURRENCY_SYMBOLS[s]!);
-    rest = rest.slice(0, match.index) + rest.slice(match.index + match[0].length);
+  };
+  for (let found = true; found; ) {
+    found = false;
+    const before = SYMBOLS.find((s) => rest.startsWith(s));
+    if (before) {
+      symbol(before);
+      rest = rest.slice(before.length).trimStart();
+      found = true;
+    }
+    const after = SYMBOLS.find((s) => rest.endsWith(s));
+    if (after) {
+      symbol(after);
+      rest = rest.slice(0, -after.length).trimEnd();
+      found = true;
+    }
   }
   rest = rest.trim();
   if (rest.startsWith("-")) {
@@ -151,7 +186,10 @@ export function parseDocumentNumber(
   text: string,
   options: { decimalSeparator?: DecimalSeparator; maxDecimals?: number } = {},
 ): number {
-  const digits = text.trim().replace(/\s*(h|hrs?|hours?)\.?$/i, "").replace(GROUP_SPACES, "").replace(GROUP_APOSTROPHES, "");
+  let rest = bounded(text).trim();
+  const unit = HOUR_UNITS.find((u) => rest.toLowerCase().endsWith(u));
+  if (unit) rest = rest.slice(0, -unit.length).trimEnd();
+  const digits = rest.replace(GROUP_SPACES, "").replace(GROUP_APOSTROPHES, "");
   const { whole, fraction } = readDecimal(digits, text, options.decimalSeparator, options.maxDecimals ?? 1);
   const value = Number(fraction ? `${whole}.${fraction}` : whole);
   if (!Number.isFinite(value) || value > Number.MAX_SAFE_INTEGER) throw new Error(`Number too large: "${text}"`);
@@ -176,7 +214,7 @@ const MONTHS: [number, string[]][] = [
 ];
 
 function monthNumber(word: string): number | null {
-  const w = word.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\.$/, "");
+  const w = word.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\.$/, "");
   if (w.length < 3) return null;
   const found = new Set<number>();
   for (const [n, names] of MONTHS) {
@@ -201,7 +239,7 @@ function isoDate(year: number, month: number, day: number, original: string): st
  * other than year-first need `order` unless the day is over 12; two-digit years are refused.
  */
 export function parseDocumentDate(text: string, options: { order?: DateOrder } = {}): string {
-  const t = text.trim().replace(/\s+/g, " ");
+  const t = bounded(text).trim().replace(/\s+/g, " ");
   const fail = (why: string): never => {
     throw new Error(`Not a date (${why}): "${text}"`);
   };
