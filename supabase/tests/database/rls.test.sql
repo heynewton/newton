@@ -67,11 +67,11 @@ select throws_ok(
   'read-only cannot add members'
 );
 
-delete from public.boats where name = 'Petrel';
-select is(
-  (select count(*)::int from public.boats where name = 'Petrel'),
-  1,
-  'read-only cannot delete the boat'
+select throws_ok(
+  $$ delete from public.boats where name = 'Petrel' $$,
+  '42501',
+  null,
+  'read-only cannot delete the boat (nobody can, except through delete_boat)'
 );
 
 select throws_ok(

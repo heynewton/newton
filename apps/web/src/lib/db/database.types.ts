@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "boats": {
                   Row: {
-                    "created_at": string,"email_alias": string,"id": string,"name": string
+                    "created_at": string,"deleting_since": string | null,"email_alias": string,"id": string,"name": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"email_alias": string,"id"?: string,"name": string
+                    "created_at"?: string,"deleting_since"?: string | null,"email_alias": string,"id"?: string,"name": string
                   }
                   Update: {
-                    "created_at"?: string,"email_alias"?: string,"id"?: string,"name"?: string
+                    "created_at"?: string,"deleting_since"?: string | null,"email_alias"?: string,"id"?: string,"name"?: string
                   }
                   Relationships: [
                     
@@ -297,7 +297,13 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "boat_id_from_storage_path":
+            "assert_boat_owner":
+{ Args: { "boat": string }; Returns: undefined
+                           },
+"begin_boat_deletion":
+{ Args: { "boat": string }; Returns: string[]
+                           },
+"boat_id_from_storage_path":
 { Args: { "path": string }; Returns: string
                            },
 "can_read_boat":
@@ -311,6 +317,9 @@ isOneToOne: false
                            },
 "current_person_id":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"delete_boat":
+{ Args: { "boat": string }; Returns: Json
                            },
 "match_inbound_email":
 { Args: { "alias": string,"sender": string }; Returns: {
