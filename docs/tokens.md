@@ -299,7 +299,7 @@ it until the app asks questions. Tests and CI use a scripted stand-in.
 
 Everything prod needs, set up once by the maintainer for #63. Same names and settings as dev
 unless a step says otherwise; **never reuse a dev key or value**. Steps 1–5 were done on 19 October 2026
-(results on #63). Step 6 moves heynewton.app to prod (#37); steps 1–3 show the values as first set
+(results on #63). Step 6 moved heynewton.app to prod on 20 October 2026 (#37); steps 1–3 show the values as first set
 up, at the prod `vercel.app` URL, and step 6 says what changes.
 
 **1. Supabase `newton-prod`**
@@ -372,27 +372,29 @@ has somewhere valid to land. DNS shouldn't need to change: both projects are in 
 team, and the records on Cloudflare (apex **A** `216.198.79.65` and `64.29.17.65`, `www`
 **CNAME** `a49833141f4b58b5.vercel-dns-017.com`, proxy off) belong to the domain, not a project.
 
-- [ ] a. Prepare prod. Nothing anyone sees changes yet:
+- [x] a. Prepare prod. Nothing anyone sees changes yet:
   - Supabase → `newton-prod` → Authentication → URL Configuration → Redirect URLs: **add**
     `https://heynewton.app/**`, keeping `https://heynewton-prod.vercel.app/**` for now.
   - Vercel → `heynewton-prod` → Settings → Environment Variables: `SITE_URL` =
     `https://heynewton.app` (Production). It applies from the next deploy (e).
   - GitHub → Settings → Environments → `production` → variable `PROD_SITE_URL` =
     `https://heynewton.app`.
-- [ ] b. Vercel → `heynewton-web` → Settings → Domains: remove `www.heynewton.app` and
-      `heynewton.app`. (If Vercel offers to move a domain to another project instead, do that.)
-- [ ] c. Straight away, Vercel → `heynewton-prod` → Settings → Domains → Add: `heynewton.app`
+- [x] b. Vercel → `heynewton-web` → Settings → Domains: remove `www.heynewton.app` and
+      `heynewton.app`. Or, with no gap at all, move it: done on 20 October with the Vercel API
+      (`POST /v1/projects/heynewton-web/domains/heynewton.app/move`, body `{"projectId": <heynewton-prod's id>}`),
+      which took `www` and its redirect along.
+- [x] c. Straight away, Vercel → `heynewton-prod` → Settings → Domains → Add: `heynewton.app`
       (Production), then `www.heynewton.app` set to **redirect** to `heynewton.app` (308), as
       today. Both should show **Valid Configuration**. If Vercel asks for different records, set
       exactly those in Cloudflare → `heynewton.app` → DNS, proxy **off** (grey cloud), and leave
       the mail records (MX, SPF, DKIM, `_dmarc`, `boats`) alone.
-- [ ] d. Supabase → `newton-prod` → URL Configuration: **Site URL** `https://heynewton.app`;
+- [x] d. Supabase → `newton-prod` → URL Configuration: **Site URL** `https://heynewton.app`;
       Redirect URLs `https://heynewton.app/**` only (remove the `vercel.app` one, so every link
       comes back to the public address). Supabase → `newton-dev` → Redirect URLs: remove
       `https://heynewton.app/**`.
-- [ ] e. Actions → the latest **Production** run → Re-run all jobs → approve. It redeploys with the
+- [x] e. Actions → the latest **Production** run → Re-run all jobs → approve. It redeploys with the
       new `SITE_URL` and checks that `/auth/fixture-sign-in` answers 404 on `https://heynewton.app`.
-- [ ] f. Check from outside: `https://heynewton.app` and `www` serve prod (fixture sign-in 404, no
+- [x] f. Check from outside: `https://heynewton.app` and `www` serve prod (fixture sign-in 404, no
       "Sign in as" on `/sign-in`); `https://heynewton-web.vercel.app` still serves dev with "Sign
       in as".
 - [ ] g. Sign in on `https://heynewton.app` with a team member's address: the email link opens
