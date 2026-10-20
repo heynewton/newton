@@ -41,4 +41,4 @@ Work on issue #109, "Separate Resend for dev and prod, so dev and previews can't
 - Previews stay without any Resend key even after the split: Resend's webhook only calls the dev
   site, so a preview never needs one.
 
-**Pull request:** [#110](https://github.com/heynewton/newton/pull/110)
+**Pull request:** [#112](https://github.com/heynewton/newton/pull/112)
