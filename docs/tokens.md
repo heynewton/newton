@@ -173,6 +173,42 @@ workflow fails if the key doesn't start with `sb_publishable_`.
 - **Expiry:** none. If the key is rotated in Supabase, update the variable and re-run Deploy.
 - **Prod:** never these. Production has its own keys in the `production` environment ([Production](#production)).
 
+## Dev site address (`dev.heynewton.app`)
+
+The dev site is served at https://dev.heynewton.app (#106), still the Vercel project
+`heynewton-web` deployed from `main`, still backed by `newton-dev`. `heynewton-web.vercel.app`
+keeps working as a fallback. The dev site and previews send `X-Robots-Tag: noindex` (`NOINDEX=1`,
+set only by `.github/workflows/deploy.yml`); the Production workflow fails if `NOINDEX` is set
+there. Setup, by the maintainer, in this order so every sign-in link has somewhere valid to land:
+
+- [x] 1. Vercel → `heynewton-web` → Settings → Domains → Add: `dev.heynewton.app`, Production
+      (connected to the production target, no redirect). Vercel shows the record it wants,
+      usually a **CNAME** `dev` → a `…vercel-dns-….com` target. Set exactly that in Cloudflare →
+      `heynewton.app` → DNS, proxy **off** (grey cloud), like the apex. Leave the mail records
+      (MX, SPF, DKIM, `_dmarc`, `boats`) alone. Wait for **Valid Configuration**. (Done: CNAME
+      `dev` → `a49833141f4b58b5.vercel-dns-017.com`, the same target as the apex and `www`.)
+- [x] 2. Supabase → `newton-dev` → Authentication → URL Configuration: **Site URL**
+      `https://dev.heynewton.app`; Redirect URLs: **add** `https://dev.heynewton.app/**`, keeping
+      `https://heynewton-web.vercel.app/**` and `https://heynewton-*-hey-newton.vercel.app/**`.
+- [x] 3. Vercel → `heynewton-web` → Settings → Environment Variables: `SITE_URL` =
+      `https://dev.heynewton.app` (Production). It applies from the next deploy (5).
+- [x] 4. Resend → Webhooks → the dev endpoint (`https://heynewton-web.vercel.app/api/email-in`) →
+      Edit: endpoint URL `https://dev.heynewton.app/api/email-in`, event `email.received` as
+      before. The signing secret stays the same; if Resend makes a new endpoint instead, put its
+      secret in `RESEND_WEBHOOK_SECRET` on `heynewton-web` (Production and Preview) and delete the
+      old endpoint. The prod endpoint doesn't change.
+- [x] 5. Actions → the latest **Deploy** run on `main` → Re-run all jobs. It redeploys the dev
+      site with the new `SITE_URL`.
+- [ ] 6. Check from outside: `https://dev.heynewton.app` serves dev, with "Sign in as" on
+      `/sign-in` and `X-Robots-Tag: noindex`; `https://heynewton.app` has no `X-Robots-Tag` and
+      `/auth/fixture-sign-in` answers 404 there.
+- [x] 7. Sign in by email link on `https://dev.heynewton.app` with a team member's address: the
+      link comes back to `https://dev.heynewton.app/auth/callback`. Email a PDF to a test boat's
+      address: Resend shows the dev webhook delivery at the new URL with 200.
+
+To undo: remove the domain from `heynewton-web`, and put the Site URL, `SITE_URL` and the webhook
+back on `https://heynewton-web.vercel.app`. The DNS record can stay; it points at nothing else.
+
 ## Fixture sign-in (`FIXTURE_SIGN_IN`, `SUPABASE_SECRET_KEY`)
 
 The sample boat's people (`fixtures/sample-boat`) sign in with addresses on reserved domains, so
@@ -200,8 +236,8 @@ settings):
 
 | Setting | Value |
 | --- | --- |
-| Site URL | `https://heynewton-web.vercel.app` |
-| Redirect URLs | `https://heynewton-web.vercel.app/**`, `https://heynewton-*-hey-newton.vercel.app/**` (PR previews). Not `https://heynewton.app/**`: since #37 that is prod |
+| Site URL | `https://dev.heynewton.app` (#106) |
+| Redirect URLs | `https://dev.heynewton.app/**`, `https://heynewton-web.vercel.app/**` (the dev site's fallback address), `https://heynewton-*-hey-newton.vercel.app/**` (PR previews). Not `https://heynewton.app/**`: since #37 that is prod |
 
 The preview pattern also matches any `*-hey-newton` Vercel team. A magic link sent somewhere else
 is useless without the PKCE cookie in the browser that asked for it, and dev holds only fixture
@@ -256,7 +292,7 @@ API.
 | `CRON_SECRET` | Us: a random string of 32+ characters (`openssl rand -hex 32`) | Vercel sends it as `Authorization: Bearer …`; the route refuses calls without it | Vercel env vars of `heynewton-web` (Production target), marked Sensitive |
 | `RESEND_API_KEY` | Resend: the same key as email-in (`email-in-newton-dev`, see above), which can also send | Sending from `heynewton.app` | Same |
 | `SUPABASE_SECRET_KEY` | Supabase, that project's secret API key | Bypasses row-level security; only `lib/db/reminders.ts`, `lib/db/email-in.ts` and (dev and previews) `lib/db/fixture-sign-in.ts` use it | Same. Never in the browser, never a `NEXT_PUBLIC_` variable |
-| `SITE_URL` | — (not secret) | Links in the email: `https://heynewton-web.vercel.app` on dev, `https://heynewton.app` on prod | Same |
+| `SITE_URL` | — (not secret) | Links in the email: `https://dev.heynewton.app` on dev (#106), `https://heynewton.app` on prod | Same |
 
 - **Expiry:** none of them expire on their own. Rotate yearly with the other keys.
 - **Locally:** `apps/web/.env.local`; call the route with

@@ -119,9 +119,11 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
   (`--archive=tgz`) to stay well under it. If a deploy fails with "Too many requests ...
   api-upload-free", the limit was hit anyway: previews and the dev site pause until it resets
   (24 hours). Deploy isn't a required check, so that failure doesn't block merging.
-- The dev site is only at https://heynewton-web.vercel.app. [heynewton.app](https://heynewton.app)
-  serves production (see Production below) since #37, so previews and dev never share a URL or a
-  database with real boat data. Fixture sign-in and sample data are on the dev site, never on
+- The dev site is at https://dev.heynewton.app (#106; https://heynewton-web.vercel.app still
+  works). [heynewton.app](https://heynewton.app) serves production (see Production below) since
+  #37, so previews and dev never share a URL or a database with real boat data. Fixture sign-in
+  and sample data are on the dev site, never on heynewton.app. The dev site and previews send
+  `X-Robots-Tag: noindex` (`NOINDEX=1` in the deploy workflow), so search engines only list
   heynewton.app.
 
 ## Dev database

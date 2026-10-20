@@ -108,6 +108,13 @@ jobs:
             echo "::error::FIXTURE_SIGN_IN is set for production. Remove it from heynewton-prod's environment variables."
             exit 1
           fi
+      # Nor hide prod from search engines: NOINDEX is only for the dev site and previews (#106).
+      - name: Check noindex is off
+        run: |
+          if [ -n "${NOINDEX:-}" ] || grep -q '^NOINDEX=' .vercel/.env.production.local 2>/dev/null; then
+            echo "::error::NOINDEX is set for production. Remove it from heynewton-prod's environment variables."
+            exit 1
+          fi
       - run: vercel build --prod --token "$VERCEL_TOKEN"
       - name: Deploy
         run: |

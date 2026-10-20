@@ -155,7 +155,8 @@ where it runs, and the Supabase URL and keys from #62. Real boats' mail must onl
 (#63, #37), so on dev, send test mail to test boats only.
 
 - [x] Resend → Webhooks → Add endpoint: `https://heynewton-web.vercel.app/api/email-in` (the dev
-      site), event `email.received` only. Copy its signing secret (`whsec_…`).
+      site), event `email.received` only. Copy its signing secret (`whsec_…`). Since #106 the
+      endpoint is `https://dev.heynewton.app/api/email-in` (`docs/tokens.md`, Dev site address).
 - [x] Resend → API Keys → Create API key `email-in-newton-dev`. Reading received mail needs more
       than "Sending access"; pick the narrowest permission that can read received emails (at the
       time of writing, "Full access") and write down which one in `docs/tokens.md`.
