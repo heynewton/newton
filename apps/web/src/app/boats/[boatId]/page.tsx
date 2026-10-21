@@ -9,7 +9,7 @@ import { boatEmailAddress } from "@/lib/email-in";
 import { attentionSummary, costSplit, schedule, todayUtc } from "@/lib/records";
 import { roleNames } from "../roles";
 import { SignOut } from "../sign-out";
-import { AttentionSummary, CoOwnerBalance, ComingUp, Documents, EmailAddress, ExportData } from "./records";
+import { AttentionSummary, CoOwnerBalance, ComingUp, Documents, ExportData } from "./records";
 
 export const metadata: Metadata = { title: "Your boat · Hey Newton" };
 
@@ -17,32 +17,32 @@ export const metadata: Metadata = { title: "Your boat · Hey Newton" };
 const DUE_SOON_DAYS = 60;
 const DUE_SOON_ENGINE_HOURS = 25;
 
-// What to do next with a new boat. Each one says "Coming soon" until it is built.
-function nextSteps(address: string | null): { title: string; description: ReactNode; comingSoon: boolean }[] {
-  return [
-    {
+const list = new Intl.ListFormat("en-GB", { type: "conjunction" });
+
+// What to do next with the boat: steps that can be done now and aren't done yet. What isn't built
+// yet is listed in one line instead.
+function nextSteps(address: string | null, hasDocuments: boolean): { steps: { title: string; description: ReactNode }[]; comingSoon: string[] } {
+  const steps = [];
+  const comingSoon = [];
+  if (!address) {
+    comingSoon.push("forwarding documents to the boat's own email address"); // #10: needs the inbound domain where this runs
+  } else if (!hasDocuments) {
+    steps.push({
       title: "Forward documents to the boat",
-      description: address ? (
+      description: (
         <>
-          Send or forward invoices, insurance and manuals to <EmailAddress address={address} />, and Newton
-          keeps them with the boat.
+          Send or forward invoices, insurance and manuals to the boat&apos;s own address, and Newton keeps them
+          with the boat.{" "}
+          <a href="#documents" className="inline-flex min-h-11 items-center font-medium underline">
+            Find the address
+          </a>
         </>
-      ) : (
-        "Send invoices, insurance and manuals to the boat's own email address, and Newton files them."
       ),
-      comingSoon: !address, // #10: needs the inbound domain where this runs
-    },
-    {
-      title: "Ask about the boat",
-      description: "Get answers from the boat's manuals, with the page they came from.",
-      comingSoon: true, // #14
-    },
-    {
-      title: "Invite co-owners and crew",
-      description: "Share the boat, its costs and its reminders with the people who sail it.",
-      comingSoon: true, // Phase 3 onboarding
-    },
-  ];
+    });
+  }
+  comingSoon.push("asking about the boat from its manuals"); // #14
+  comingSoon.push("inviting co-owners and crew"); // Phase 3 onboarding
+  return { steps, comingSoon };
 }
 
 export default function BoatHome({ params }: PageProps<"/boats/[boatId]">) {
@@ -76,6 +76,7 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
   );
   const documents = new Map(records.documents.map((d) => [d.id, d]));
   const address = boatEmailAddress(boat.emailAlias, process.env.INBOUND_EMAIL_DOMAIN);
+  const next = nextSteps(address, records.documents.length > 0);
 
   return (
     <>
@@ -108,24 +109,22 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
         <h2 id="next-steps" className="text-xl font-semibold">
           Next steps
         </h2>
-        <ul className="grid gap-4 sm:grid-cols-3">
-          {nextSteps(address).map((step) => (
-            <li
-              key={step.title}
-              className="flex flex-col gap-2 rounded-2xl border border-black/10 p-5 dark:border-white/15"
-            >
-              <h3 className="flex flex-wrap items-center gap-2 font-semibold">
-                {step.title}
-                {step.comingSoon && (
-                  <span className="rounded-full bg-spinnaker/20 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-spinnaker">
-                    Coming soon
-                  </span>
-                )}
-              </h3>
-              <p className="text-zinc-700 dark:text-zinc-300">{step.description}</p>
-            </li>
-          ))}
-        </ul>
+        {next.steps.length > 0 && (
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {next.steps.map((step) => (
+              <li
+                key={step.title}
+                className="flex flex-col gap-2 rounded-2xl border border-black/10 p-5 dark:border-white/15"
+              >
+                <h3 className="font-semibold">{step.title}</h3>
+                <p className="text-zinc-700 dark:text-zinc-300">{step.description}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="text-zinc-600 dark:text-zinc-400">
+          Coming soon: {list.format(next.comingSoon)}.
+        </p>
       </section>
 
       {canExport(boat.role) && (

@@ -17,6 +17,7 @@ import {
   type SummaryPart,
 } from "@/lib/records";
 import { Contact } from "../../legal-page";
+import { CopyAddress } from "./copy-address";
 
 // The boat page's read-only record sections. Every date and amount shown here was computed by
 // packages/calc (through @/lib/records); these components only lay them out, with the basis
@@ -373,11 +374,6 @@ export function CoOwnerBalance({
   );
 }
 
-// The boat's email address, easy to select and copy on a phone.
-export function EmailAddress({ address }: { address: string }) {
-  return <strong className="font-semibold break-words select-all">{address}</strong>;
-}
-
 export function Documents({
   documents,
   boatId,
@@ -397,10 +393,13 @@ export function Documents({
         {lastReceived && <Freshness>Last received {formatDate(lastReceived)}.</Freshness>}
       </div>
       {address && (
-        <p className="text-zinc-700 dark:text-zinc-300">
-          Forward emails with their attachments to <EmailAddress address={address} />. Mail from people who
-          aren&apos;t on the boat is held, not filed.
-        </p>
+        <div className="flex flex-col gap-1">
+          <p className="text-zinc-700 dark:text-zinc-300">
+            Forward emails with their attachments to the boat&apos;s own address. Mail from people who aren&apos;t
+            on the boat is held, not filed.
+          </p>
+          <CopyAddress address={address} />
+        </div>
       )}
       {documents.length === 0 ? (
         <p className={`${card} ${muted}`}>
