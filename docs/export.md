@@ -22,7 +22,7 @@ files of that one boat, and only those the person is allowed to read. That is al
 ## Layout
 
 ```
-kittiwake-export-2026-10-20.zip
+test-boat-export-2026-10-20.zip
 ├── data/
 │   ├── boat.json
 │   ├── people.json
@@ -79,7 +79,7 @@ file's path in the archive with its document ID, so use the manifest rather than
   "format": "newton-boat-export",
   "format_version": 1,
   "exported_at": "2026-10-20T09:30:00.000Z",
-  "boat": { "id": "00000000-0000-4000-8000-000000000001", "name": "Kittiwake" },
+  "boat": { "id": "00000000-0000-4000-8000-000000000001", "name": "Test boat" },
   "exported_by": { "person_id": "00000000-0000-4000-8000-000000000101", "role": "owner" },
   "tables": [{ "name": "expenses", "path": "data/expenses.json", "rows": 4 }],
   "files": [

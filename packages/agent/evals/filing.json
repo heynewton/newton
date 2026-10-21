@@ -23,7 +23,7 @@
     {
       "id": "yard-invoice",
       "file": "yard-invoice.pdf",
-      "emailSubject": "Fwd: Invoice EPB-2026-0917 - Kittiwake",
+      "emailSubject": "Fwd: Invoice EPB-2026-0917 - Test boat",
       "type": "invoice",
       "required": [
         { "table": "expenses", "amount_cents": 167690, "currency": "USD", "spent_on": ["2026-10-02", "2026-10-03"] },
@@ -40,7 +40,7 @@
     {
       "id": "yard-invoice-already-recorded",
       "file": "yard-invoice.pdf",
-      "emailSubject": "Fwd: Invoice EPB-2026-0917 - Kittiwake",
+      "emailSubject": "Fwd: Invoice EPB-2026-0917 - Test boat",
       "type": "invoice",
       "boat": {
         "maintenance": [

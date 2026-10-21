@@ -252,8 +252,8 @@ describe("aliasesFor", () => {
   });
 
   it("prefers who the message was delivered to, which includes Bcc", () => {
-    const e = event({ to: ["Someone <someone@example.com>"], received_for: ["Kittiwake-X7@Boats.HeyNewton.app"] });
-    expect(aliasesFor(e, "boats.heynewton.app")).toEqual(["kittiwake-x7"]);
+    const e = event({ to: ["Someone <someone@example.com>"], received_for: ["Test-Boat-X7@Boats.HeyNewton.app"] });
+    expect(aliasesFor(e, "boats.heynewton.app")).toEqual(["test-boat-x7"]);
   });
 
   it("falls back to To and Cc, in order and without repeats", () => {
@@ -299,7 +299,7 @@ describe("file names", () => {
   });
 
   it("names the original message after its subject", () => {
-    expect(messageFilename("Fwd: Invoice EPB-2026-0917 / Kittiwake")).toBe("Fwd: Invoice EPB-2026-0917 Kittiwake.eml");
+    expect(messageFilename("Fwd: Invoice EPB-2026-0917 / Test boat")).toBe("Fwd: Invoice EPB-2026-0917 Test boat.eml");
     expect(messageFilename("")).toBe("Email.eml");
     expect(messageFilename(null)).toBe("Email.eml");
   });

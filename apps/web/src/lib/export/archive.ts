@@ -56,7 +56,7 @@ export const EXCLUDED = [
   "people's email addresses and sign-in details: only each member's ID and name are included.",
 ];
 
-// The archive's file name, e.g. "kittiwake-export-2026-10-20.zip".
+// The archive's file name, e.g. "test-boat-export-2026-10-20.zip".
 export function archiveFilename(boatName: string, exportedAt: Date): string {
   const slug =
     boatName

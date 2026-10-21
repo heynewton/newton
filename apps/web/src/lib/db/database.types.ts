@@ -179,6 +179,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"invitations": {
+                  Row: {
+                    "boat_id": string,"created_at": string,"email": string,"id": string,"invited_by": string | null,"role": Database["public"]['Enums']["membership_role"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "boat_id": string,"created_at"?: string,"email": string,"id"?: string,"invited_by"?: string | null,"role": Database["public"]['Enums']["membership_role"]
+                  }
+                  Update: {
+                    "boat_id"?: string,"created_at"?: string,"email"?: string,"id"?: string,"invited_by"?: string | null,"role"?: Database["public"]['Enums']["membership_role"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invitations_boat_id_fkey"
+      columns: ["boat_id"]
+isOneToOne: false
+      referencedRelation: "boats"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_invited_by_fkey"
+      columns: ["invited_by"]
+isOneToOne: false
+      referencedRelation: "people"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"maintenance_items": {
                   Row: {
                     "boat_id": string,"created_at": string,"document_id": string | null,"every_engine_hours": number | null,"every_months": number | null,"id": string,"last_done_engine_hours": number | null,"last_done_on": string,"notes": string | null,"title": string
@@ -368,6 +394,9 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"invite_to_boat":
+{ Args: { "boat": string,"invitee_email": string,"invitee_role": Database["public"]['Enums']["membership_role"] }; Returns: string
+                           },
 "match_inbound_email":
 { Args: { "alias": string,"sender": string }; Returns: {
               "boat_id": string,"person_id": string

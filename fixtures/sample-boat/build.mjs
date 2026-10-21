@@ -10,8 +10,8 @@ const boat = JSON.parse(readFileSync(join(here, "boat.json"), "utf8")).boat;
 const BOAT_ADDRESS = boat.inboundAddress;
 
 const documents = {
-  "insurance-certificate": "Kittiwake insurance certificate 2026-27",
-  registration: "Kittiwake registration certificate",
+  "insurance-certificate": "Test boat insurance certificate 2026-27",
+  registration: "Test boat registration certificate",
   "yard-invoice": "Example Point Boatyard invoice EPB-2026-0917",
   "manual-excerpt": "Sample Marine SM-30 owner's manual, maintenance section",
   "sail-loft-invoice": "Voilerie Exemple facture VE-2026-0412",
@@ -56,16 +56,16 @@ const emails = [
     file: "03-yard-invoice.eml",
     from: "Sam Placeholder <sam@example.net>",
     date: "Sat, 03 Oct 2026 16:45:12 +0000",
-    subject: "Fwd: Invoice EPB-2026-0917 - Kittiwake",
+    subject: "Fwd: Invoice EPB-2026-0917 - Test boat",
     body: [
       "Haul-out and engine service. I paid it on my card, so please split it.",
       "",
       "---------- Forwarded message ---------",
       "From: Example Point Boatyard <office@boatyard.example.net>",
       "Date: Fri, 02 Oct 2026 15:30:00 +0000",
-      "Subject: Invoice EPB-2026-0917 - Kittiwake",
+      "Subject: Invoice EPB-2026-0917 - Test boat",
       "",
-      "Hello, please find attached our invoice for the work on Kittiwake.",
+      "Hello, please find attached our invoice for the work on Test boat.",
       "Total due: USD 1,676.90 by 2026-11-01.",
       "",
       "Example Point Boatyard",
@@ -165,7 +165,7 @@ function buildEmail(email, pdfs) {
   parts.push(`--${boundary}--`, "");
   const headers = [
     `From: ${email.from}`,
-    `To: Kittiwake <${BOAT_ADDRESS}>`,
+    `To: Test boat <${BOAT_ADDRESS}>`,
     `Date: ${email.date}`,
     `Subject: ${email.subject}`,
     `Message-ID: <${email.file.replace(".eml", "")}@sample.example.com>`,

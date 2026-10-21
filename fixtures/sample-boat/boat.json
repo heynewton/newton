@@ -2,7 +2,7 @@
   "_note": "Invented sample data. Every name, number and address here is made up. See README.md.",
   "boat": {
     "id": "00000000-0000-4000-8000-000000000001",
-    "name": "Kittiwake",
+    "name": "Test boat",
     "type": "sailboat",
     "rig": "sloop",
     "lengthFeet": 34,
@@ -13,7 +13,7 @@
     "registration": "XX 0000 ZZ",
     "homePort": "Sample Harbor Marina, Port Example",
     "currency": "USD",
-    "inboundAddress": "kittiwake@in.heynewton.test",
+    "inboundAddress": "test-boat@in.heynewton.test",
     "engine": {
       "make": "Sample Marine",
       "model": "SM-30",

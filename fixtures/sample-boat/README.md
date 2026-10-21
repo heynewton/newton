@@ -1,4 +1,4 @@
-# Sample boat: Kittiwake
+# Sample boat: Test boat
 
 **Everything in this folder is made up.** The boat, people, companies, addresses, phone numbers,
 policy, registration and hull numbers are invented for tests and demos. Email addresses use the
@@ -18,9 +18,9 @@ fictional 555-01xx range. Never add real boat data here (see the repo rules in `
 | Jordan Fictional | co-owner | 25% | jordan@example.com |
 | Riley Testcase | crew | 0% | riley@example.org |
 
-Kittiwake is a 2009 Example Yachts EY 34 sloop with a Sample Marine SM-30 diesel (1,412 engine
-hours on 2026-10-02). Its inbound address is `kittiwake@in.heynewton.test`: the seed gives the boat the
-alias `kittiwake`, and `INBOUND_EMAIL_DOMAIN=in.heynewton.test` locally (real boats get a random
+Test boat is a 2009 Example Yachts EY 34 sloop with a Sample Marine SM-30 diesel (1,412 engine
+hours on 2026-10-02). Its inbound address is `test-boat@in.heynewton.test`: the seed gives the boat the
+alias `test-boat`, and `INBOUND_EMAIL_DOMAIN=in.heynewton.test` locally (real boats get a random
 suffix). Each person's first verified sender address is the one they sign in with; the others are
 seeded as verified `sender_addresses`, so Alex's second address files mail too.
 
@@ -41,7 +41,7 @@ with `npx supabase seed buckets --linked` on every push to `main`.
 
 Their addresses can't receive mail, so the sign-in link never arrives. On the dev site and PR
 previews, `/sign-in` has a "Sign in as a sample-boat person" section: pick Alex, Sam, Jordan or
-Riley and you are signed in straight away and land on Kittiwake's page, with no email sent. It is
+Riley and you are signed in straight away and land on Test boat's page, with no email sent. It is
 there because the Deploy workflow sets `FIXTURE_SIGN_IN=1`; it needs `newton-dev`'s secret key in
 Vercel (see "Fixture sign-in" in `docs/tokens.md`) and is never on production. Locally, set
 `FIXTURE_SIGN_IN=1` and `SUPABASE_SECRET_KEY` (from `npx supabase status`) in `apps/web/.env.local`

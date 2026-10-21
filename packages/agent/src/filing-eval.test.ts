@@ -14,7 +14,7 @@ const answers: Record<string, (request: FilingRequest) => FilingProposal> = {
     ...none,
     document_type: "insurance",
     confidence: "high",
-    summary: "Insurance certificate for Kittiwake, 2026-27.",
+    summary: "Insurance certificate for Test boat, 2026-27.",
     vendor: "EXAMPLE MUTUAL MARINE INSURANCE CO.",
     decimal_separator: ".",
     date_order: "YMD",

@@ -18,6 +18,8 @@ function query(table: string) {
     select: (...args: unknown[]) => (calls.push({ method: `${table}.select`, args }), builder),
     update: (...args: unknown[]) => (calls.push({ method: `${table}.update`, args }), builder),
     eq: (...args: unknown[]) => (calls.push({ method: `${table}.eq`, args }), builder),
+    order: (...args: unknown[]) => (calls.push({ method: `${table}.order`, args }), builder),
+    delete: (...args: unknown[]) => (calls.push({ method: `${table}.delete`, args }), builder),
     maybeSingle: async () => answer(table),
     then: (resolve: (r: Result) => unknown, reject?: (e: unknown) => unknown) =>
       Promise.resolve(answer(table)).then(resolve, reject),
@@ -236,14 +238,14 @@ describe("listMyBoats and getMyBoat", () => {
     results.memberships = {
       data: [
         { role: "read_only", boats: { id: "b2", name: "Petrel" } },
-        { role: "owner", boats: { id: "b1", name: "Kittiwake" } },
+        { role: "owner", boats: { id: "b1", name: "Test boat" } },
         { role: "co_owner", boats: { id: "b3", name: "albatross" } },
       ],
     };
     expect(await db.listMyBoats(ALEX)).toEqual([
       { boatId: "b3", boatName: "albatross", role: "co_owner" },
-      { boatId: "b1", boatName: "Kittiwake", role: "owner" },
       { boatId: "b2", boatName: "Petrel", role: "read_only" },
+      { boatId: "b1", boatName: "Test boat", role: "owner" },
     ]);
     expect(calls).toContainEqual({ method: "memberships.eq", args: ["person_id", ALEX.id] });
   });
@@ -256,8 +258,8 @@ describe("listMyBoats and getMyBoat", () => {
   });
 
   it("finds one of the person's boats", async () => {
-    results.memberships = { data: { role: "owner", boats: { id: BOAT_ID, name: "Kittiwake" } } };
-    expect(await db.getMyBoat(ALEX, BOAT_ID)).toEqual({ boatId: BOAT_ID, boatName: "Kittiwake", role: "owner" });
+    results.memberships = { data: { role: "owner", boats: { id: BOAT_ID, name: "Test boat" } } };
+    expect(await db.getMyBoat(ALEX, BOAT_ID)).toEqual({ boatId: BOAT_ID, boatName: "Test boat", role: "owner" });
     expect(calls).toContainEqual({ method: "memberships.eq", args: ["boat_id", BOAT_ID] });
   });
 
@@ -270,7 +272,7 @@ describe("listMyBoats and getMyBoat", () => {
 });
 
 describe("deleteBoat", () => {
-  const owner = { role: "owner", boats: { id: BOAT_ID, name: "Kittiwake", email_alias: "kittiwake", deleting_since: null } };
+  const owner = { role: "owner", boats: { id: BOAT_ID, name: "Test boat", email_alias: "test-boat", deleting_since: null } };
   const paths = [`${BOAT_ID}/a.pdf`, `${BOAT_ID}/email/1/0-b.pdf`];
   const rows = { documents: 2, memberships: 1 };
 
@@ -279,7 +281,7 @@ describe("deleteBoat", () => {
     results["rpc.begin_boat_deletion"] = { data: paths };
     results["storage.documents.remove"] = { data: paths.map((name) => ({ name })) };
     results["rpc.delete_boat"] = { data: rows };
-    expect(await db.deleteBoat(ALEX, BOAT_ID, " Kittiwake ")).toEqual({ ok: true, removed: { files: 2, rows } });
+    expect(await db.deleteBoat(ALEX, BOAT_ID, " Test boat ")).toEqual({ ok: true, removed: { files: 2, rows } });
     expect(calls.filter((c) => !c.method.startsWith("memberships."))).toEqual([
       { method: "rpc.begin_boat_deletion", args: [{ boat: BOAT_ID }] },
       { method: "storage.documents.remove", args: [paths] },
@@ -293,24 +295,24 @@ describe("deleteBoat", () => {
     results["rpc.begin_boat_deletion"] = { data: many };
     results["storage.documents.remove"] = { data: [{ name: "x" }] };
     results["rpc.delete_boat"] = { data: rows };
-    await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake");
+    await db.deleteBoat(ALEX, BOAT_ID, "Test boat");
     const batches = calls.filter((c) => c.method === "storage.documents.remove").map((c) => (c.args[0] as string[]).length);
     expect(batches).toEqual([1000, 1000, 1]);
   });
 
   it.each(["co_owner", "crew", "read_only"])("refuses a %s without touching anything", async (role) => {
     results.memberships = { data: { ...owner, role } };
-    expect(await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake")).toEqual({ ok: false, reason: "not_owner" });
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "Test boat")).toEqual({ ok: false, reason: "not_owner" });
     expect(calls.some((c) => c.method.startsWith("rpc.") || c.method.startsWith("storage."))).toBe(false);
   });
 
   it("refuses a boat the person isn't on", async () => {
-    expect(await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake")).toEqual({ ok: false, reason: "not_owner" });
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "Test boat")).toEqual({ ok: false, reason: "not_owner" });
   });
 
   it("refuses when the typed name doesn't match exactly", async () => {
     results.memberships = { data: owner };
-    expect(await db.deleteBoat(ALEX, BOAT_ID, "kittiwake")).toEqual({ ok: false, reason: "name_mismatch" });
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "test boat")).toEqual({ ok: false, reason: "name_mismatch" });
     expect(calls.some((c) => c.method.startsWith("rpc."))).toBe(false);
   });
 
@@ -318,7 +320,7 @@ describe("deleteBoat", () => {
     results.memberships = { data: owner };
     results["rpc.begin_boat_deletion"] = { data: paths };
     results["storage.documents.remove"] = { error: { message: "storage down" } };
-    expect(await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake")).toEqual({ ok: false, reason: "failed" });
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "Test boat")).toEqual({ ok: false, reason: "failed" });
     expect(calls.some((c) => c.method === "rpc.delete_boat")).toBe(false);
   });
 
@@ -330,18 +332,88 @@ describe("deleteBoat", () => {
     results.memberships = { data: owner };
     results["rpc.begin_boat_deletion"] = { data: [] };
     results["rpc.delete_boat"] = { error: { message: "no", code } };
-    expect(await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake")).toEqual({ ok: false, reason });
+    expect(await db.deleteBoat(ALEX, BOAT_ID, "Test boat")).toEqual({ ok: false, reason });
+  });
+});
+
+describe("inviteToBoat", () => {
+  it.each(["", "  ", "nia", "nia@example", "a b@example.com"])("refuses the email %j without calling Supabase", async (email) => {
+    expect(await db.inviteToBoat(BOAT_ID, email, "co_owner")).toEqual({ ok: false, reason: "invalid_email" });
+    expect(calls).toEqual([]);
+  });
+
+  it.each(["owner", "captain", ""])("refuses the role %j without calling Supabase", async (role) => {
+    expect(await db.inviteToBoat(BOAT_ID, "nia@example.com", role)).toEqual({ ok: false, reason: "invalid_role" });
+    expect(calls).toEqual([]);
+  });
+
+  it.each(["added", "invited", "already_on_boat"])("passes on %s", async (outcome) => {
+    results["rpc.invite_to_boat"] = { data: outcome };
+    expect(await db.inviteToBoat(BOAT_ID, "  nia@example.com ", "crew")).toEqual({ ok: true, outcome });
+    expect(calls).toEqual([
+      { method: "rpc.invite_to_boat", args: [{ boat: BOAT_ID, invitee_email: "nia@example.com", invitee_role: "crew" }] },
+    ]);
+  });
+
+  it.each([
+    ["42501", "not_allowed"],
+    ["55000", "not_allowed"],
+    ["54000", "too_many"],
+    ["22023", "invalid_email"],
+    ["XX000", "failed"],
+  ])("maps database error %s to %s", async (code, reason) => {
+    results["rpc.invite_to_boat"] = { error: { message: "no", code } };
+    expect(await db.inviteToBoat(BOAT_ID, "nia@example.com", "co_owner")).toEqual({ ok: false, reason });
+  });
+
+  it("fails without Supabase settings", async () => {
+    withoutSupabase();
+    expect(await db.inviteToBoat(BOAT_ID, "nia@example.com", "co_owner")).toEqual({ ok: false, reason: "failed" });
+  });
+});
+
+describe("listInvitations and cancelInvitation", () => {
+  it("lists the boat's invitations, newest first", async () => {
+    results.invitations = {
+      data: [{ id: "i1", email: "nia@example.com", role: "co_owner", created_at: "2026-10-21T10:00:00Z" }],
+    };
+    expect(await db.listInvitations(BOAT_ID)).toEqual([
+      { id: "i1", email: "nia@example.com", role: "co_owner", createdAt: "2026-10-21T10:00:00Z" },
+    ]);
+    expect(calls).toContainEqual({ method: "invitations.eq", args: ["boat_id", BOAT_ID] });
+    expect(calls).toContainEqual({ method: "invitations.order", args: ["created_at", { ascending: false }] });
+  });
+
+  it("throws when invitations can't be read", async () => {
+    results.invitations = { error: { message: "boom" } };
+    await expect(db.listInvitations(BOAT_ID)).rejects.toThrow("Could not load invitations: boom");
+  });
+
+  it("cancels one invitation of the boat", async () => {
+    expect(await db.cancelInvitation(BOAT_ID, "i1")).toBe(true);
+    expect(calls).toEqual([
+      { method: "invitations.delete", args: [] },
+      { method: "invitations.eq", args: ["boat_id", BOAT_ID] },
+      { method: "invitations.eq", args: ["id", "i1"] },
+    ]);
+  });
+});
+
+describe("canInvite", () => {
+  it("is owners and co-owners", () => {
+    const roles = ["owner", "co_owner", "crew", "read_only"] as const;
+    expect(roles.filter((role) => db.canInvite(role))).toEqual(["owner", "co_owner"]);
   });
 });
 
 describe("renameBoat", () => {
-  const owner = { role: "owner", boats: { id: BOAT_ID, name: "Kittiwake", email_alias: "kittiwake", deleting_since: null } };
+  const owner = { role: "owner", boats: { id: BOAT_ID, name: "Test boat", email_alias: "test-boat", deleting_since: null } };
 
   it("updates the name, trimmed, and only the name", async () => {
     results.memberships = { data: owner };
     results.boats = { data: [{ id: BOAT_ID }] };
-    expect(await db.renameBoat(ALEX, BOAT_ID, "  Kittiwake II ")).toEqual({ ok: true, boatName: "Kittiwake II" });
-    expect(calls).toContainEqual({ method: "boats.update", args: [{ name: "Kittiwake II" }] });
+    expect(await db.renameBoat(ALEX, BOAT_ID, "  Test boat II ")).toEqual({ ok: true, boatName: "Test boat II" });
+    expect(calls).toContainEqual({ method: "boats.update", args: [{ name: "Test boat II" }] });
     expect(calls).toContainEqual({ method: "boats.eq", args: ["id", BOAT_ID] });
   });
 
@@ -358,7 +430,7 @@ describe("renameBoat", () => {
 
   it("doesn't write when the name is unchanged", async () => {
     results.memberships = { data: owner };
-    expect(await db.renameBoat(ALEX, BOAT_ID, " Kittiwake")).toEqual({ ok: true, boatName: "Kittiwake" });
+    expect(await db.renameBoat(ALEX, BOAT_ID, " Test boat")).toEqual({ ok: true, boatName: "Test boat" });
     expect(calls.some((c) => c.method === "boats.update")).toBe(false);
   });
 
@@ -405,8 +477,8 @@ describe("createBoat", () => {
 
   it("creates the boat with the trimmed name", async () => {
     results["rpc.create_boat"] = { data: BOAT_ID };
-    expect(await db.createBoat("  Kittiwake ")).toEqual({ ok: true, boatId: BOAT_ID });
-    expect(calls).toEqual([{ method: "rpc.create_boat", args: [{ boat_name: "Kittiwake" }] }]);
+    expect(await db.createBoat("  Test boat ")).toEqual({ ok: true, boatId: BOAT_ID });
+    expect(calls).toEqual([{ method: "rpc.create_boat", args: [{ boat_name: "Test boat" }] }]);
     expect(await db.createBoat("x".repeat(100))).toEqual({ ok: true, boatId: BOAT_ID });
   });
 
@@ -416,11 +488,11 @@ describe("createBoat", () => {
     ["XX000", "failed"],
   ])("maps database error %s to %s", async (code, reason) => {
     results["rpc.create_boat"] = { error: { message: "no", code } };
-    expect(await db.createBoat("Kittiwake")).toEqual({ ok: false, reason });
+    expect(await db.createBoat("Test boat")).toEqual({ ok: false, reason });
   });
 
   it("is signed out without Supabase settings", async () => {
     withoutSupabase();
-    expect(await db.createBoat("Kittiwake")).toEqual({ ok: false, reason: "signed_out" });
+    expect(await db.createBoat("Test boat")).toEqual({ ok: false, reason: "signed_out" });
   });
 });

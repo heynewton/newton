@@ -2,6 +2,9 @@ import "server-only";
 import type { ExpenseRow, MaintenanceRow, RenewalRow } from "@/lib/records";
 import { createClient, supabaseSettings } from "./client";
 import type { Database } from "./database.types";
+import { INVITE_ROLES, type InviteRole } from "./roles";
+
+export { INVITE_ROLES, canInvite, type InviteRole } from "./roles";
 
 // The web app's only way into the database and auth. Components and pages call these
 // functions, never the Supabase client, so the provider can change behind this module
@@ -37,13 +40,16 @@ export function isSignInAvailable(): boolean {
   return supabaseSettings() !== null;
 }
 
+// What counts as an email address, here and in the database's checks.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // Emails a magic link. A new email address gets a new person on first sign-in.
 export async function sendSignInLink(
   email: string,
   redirectTo: string,
 ): Promise<SignInLinkResult> {
   const address = email.trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
+  if (!EMAIL_PATTERN.test(address)) {
     return { ok: false, reason: "invalid_email" };
   }
   const supabase = await createClient();
@@ -214,6 +220,57 @@ export async function getMyBoat(person: Person, boatId: string): Promise<MyBoat 
         deletingSince: data.boats.deleting_since,
       }
     : null;
+}
+
+export type InviteResult =
+  | { ok: true; outcome: "added" | "invited" | "already_on_boat" }
+  | { ok: false; reason: "invalid_email" | "invalid_role" | "not_allowed" | "too_many" | "failed" };
+
+// Invites someone to one of the signed-in person's boats by email. Someone who already uses
+// Newton is on the boat at once ("added"); anyone else is once they first sign in with that
+// address ("invited"). The database checks the caller is an owner or co-owner.
+export async function inviteToBoat(boatId: string, email: string, role: string): Promise<InviteResult> {
+  const address = email.trim();
+  if (!EMAIL_PATTERN.test(address)) return { ok: false, reason: "invalid_email" };
+  if (!(INVITE_ROLES as readonly string[]).includes(role)) return { ok: false, reason: "invalid_role" };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, reason: "failed" };
+  const { data, error } = await supabase.rpc("invite_to_boat", {
+    boat: boatId,
+    invitee_email: address,
+    invitee_role: role as InviteRole,
+  });
+  if (error) {
+    if (error.code === "42501" || error.code === "55000") return { ok: false, reason: "not_allowed" };
+    if (error.code === "54000") return { ok: false, reason: "too_many" };
+    if (error.code === "22023") return { ok: false, reason: "invalid_email" };
+    return { ok: false, reason: "failed" };
+  }
+  return { ok: true, outcome: data as "added" | "invited" | "already_on_boat" };
+}
+
+export type Invitation = { id: string; email: string; role: InviteRole; createdAt: string };
+
+// The invitations waiting on a boat, newest first. Empty unless the signed-in person is one of its
+// owners or co-owners (RLS).
+export async function listInvitations(boatId: string): Promise<Invitation[]> {
+  const supabase = await createClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("invitations")
+    .select("id, email, role, created_at")
+    .eq("boat_id", boatId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(`Could not load invitations: ${error.message}`);
+  return data.map((i) => ({ id: i.id, email: i.email, role: i.role as InviteRole, createdAt: i.created_at }));
+}
+
+// Cancels a waiting invitation. RLS only lets owners and co-owners delete one.
+export async function cancelInvitation(boatId: string, invitationId: string): Promise<boolean> {
+  const supabase = await createClient();
+  if (!supabase) return false;
+  const { error } = await supabase.from("invitations").delete().eq("boat_id", boatId).eq("id", invitationId);
+  return !error;
 }
 
 // What deleting a boat removed: files from Storage, and rows by table.

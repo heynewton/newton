@@ -4,7 +4,7 @@ import { answerFromManuals, buildPrompt, citationLine, numbersIn, NOT_COVERED, t
 
 const excerpt = (page: number, content: string, documentId = "manual-1"): SearchResult => ({
   chunkId: `${documentId}/${page}`,
-  boatId: "kittiwake",
+  boatId: "test-boat",
   documentId,
   filename: "manual-excerpt.pdf",
   documentReceivedAt: "2026-10-11T08:15:40Z",
