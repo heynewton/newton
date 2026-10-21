@@ -21,4 +21,4 @@ Instead of "Kittiwake", call test boat "Test boat"
 - Build-log and history entries and the applied email-in migration keep "Kittiwake": they record
   what happened then.
 
-**PR:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**PR:** [#162](https://github.com/heynewton/newton/pull/162)
