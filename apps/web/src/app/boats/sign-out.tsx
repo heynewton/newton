@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { signOut, type Person } from "@/lib/db";
+import { signOut } from "@/lib/db";
+import { menuItem } from "./menu-item";
 
-// "Signed in as …" and a sign-out button, at the bottom of the signed-in pages.
-export function SignOut({ person }: { person: Person }) {
+// The sign-out button in the header's account menu.
+export function SignOut() {
   return (
     <form
       action={async () => {
@@ -10,10 +11,8 @@ export function SignOut({ person }: { person: Person }) {
         await signOut();
         redirect("/");
       }}
-      className="flex flex-wrap items-center gap-x-3 text-sm text-zinc-600 dark:text-zinc-400"
     >
-      <span className="break-all">Signed in as {person.displayName ?? person.email}</span>
-      <button type="submit" className="min-h-11 font-medium underline">
+      <button type="submit" className={`${menuItem} w-full`}>
         Sign out
       </button>
     </form>
