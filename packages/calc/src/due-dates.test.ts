@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, addMonths, findDue, nextDue, type DueItem } from "./due-dates";
+import { addDays, addMonths, daysBetween, findDue, fullMonthsBetween, nextDue, type DueItem } from "./due-dates";
 
 describe("addMonths", () => {
   it.each([
@@ -170,5 +170,36 @@ describe("findDue", () => {
     ["a negative engine hours window", { today: "2026-10-18", withinDays: 1, withinEngineHours: -1 }],
   ])("rejects %s", (_, window) => {
     expect(() => findDue([], window)).toThrow();
+  });
+});
+
+describe("daysBetween", () => {
+  it.each([
+    ["2026-10-19", "2026-10-21", 2],
+    ["2026-10-21", "2026-10-21", 0],
+    ["2026-10-21", "2026-10-19", -2],
+    ["2028-02-28", "2028-03-01", 2],
+    ["2026-12-31", "2027-01-01", 1],
+    ["2026-03-28", "2026-03-30", 2],
+  ])("from %s to %s is %i days", (from, to, expected) => {
+    expect(daysBetween(from, to)).toBe(expected);
+  });
+
+  it("rejects a date that doesn't exist", () => {
+    expect(() => daysBetween("2026-02-29", "2026-03-01")).toThrow(/Not a date/);
+  });
+});
+
+describe("fullMonthsBetween", () => {
+  it.each([
+    ["2026-10-21", "2026-12-20", 1],
+    ["2026-10-21", "2026-12-21", 2],
+    ["2026-10-21", "2026-11-20", 0],
+    ["2026-10-21", "2026-10-01", 0],
+    ["2026-01-31", "2026-02-28", 1],
+    ["2026-01-31", "2026-02-27", 0],
+    ["2026-10-21", "2028-10-21", 24],
+  ])("from %s to %s is %i months", (from, to, expected) => {
+    expect(fullMonthsBetween(from, to)).toBe(expected);
   });
 });

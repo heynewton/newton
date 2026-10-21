@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { sendSignInLink, startGoogleSignIn, type SignInLinkResult } from "@/lib/db";
+import { sendSignInLink, startProviderSignIn, type SignInLinkResult } from "@/lib/db";
 
 export type SignInState = { email: string; result: SignInLinkResult } | null;
 
@@ -20,8 +20,13 @@ export async function requestSignInLink(
   return { email, result };
 }
 
-// Sends the person to Google, which returns them to the same callback as a magic link.
+// Sends the person to Google or Apple, which return them to the same callback as a magic link.
 export async function signInWithGoogle(): Promise<void> {
-  const url = await startGoogleSignIn(await callbackUrl());
-  redirect(url ?? "/sign-in?error=google");
+  const url = await startProviderSignIn("google", await callbackUrl());
+  redirect(url ?? "/sign-in?error=provider");
+}
+
+export async function signInWithApple(): Promise<void> {
+  const url = await startProviderSignIn("apple", await callbackUrl());
+  redirect(url ?? "/sign-in?error=provider");
 }

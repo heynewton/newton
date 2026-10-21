@@ -55,40 +55,50 @@ export async function sendSignInLink(
   return error ? { ok: false, reason: "failed" } : { ok: true };
 }
 
-// Whether the auth server has Google sign-in turned on. A stack without Google keys (a local
-// stack with none in .env) leaves the button out instead of offering one that fails. Cached for a
-// minute, so turning Google on or off shows within a minute.
-export async function isGoogleSignInAvailable(): Promise<boolean> {
+// The sign-in providers, besides the magic link, that /sign-in can offer (#131, #27).
+export type SignInProvider = "google" | "apple";
+
+const SIGN_IN_PROVIDERS: SignInProvider[] = ["google", "apple"];
+
+// Which providers the auth server has turned on. A stack without a provider's keys (a local stack
+// with none in .env) leaves its button out instead of offering one that fails. Cached for a
+// minute, so turning a provider on or off shows within a minute.
+export async function availableSignInProviders(): Promise<SignInProvider[]> {
   const settings = supabaseSettings();
-  if (!settings) return false;
+  if (!settings) return [];
   try {
     const response = await fetch(`${settings.url}/auth/v1/settings`, {
       headers: { apikey: settings.key },
       next: { revalidate: 60 },
     });
-    if (!response.ok) return false;
-    const body = (await response.json()) as { external?: { google?: boolean } };
-    return body.external?.google === true;
+    if (!response.ok) return [];
+    const body = (await response.json()) as { external?: Partial<Record<SignInProvider, boolean>> };
+    return SIGN_IN_PROVIDERS.filter((provider) => body.external?.[provider] === true);
   } catch {
-    return false;
+    return [];
   }
 }
 
-// Starts Google sign-in and returns the address to send the person to, or null if it can't
-// start. Google comes back to redirectTo with a code that finishSignIn swaps for a session, as
-// for a magic link. Supabase Auth gives a verified email the same user whichever way it signs in,
-// so Google and a magic link for one address land on the same person.
-export async function startGoogleSignIn(redirectTo: string): Promise<string | null> {
+// Starts sign-in with Google or Apple and returns the address to send the person to, or null if
+// it can't start. The provider comes back to redirectTo with a code that finishSignIn swaps for a
+// session, as for a magic link. Supabase Auth gives a verified email the same user whichever way
+// it signs in, so Google, Apple and a magic link for one address land on the same person. An Apple
+// "Hide My Email" relay address is a different email, so it is a different person until #27 links
+// sign-in methods.
+export async function startProviderSignIn(
+  provider: SignInProvider,
+  redirectTo: string,
+): Promise<string | null> {
   const supabase = await createClient();
   if (!supabase) return null;
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
+    provider,
     options: { redirectTo, skipBrowserRedirect: true },
   });
   return error ? null : data.url;
 }
 
-// Turns the code from a magic link or Google into a session cookie. False if the link is invalid
+// Turns the code from a magic link, Google or Apple into a session cookie. False if the link is invalid
 // or expired.
 export async function finishSignIn(code: string): Promise<boolean> {
   const supabase = await createClient();

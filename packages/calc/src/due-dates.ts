@@ -188,3 +188,24 @@ export function wholeMonthsBetween(from: string, to: string): number | null {
   const months = (end.getUTCFullYear() - start.getUTCFullYear()) * 12 + end.getUTCMonth() - start.getUTCMonth();
   return months > 0 && addMonths(from, months) === to ? months : null;
 }
+
+/**
+ * Calendar days from one date to another: 2 when `to` is two days after `from`, negative when
+ * it is before. Says how long ago something fell due, or how long until it does.
+ */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((parseDate(to) - parseDate(from)) / DAY_MS);
+}
+
+/**
+ * The whole calendar months from one date to a later one, rounded down (by `addMonths`): from
+ * 2026-10-21, 2026-12-20 is 1 month and 2026-12-21 is 2. 0 when `to` is less than a month after
+ * `from`, or before it.
+ */
+export function fullMonthsBetween(from: string, to: string): number {
+  const start = new Date(parseDate(from));
+  const end = new Date(parseDate(to));
+  const months = (end.getUTCFullYear() - start.getUTCFullYear()) * 12 + end.getUTCMonth() - start.getUTCMonth();
+  if (months <= 0) return 0;
+  return addMonths(from, months) > to ? months - 1 : months;
+}

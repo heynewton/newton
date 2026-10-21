@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  attentionSummary,
+  balancesFor,
   costSplit,
+  dateOf,
+  dueState,
   formatDate,
   groupThousands,
   latestEngineHours,
+  latestOn,
+  money,
   maintenanceRule,
   renewalRule,
   schedule,
@@ -147,6 +153,89 @@ describe("schedule", () => {
   });
 });
 
+describe("dueState", () => {
+  const options = { today: "2026-10-18", withinDays: 60, withinEngineHours: 25 };
+  const state = (renewals: RenewalRow[], items: MaintenanceRow[]) => {
+    const result = schedule(renewals, items, options);
+    return [...result.overdue, ...result.dueSoon, ...result.later].map((i) => [i.row.id, dueState(i, options.today)]);
+  };
+
+  it("says how many days overdue, or until due, and months when it's further off", () => {
+    expect(
+      state(
+        [
+          renewal("yesterday", "2026-10-17"),
+          renewal("today", "2026-10-18"),
+          renewal("tomorrow", "2026-10-19"),
+          renewal("soon", "2026-11-21"),
+          renewal("months", "2026-12-31"),
+          renewal("edge", "2026-12-17"),
+          renewal("years", "2029-01-01"),
+        ],
+        [maintenance("old", { every_months: 6, last_done_on: "2026-04-16" })],
+      ),
+    ).toEqual([
+      ["old", "Overdue by 2 days"],
+      ["yesterday", "Overdue by 1 day"],
+      ["today", "Due today"],
+      ["tomorrow", "Due tomorrow"],
+      ["soon", "Due in 34 days"],
+      ["edge", "Due in 60 days"],
+      ["months", "Due in 2 months"],
+      ["years", "Due in 2 years"],
+    ]);
+  });
+
+  it("counts in days up to 60 days, whatever the due-soon window", () => {
+    const result = schedule([renewal("r", "2026-12-17")], [], { ...options, withinDays: 30 });
+    expect(dueState(result.later[0]!, options.today)).toBe("Due in 60 days");
+  });
+
+  it("names engine hours when they, not the date, make it overdue or due soon", () => {
+    expect(
+      state(
+        [],
+        [
+          maintenance("past", { every_months: 12, every_engine_hours: 100, last_done_on: "2026-06-01", last_done_engine_hours: 1000 }),
+          maintenance("close", { every_months: 12, every_engine_hours: 100, last_done_on: "2026-06-01", last_done_engine_hours: 1030 }),
+          maintenance("hours-only", { every_engine_hours: 500, last_done_on: "2026-06-01", last_done_engine_hours: 1090 }),
+          maintenance("latest", { every_months: 12, last_done_on: "2026-10-02", last_done_engine_hours: 1105 }),
+        ],
+      ),
+    ).toEqual([
+      ["past", "Overdue by engine hours"],
+      ["close", "Due soon by engine hours"],
+      ["latest", "Due in 11 months"],
+      ["hours-only", "Not due soon"],
+    ]);
+  });
+});
+
+describe("balancesFor", () => {
+  const balances = [
+    { owner: "alex", paidCents: 170400, shareCents: 139156, balanceCents: 31244 },
+    { owner: "sam", paidCents: 167690, shareCents: 121762, balanceCents: 45928 },
+    { owner: "jordan", paidCents: 9800, shareCents: 86972, balanceCents: -77172 },
+  ];
+
+  it("puts the signed-in co-owner first and marks them, keeping the others' order", () => {
+    expect(balancesFor(balances, "sam").map((b) => [b.owner, b.isYou])).toEqual([
+      ["sam", true],
+      ["alex", false],
+      ["jordan", false],
+    ]);
+    expect(balancesFor(balances, "alex")[0]).toEqual({ ...balances[0], isYou: true });
+  });
+
+  it("marks no one for a member with no ownership share", () => {
+    expect(balancesFor(balances, "riley").map((b) => [b.owner, b.isYou])).toEqual([
+      ["alex", false],
+      ["sam", false],
+      ["jordan", false],
+    ]);
+  });
+});
+
 describe("costSplit", () => {
   const shares = [
     { person_id: "riley", ownership_share: 0 },
@@ -224,5 +313,96 @@ describe("formatting", () => {
     expect(groupThousands("1234567.00")).toBe("1,234,567.00");
     expect(groupThousands("98.00")).toBe("98.00");
     expect(groupThousands("-1000.50")).toBe("-1,000.50");
+  });
+});
+
+describe("attentionSummary", () => {
+  const options = { today: "2026-10-18", withinDays: 60, withinEngineHours: 25 };
+  const shares = [
+    { person_id: "alex", ownership_share: 40 },
+    { person_id: "sam", ownership_share: 35 },
+    { person_id: "jordan", ownership_share: 25 },
+  ];
+  const expenses = [
+    expense("yard", 167690, "sam", "2026-10-02"),
+    expense("insurance", 128400, "alex", "2026-04-14"),
+    expense("registration", 9800, "jordan", "2024-12-15"),
+    expense("mooring", 42000, "alex", "2026-10-01"),
+  ];
+  const due = schedule(
+    [renewal("insurance", "2027-04-30")],
+    [maintenance("old", { every_months: 6, last_done_on: "2026-01-10" })],
+    options,
+  );
+  const summary = (personId: string, split = costSplit(expenses, shares), s = due) =>
+    attentionSummary(s, split, personId, options.withinDays);
+
+  it("counts overdue and due-soon items and says the signed-in co-owner's balance", () => {
+    expect(summary("alex")).toEqual([
+      { text: "1 overdue", anchor: "overdue" },
+      { text: "nothing due in the next 60 days", anchor: "due-soon" },
+      { text: "you're owed USD 312.44", anchor: "balance" },
+    ]);
+    expect(summary("jordan")?.[2]).toEqual({ text: "you owe USD 771.72", anchor: "balance" });
+  });
+
+  it("uses the counts the section shows", () => {
+    expect(summary("alex")?.[0]?.text).toBe(`${due.overdue.length} overdue`);
+    const soon = schedule([renewal("a", "2026-10-20"), renewal("b", "2026-11-01")], [], options);
+    expect(summary("alex", costSplit([], shares), soon)).toEqual([
+      { text: "Nothing overdue", anchor: "overdue" },
+      { text: "2 due in the next 60 days", anchor: "due-soon" },
+    ]);
+  });
+
+  it("leaves the balance out for a member with no ownership share", () => {
+    expect(summary("riley")?.map((p) => p.anchor)).toEqual(["overdue", "due-soon"]);
+  });
+
+  it("says square, naming the currency only when there are several", () => {
+    const even = [expense("a", 10000, "alex", "2026-05-01"), expense("b", 10000, "sam", "2026-05-01")];
+    const half = [
+      { person_id: "alex", ownership_share: 1 },
+      { person_id: "sam", ownership_share: 1 },
+    ];
+    expect(summary("alex", costSplit(even, half))?.[2]?.text).toBe("you're square");
+    const twoCurrencies = [...even, expense("c", 500, "alex", "2026-05-01", "EUR"), expense("d", 500, "sam", "2026-05-01", "EUR")];
+    expect(summary("alex", costSplit(twoCurrencies, half))?.slice(2).map((p) => p.text)).toEqual([
+      "you're square in EUR",
+      "you're square in USD",
+    ]);
+  });
+
+  it("starts with the balance, capitalised, when the boat has expenses but no renewals or maintenance", () => {
+    expect(summary("alex", costSplit(expenses, shares), schedule([], [], options))).toEqual([
+      { text: "You're owed USD 312.44", anchor: "balance" },
+    ]);
+  });
+
+  it("is null for a boat with nothing to track yet", () => {
+    expect(summary("alex", costSplit([], shares), schedule([], [], options))).toBeNull();
+  });
+});
+
+describe("money", () => {
+  it("formats cents with the currency and thousands separators", () => {
+    expect(money(123456, "USD")).toBe("USD 1,234.56");
+    expect(money(5, "EUR")).toBe("EUR 0.05");
+  });
+});
+
+describe("latestOn and dateOf", () => {
+  it("gives a timestamp's UTC calendar date", () => {
+    expect(dateOf("2026-10-03T16:45:12Z")).toBe("2026-10-03");
+    expect(dateOf("2026-10-03T23:30:00-02:00")).toBe("2026-10-04");
+  });
+
+  it("finds the most recent date among dates and timestamps", () => {
+    expect(latestOn(["2026-04-14T18:22:05Z", "2026-10-11T08:15:40Z", "2025-01-18T10:04:51Z"])).toBe("2026-10-11");
+    expect(latestOn(["2026-10-02", "2024-12-15", "2026-10-01"])).toBe("2026-10-02");
+  });
+
+  it("is null with nothing to go on", () => {
+    expect(latestOn([])).toBeNull();
   });
 });

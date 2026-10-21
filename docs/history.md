@@ -98,6 +98,7 @@ The Supabase schema, row-level security, sign-in, storage and the sample boat.
 - [#123](https://github.com/heynewton/newton/pull/123) · 2026-10-20 · A person's stored email follows their sign-in email, and email-in matches the current address · closes [#117](https://github.com/heynewton/newton/issues/117)
 - [#127](https://github.com/heynewton/newton/pull/127) · 2026-10-20 · Owners can delete a boat, and its files in Storage go with it · closes [#115](https://github.com/heynewton/newton/issues/115)
 - [#132](https://github.com/heynewton/newton/pull/132) · 2026-10-21 · Sign in with Google next to the magic link · closes [#131](https://github.com/heynewton/newton/issues/131)
+- [#152](https://github.com/heynewton/newton/pull/152) · 2026-10-21 · Sign in with Apple next to Google and the magic link
 
 ### Email-in and filing
 
@@ -116,6 +117,12 @@ What a signed-in person can do in the app.
 - [#70](https://github.com/heynewton/newton/pull/70) · 2026-10-19 · A boat's page shows its renewals, maintenance, co-owner balance and documents · closes [#15](https://github.com/heynewton/newton/issues/15)
 - [#77](https://github.com/heynewton/newton/pull/77) · 2026-10-19 · Owners and co-owners get one email digest of what is overdue or coming up · closes [#12](https://github.com/heynewton/newton/issues/12)
 - [#126](https://github.com/heynewton/newton/pull/126) · 2026-10-20 · Owners and co-owners download all of a boat's data as one zip · closes [#16](https://github.com/heynewton/newton/issues/16)
+- [#144](https://github.com/heynewton/newton/pull/144) · 2026-10-21 · Renewals and maintenance say each item's state in words, with chevrons on the folded lists · closes [#135](https://github.com/heynewton/newton/issues/135)
+- [#145](https://github.com/heynewton/newton/pull/145) · 2026-10-21 · The co-owner balance shows which line is you · closes [#136](https://github.com/heynewton/newton/issues/136)
+- [#146](https://github.com/heynewton/newton/pull/146) · 2026-10-21 · The boat page opens with a one-line summary of what needs attention · closes [#134](https://github.com/heynewton/newton/issues/134)
+- [#149](https://github.com/heynewton/newton/pull/149) · 2026-10-21 · Every section of the boat page says where its data came from and how recent it is · closes [#140](https://github.com/heynewton/newton/issues/140)
+- [#150](https://github.com/heynewton/newton/pull/150) · 2026-10-21 · The boat's email address is shown once, with a Copy button · closes [#137](https://github.com/heynewton/newton/issues/137)
+- [#148](https://github.com/heynewton/newton/pull/148) · 2026-10-21 · Branded 404, error and loading screens · closes [#138](https://github.com/heynewton/newton/issues/138)
 
 ### Manual Q&A
 
