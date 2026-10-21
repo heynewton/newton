@@ -4,7 +4,7 @@ How Newton is built today, and what each build phase adds. The product view (use
 model, agent tools, risks) is in the [Newton — Product & Architecture Spec](https://docs.google.com/document/d/19byJe41PNjezQD93sBnIgbE90bdVzTzWd5ptSrVg5yU/edit) in the team Google
 Drive; this page is the engineering view and stays in step with the code.
 
-**Status (last updated 2026-10-20):** Phase 1: scaffold, plus boats, people, memberships,
+**Status (last updated 2026-10-21):** Phase 1: scaffold, plus boats, people, memberships,
 magic-link sign-in, adding your first boat, a per-boat document store, renewals, maintenance and
 expenses with a boat page that shows them, manuals split into searchable chunks, and forwarded
 documents filed into those records by Claude with code checking every value; a hosted dev
@@ -188,8 +188,10 @@ dev site is only at its `vercel.app` URL. Since #11: each document email-in stor
 after the webhook answers (and by a daily sweep for anything left): Claude proposes what it is
 and its records, `calc` reads every value, and what passes is saved; the rest waits for review.
 Since #16: owners and co-owners download a boat's whole data as one zip from its page
-([format](export.md)). Since #133 and #142: the signed-in pages share a header (`boats/layout.tsx`)
-with a boat switcher and account menu, and export and delete live on the boat's settings page
+([format](export.md)). Since #133, #142 and #155: every page shares one header, rendered by
+the root layout (`app/site-header/`): the logo back to the homepage, a boat switcher on `/boats/*`, and
+the account menu (or "Sign in" when signed out), which streams in behind `Suspense` so static pages
+stay prerendered; and export and delete live on the boat's settings page
 (`/boats/<id>/settings`), linked from that menu for owners and co-owners.
 
 ```mermaid

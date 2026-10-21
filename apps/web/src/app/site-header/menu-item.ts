@@ -1,4 +1,4 @@
-// A row in the /boats header or one of its menus: 44 px tall, with a focus ring that shows in both
+// A row in the site header or one of its menus: 44 px tall, with a focus ring that shows in both
 // themes. In its own module so server components can use it too (a client module's exports reach
 // them only as references).
 export const menuItem =

@@ -1,18 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import type { BoatMembership } from "@/lib/db";
 import { Menu } from "./menu";
 import { menuItem } from "./menu-item";
-import { roleNames } from "./roles";
+import { roleNames } from "../boats/roles";
 
-// The parts of the /boats header that depend on which boat is open. A layout doesn't get its
-// child segments' params, so the boat comes from the URL here.
+// The parts of the site header that depend on the page. A layout doesn't get its child segments'
+// params, so the page and the open boat come from the URL here.
+
+// The open boat, with a switcher when the person is on several. Only on /boats/*: elsewhere
+// (privacy, terms) the account menu's "Your boats" leads back.
 export function BoatSwitcher({ boats }: { boats: BoatMembership[] }) {
   const { boatId } = useParams<{ boatId?: string }>();
+  const inBoats = usePathname().startsWith("/boats");
   const current = boats.find((b) => b.boatId === boatId);
+  if (!inBoats) return null;
 
   // One boat: its name, linking home. No boat (or none open): nothing to switch to.
   if (boats.length < 2) {
@@ -51,7 +56,7 @@ export function BoatSwitcher({ boats }: { boats: BoatMembership[] }) {
   );
 }
 
-// Who is signed in, the open boat's settings, adding a boat and signing out. `settingsFor` lists
+// Who is signed in, their boats, the open boat's settings, adding a boat and signing out. `settingsFor` lists
 // the boats whose settings page the person may open (the page checks again); `signOut` is the
 // server-rendered form.
 export function AccountMenu({
@@ -80,11 +85,24 @@ export function AccountMenu({
           Boat settings
         </Link>
       )}
+      <Link href="/boats" className={menuItem}>
+        Your boats
+      </Link>
       <Link href="/boats/new" className={menuItem}>
         Add a boat
       </Link>
       <div className="border-t border-black/10 pt-1 dark:border-white/15">{signOut}</div>
     </Menu>
+  );
+}
+
+// Signed out: a way to sign in, except on the sign-in page itself.
+export function SignInLink() {
+  if (usePathname() === "/sign-in") return null;
+  return (
+    <Link href="/sign-in" className={menuItem}>
+      Sign in
+    </Link>
   );
 }
 
