@@ -17,19 +17,6 @@ const onTheWater = [
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <Image src="/icon.svg" alt="" width={32} height={32} />
-          Hey Newton
-        </Link>
-        <Link
-          href="/sign-in"
-          className="rounded-full px-4 py-3 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10"
-        >
-          Sign in
-        </Link>
-      </header>
-
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-16 px-4 pt-10 pb-16 sm:pt-20">
         <section className="flex flex-col items-start gap-6">
           <Image src="/icon.svg" alt="Hey Newton logo" width={72} height={72} priority />
