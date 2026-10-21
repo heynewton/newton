@@ -37,4 +37,4 @@ UI should allow a co-owner to invite another co-owner
 - The container had Node 22 and no Docker daemon; Claude ran Node 24 through `npx`, started
   `dockerd`, and ran the pgTAP files with `psql` because the `pg_prove` image couldn't be pulled.
 
-**PR:** [#PR](https://github.com/heynewton/newton/pull/PR)
+**PR:** [#161](https://github.com/heynewton/newton/pull/161)
