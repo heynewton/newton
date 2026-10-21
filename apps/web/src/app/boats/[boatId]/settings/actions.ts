@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { cancelInvitation, getCurrentPerson, getMyBoat, inviteToBoat, type InviteRole } from "@/lib/db";
+import { cancelInvitation, getCurrentPerson, getMyBoat, inviteToBoat, renameBoat, type InviteRole } from "@/lib/db";
 import { renderInvitation } from "@/lib/invitations";
 import { ResendMailer } from "@/lib/reminders/resend";
 import { roleInSentence } from "../../roles";
@@ -62,4 +62,24 @@ async function sendInvitationEmail(invitation: Parameters<typeof renderInvitatio
 export async function cancel(boatId: string, invitationId: string): Promise<void> {
   await cancelInvitation(boatId, invitationId);
   revalidatePath(`/boats/${boatId}/settings`);
+}
+
+export type RenameBoatState =
+  | { ok: true; boatName: string }
+  | { ok: false; name: string; error: "invalid_name" | "not_owner" | "failed" }
+  | null;
+
+export async function changeBoatName(
+  boatId: string,
+  _previous: RenameBoatState,
+  formData: FormData,
+): Promise<RenameBoatState> {
+  const person = await getCurrentPerson();
+  if (!person) redirect("/sign-in");
+  const name = String(formData.get("name") ?? "");
+  const result = await renameBoat(person, boatId, name);
+  if (!result.ok) return { ok: false, name, error: result.reason };
+  // The name shows in the header's boat list (in the root layout) and on every boat page.
+  revalidatePath("/", "layout");
+  return { ok: true, boatName: result.boatName };
 }
