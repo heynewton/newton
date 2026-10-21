@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useState, type ReactNode } from "react";
 import { removeBoat, type DeleteBoatState } from "./actions";
 
@@ -58,9 +57,12 @@ export function DeleteBoatForm({
               <li key={key}>{count(rows[key], one, many)}</li>
             ))}
         </ul>
-        <Link href="/boats" className="flex min-h-11 items-center font-medium underline">
+        {/* A full page load, so the header's boat list (boats/layout.tsx) drops the deleted boat.
+            Refreshing the route instead would re-render this page as a 404 and lose the summary. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/boats" className="flex min-h-11 items-center font-medium underline">
           Your boats
-        </Link>
+        </a>
       </div>
     );
   }
