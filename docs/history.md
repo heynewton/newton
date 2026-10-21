@@ -62,6 +62,7 @@ The workspace, checks and CI, preview deployments and the domain.
 - [#110](https://github.com/heynewton/newton/pull/110) · 2026-10-20 · Production checklist: heynewton.app sign-in checked
 - [#121](https://github.com/heynewton/newton/pull/121) · 2026-10-20 · Production releases on merge without a click, with approval only when migrations are pending · closes [#120](https://github.com/heynewton/newton/issues/120)
 - [#125](https://github.com/heynewton/newton/pull/125) · 2026-10-20 · One Node version everywhere, Node 24, and npm install refuses any other · closes [#118](https://github.com/heynewton/newton/issues/118)
+- [#167](https://github.com/heynewton/newton/pull/167) · 2026-10-21 · Production releases only when a maintainer publishes a GitHub Release, with notes drafted from the history files · closes [#163](https://github.com/heynewton/newton/issues/163), [#164](https://github.com/heynewton/newton/issues/164)
 
 ### Brand and website
 
