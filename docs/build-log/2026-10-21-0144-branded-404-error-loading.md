@@ -43,7 +43,10 @@ This runs overnight with nobody watching. Don't stop to ask: make a sensible cal
   raised after the response has started streaming. Noted in the PR.
 - The first layout centred the text in a narrower column than the header, which looked off at
   1280 px; it now lines up with the header.
-- The PR's Vercel preview couldn't be opened from the cloud session, so it is on the PR's
-  "not tested" list.
+- The PR's Vercel preview turned out to be reachable once its deploy finished, so the 404 was
+  checked there too at the three widths in light and dark. The error screen and the skeletons
+  were checked locally only.
+- CI's `database` job failed once while starting the database, before any test ran; a single
+  re-run passed.
 
 **PR:** [#148](https://github.com/heynewton/newton/pull/148)
