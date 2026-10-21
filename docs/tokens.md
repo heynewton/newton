@@ -373,21 +373,29 @@ consent screen or an OAuth client for a public app, so these are dashboard steps
 | `newton-dev` | `https://czmndtkrnphueurgoqfk.supabase.co/auth/v1/callback` (the dev site and previews), `http://127.0.0.1:54321/auth/v1/callback` (the local stack) |
 | `newton-prod` | `https://yipgqtxszsdkvpegyolv.supabase.co/auth/v1/callback` |
 
-- Download each client's JSON straight after creating it (the secret is shown once) and keep it
-  out of the repo; the next step reads it and then it can be deleted.
+- Copy each client's secret when you create it: Google shows it once. If it's lost, open the
+  client, **Add secret**, and disable the old one once the new one is set below.
 
-**Supabase** (by Claude or a maintainer, with the CLI's access token; the secret goes from the
-downloaded JSON straight into the request, never printed):
+**Supabase** (set 20 October through the Management API, with a personal access token from the
+project account; the CI tokens can't write auth settings). In a real terminal, not a
+non-interactive one, so the hidden prompts can read what you paste and nothing is echoed or kept
+in shell history:
 
 ```bash
-jq '{external_google_enabled: true, external_google_client_id: .web.client_id, external_google_secret: .web.client_secret}' client_secret_dev.json | curl -sf -X PATCH -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @- "https://api.supabase.com/v1/projects/<ref>/config/auth" -o /dev/null
+read -s "SB_TOKEN?Supabase access token: "; echo; read -s "G_ID?Client ID: "; echo; read -s "G_SECRET?Client secret: "; echo
+```
+
+```bash
+jq -n --arg id "$G_ID" --arg secret "$G_SECRET" '{external_google_enabled: true, external_google_client_id: $id, external_google_secret: $secret}' | curl -sf -X PATCH -H "Authorization: Bearer $SB_TOKEN" -H "Content-Type: application/json" --data @- "https://api.supabase.com/v1/projects/<ref>/config/auth" -o /dev/null && echo "Google on"
 ```
 
 Check with `curl -s -H "apikey: <publishable key>" https://<ref>.supabase.co/auth/v1/settings`,
-which shows `"google": true`.
+which shows `"google": true`, then `unset SB_TOKEN G_ID G_SECRET`.
 
 **Local stack:** copy `supabase/.env.example` to `supabase/.env` and fill in the `newton-dev`
-client's ID and secret, then restart the stack. `supabase/config.toml` keeps Google off without it.
+client's ID and secret (or, with the dev client's values in `G_ID` and `G_SECRET` as above,
+`printf 'SUPABASE_AUTH_EXTERNAL_GOOGLE_ENABLED=true\nSUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=%s\nSUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=%s\n' "$G_ID" "$G_SECRET" > supabase/.env`),
+then restart the stack. `supabase/config.toml` keeps Google off without it.
 
 - **Same person:** Supabase Auth links a Google identity to the existing user with the same
   verified email, so Google and a magic link for one address land on the same `people` row.
