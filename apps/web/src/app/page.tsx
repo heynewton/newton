@@ -45,7 +45,7 @@ export default function Home() {
               href="/get-started"
               className="rounded-full bg-navy px-6 py-3 text-center font-medium text-white hover:bg-navy/90 dark:bg-teal dark:text-navy dark:hover:bg-teal/90"
             >
-              Try the alpha for free
+              Get started
             </Link>
             <Link
               href="/sign-in"
