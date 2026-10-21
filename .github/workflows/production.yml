@@ -1,27 +1,34 @@
-# Releases main to production (#63): newton-prod gets the checked-in migrations, then the web app
-# is deployed to the Vercel project heynewton-prod against it. It starts once the Dev database
-# workflow has migrated and seeded dev from the same commit. newton-prod is never seeded. Fixture
-# sign-in is never on here: the release fails if anything sets FIXTURE_SIGN_IN.
+# Releases to production when a maintainer publishes a GitHub Release (#163): newton-prod gets the
+# checked-in migrations of the release's tag, then the web app is deployed to the Vercel project
+# heynewton-prod against it. A merge to main never releases: it only updates dev. newton-prod is
+# never seeded. Fixture sign-in is never on here: the release fails if anything sets FIXTURE_SIGN_IN.
 #
-# Approval only when migrations are pending (#120). `check` lists the migrations newton-prod hasn't
-# applied; if there are any, `gate` waits for the maintainer's approval on the
-# `production-migrations` environment (required reviewer, no secrets). `release` runs after the
-# check, and after the gate when it ran. Every prod key stays in the `production` environment, which
-# only main can use.
+# Publishing is the approval. `verify` (no secrets) refuses a tag that isn't a calendar tag with a
+# published, non-prerelease GitHub Release, or whose commit isn't on main or didn't pass on dev
+# (scripts/release-check.mjs). `release` (environment `production`, which holds every prod key)
+# lists the migrations newton-prod hasn't applied in the run summary, applies them, and deploys.
+#
+# Run workflow (from main, with a tag) releases a published tag again: to retry a failed release,
+# or to roll back to an earlier one. A rollback puts the old code back; migrations stay applied.
 name: Production
 
 on:
-  workflow_run:
-    workflows: [Dev database]
-    types: [completed]
-    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to deploy (for example 2026.10.21), already published as a GitHub Release
+        required: true
+        type: string
 
 permissions:
   contents: read
+  actions: read
   deployments: write
 
-# One release at a time. While one runs or waits for approval, the next one queues behind it; a
-# newer commit replaces an older one in the queue.
+# One release at a time. While one runs, the next one queues behind it; a newer one replaces an
+# older one in the queue.
 concurrency:
   group: production
   cancel-in-progress: false
@@ -31,17 +38,46 @@ env:
   VERCEL_TELEMETRY_DISABLED: 1
 
 jobs:
-  check:
-    name: Check settings and list pending migrations
-    # Only after dev took the same commit, and only from a push to main (not a manual dev run on
-    # another branch).
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main'
+  verify:
+    name: Check the release tag
     runs-on: ubuntu-latest
-    # For the prod keys. The environment only allows main; it has no required reviewer since #120.
-    environment: production
+    outputs:
+      sha: ${{ steps.check.outputs.sha }}
+      tag: ${{ steps.check.outputs.tag }}
+    steps:
+      # Run workflow only from main: on another branch its own copy of this file would run.
+      - name: Started from a release or from main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Run the Production workflow from main, not $GITHUB_REF_NAME."
+          exit 1
+      # Full history and tags: the dev check looks for the last commit up to the tag that changed
+      # the app.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      # The script only uses Node's built-ins and gh, so no npm ci.
+      - name: Tag is published, on main and passed on dev
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
+        run: |
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          node scripts/release-check.mjs "$TAG"
+
+  release:
+    name: Migrate and deploy production
+    needs: verify
+    runs-on: ubuntu-latest
+    # The environment only allows main and release tags, and has no required reviewer: publishing
+    # the release was the approval.
+    environment:
+      name: production
+      url: ${{ vars.PROD_SITE_URL }}
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_PROD_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_PROD_DB_PASSWORD }}
@@ -49,9 +85,8 @@ jobs:
       # Environment variables of `production`, not repo variables: dev's values never reach here.
       SUPABASE_URL: ${{ vars.SUPABASE_PROD_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PROD_PUBLISHABLE_KEY }}
-    outputs:
-      count: ${{ steps.pending.outputs.count }}
-      migrations: ${{ steps.pending.outputs.migrations }}
+      SHA: ${{ needs.verify.outputs.sha }}
+      TAG: ${{ needs.verify.outputs.tag }}
     steps:
       - name: Check the prod settings
         env:
@@ -77,9 +112,10 @@ jobs:
             exit 1
           fi
 
+      # The commit verify checked, not the tag, in case the tag moved since.
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ needs.verify.outputs.sha }}
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
@@ -89,95 +125,45 @@ jobs:
       - name: Link newton-prod
         run: npx supabase link --project-ref "${{ vars.SUPABASE_PROD_PROJECT_REF }}"
 
+      # For the record, not a gate: the release notes listed them and publishing approved them.
+      # A rollback to an older tag finds migrations newton-prod has that this commit doesn't: they
+      # stay applied, and only the code goes back.
       - name: Migrations newton-prod hasn't applied
         id: pending
         run: |
-          pending=$(.github/scripts/pending-migrations.sh --linked)
+          pending=$(NEWER_FILE=newer.txt .github/scripts/pending-migrations.sh --linked)
           count=$(grep -c . <<<"$pending" || true)
+          newer=$(grep -c . newer.txt || true)
           {
-            echo "count=$count"
-            echo "migrations<<END_OF_LIST"
-            echo "$pending"
-            echo "END_OF_LIST"
-          } >> "$GITHUB_OUTPUT"
-          {
+            if [ "$newer" != 0 ]; then
+              echo "**Rollback: newton-prod has $newer migration(s) newer than $TAG.** They stay applied (migrations don't roll back); only the code goes back:"
+              echo
+              sed 's/^/- /' newer.txt
+              echo
+            fi
             if [ "$count" = 0 ]; then
-              echo "No migrations pending on newton-prod: releasing without approval."
+              echo "No migrations to apply to newton-prod."
             else
-              echo "**$count migration(s) pending on newton-prod.** The release waits for approval on \`production-migrations\`:"
+              echo "**$count migration(s) to apply to newton-prod:**"
               echo
               while read -r name; do
                 echo "- [$name]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$SHA/supabase/migrations/$name)"
               done <<<"$pending"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-        env:
-          SHA: ${{ github.event.workflow_run.head_sha }}
-
-  gate:
-    name: Approve pending migrations
-    needs: check
-    if: needs.check.outputs.count != '0'
-    runs-on: ubuntu-latest
-    # Required reviewer: the maintainer. No secrets: this job only waits for the approval.
-    environment: production-migrations
-    steps:
-      - name: Approved migrations
-        env:
-          MIGRATIONS: ${{ needs.check.outputs.migrations }}
-        run: |
-          echo "Approved for newton-prod:"
-          echo "$MIGRATIONS"
-
-  release:
-    name: Migrate and deploy production
-    needs: [check, gate]
-    # After the check, and after the gate when migrations are pending. The gate is only allowed to
-    # be skipped when none are, and a rejected gate stops here. Not always(): a cancelled run
-    # must not release.
-    if: >-
-      !cancelled() &&
-      needs.check.result == 'success' &&
-      (needs.gate.result == 'success' ||
-       (needs.gate.result == 'skipped' && needs.check.outputs.count == '0'))
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: ${{ vars.PROD_SITE_URL }}
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_PROD_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_PROD_DB_PASSWORD }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      # Environment variables of `production`, not repo variables: dev's values never reach here.
-      SUPABASE_URL: ${{ vars.SUPABASE_PROD_URL }}
-      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PROD_PUBLISHABLE_KEY }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-      - uses: actions/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-
-      - name: Link newton-prod
-        run: npx supabase link --project-ref "${{ vars.SUPABASE_PROD_PROJECT_REF }}"
-      # Exactly what the check listed (and the gate approved, if it ran), or nothing.
-      - name: Pending migrations are unchanged since the check
-        env:
-          CHECKED: ${{ needs.check.outputs.migrations }}
-        run: |
-          pending=$(.github/scripts/pending-migrations.sh --linked)
-          # Blank lines aside: an empty list may come back from the job output as one.
-          if [ "$(grep . <<<"$pending" || true)" != "$(grep . <<<"$CHECKED" || true)" ]; then
-            echo "::error::newton-prod's pending migrations changed since the check. Re-run the workflow."
+          # Older than prod and new migrations at once can't be right: db push would refuse it too.
+          if [ "$newer" != 0 ] && [ "$count" != 0 ]; then
+            echo "::error::$TAG has migrations newton-prod hasn't applied, but newton-prod also has newer ones. Release a newer tag."
             exit 1
           fi
+          echo "newer=$newer" >> "$GITHUB_OUTPUT"
+      # Migrations only. Never --include-seed, never psql -f seed.sql, never seed buckets. Skipped on
+      # a rollback, where there is nothing to apply and db push refuses the newer versions.
       - name: Migrations that will apply
+        if: steps.pending.outputs.newer == '0'
         run: npx supabase db push --linked --dry-run --yes
-      # Migrations only. Never --include-seed, never psql -f seed.sql, never seed buckets.
       - name: Apply migrations
+        if: steps.pending.outputs.newer == '0'
         run: npx supabase db push --linked --yes
 
       - run: npm install --global vercel@64.5.0
@@ -225,3 +211,4 @@ jobs:
             echo "::error::/auth/fixture-sign-in answered $status on production, expected 404."
             exit 1
           fi
+          echo "Released $TAG ($SHA) to ${{ vars.PROD_SITE_URL }}." >> "$GITHUB_STEP_SUMMARY"
