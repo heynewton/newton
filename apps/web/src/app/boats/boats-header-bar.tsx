@@ -51,8 +51,19 @@ export function BoatSwitcher({ boats }: { boats: BoatMembership[] }) {
   );
 }
 
-// Who is signed in, adding a boat and signing out. `signOut` is the server-rendered form.
-export function AccountMenu({ name, signOut }: { name: string; signOut: ReactNode }) {
+// Who is signed in, the open boat's settings, adding a boat and signing out. `settingsFor` lists
+// the boats whose settings page the person may open (the page checks again); `signOut` is the
+// server-rendered form.
+export function AccountMenu({
+  name,
+  settingsFor,
+  signOut,
+}: {
+  name: string;
+  settingsFor: string[];
+  signOut: ReactNode;
+}) {
+  const { boatId } = useParams<{ boatId?: string }>();
   return (
     <Menu
       align="end"
@@ -64,6 +75,11 @@ export function AccountMenu({ name, signOut }: { name: string; signOut: ReactNod
       }
     >
       <p className="px-3 pt-1 text-sm break-all text-zinc-600 dark:text-zinc-400">Signed in as {name}</p>
+      {boatId && settingsFor.includes(boatId) && (
+        <Link href={`/boats/${boatId}/settings`} className={menuItem}>
+          Boat settings
+        </Link>
+      )}
       <Link href="/boats/new" className={menuItem}>
         Add a boat
       </Link>

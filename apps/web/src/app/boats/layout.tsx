@@ -2,12 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentPerson, listMyBoats } from "@/lib/db";
+import { canExport } from "@/lib/db/export";
 import { AccountMenu, BoatSwitcher } from "./boats-header-bar";
 import { menuItem } from "./menu-item";
 import { SignOut } from "./sign-out";
 
 // Every signed-in page shares this header (#133): the logo back to the person's boats, the open
-// boat with a switcher when they're on several, and the account menu.
+// boat with a switcher when they're on several, and the account menu (with the boat's settings).
 export default function BoatsLayout({ children }: LayoutProps<"/boats">) {
   return (
     <>
@@ -36,7 +37,12 @@ async function SignedInHeader() {
       <div className="flex min-w-0 flex-1">
         <BoatSwitcher boats={boats} />
       </div>
-      <AccountMenu name={person.displayName ?? person.email ?? "you"} signOut={<SignOut />} />
+      <AccountMenu
+        name={person.displayName ?? person.email ?? "you"}
+        // Boat settings holds export and delete, so it's for those who can export (#142).
+        settingsFor={boats.filter((b) => canExport(b.role)).map((b) => b.boatId)}
+        signOut={<SignOut />}
+      />
     </>
   );
 }

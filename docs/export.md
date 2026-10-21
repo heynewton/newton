@@ -1,8 +1,8 @@
 # Boat export format
 
 Owners own their data (principle 5). An owner or co-owner of a boat can download everything
-Newton holds for that boat as one zip archive, from the boat's page ("Your boat's data" →
-"Download all data"), to keep a copy, move to another tool, or hand to a buyer. This page
+Newton holds for that boat as one zip archive, from the boat's settings page (account menu → "Boat
+settings" → "Download all data"), to keep a copy, move to another tool, or hand to a buyer. This page
 describes the archive so another program, or a person with a text editor, can read it.
 
 The code is `apps/web/src/lib/export/archive.ts` (the archive) and `apps/web/src/lib/db/export.ts`
@@ -120,7 +120,7 @@ size doesn't fill memory. What bounds it is time: the route runs on Vercel, wher
 after 300 seconds, and the download goes at the speed of the person's connection; 500 MB leaves room
 at about 2 MB/s. The zip format's 4 GiB limit (fflate doesn't write ZIP64) is far above it.
 
-A boat over the limit doesn't get the button: its page says so and asks the owner to write to
+A boat over the limit doesn't get the button: its settings page says so and asks the owner to write to
 privacy@heynewton.app, and the route answers 413. Above that size, the export would need to be built
 in the background and stored for download, which isn't built (see the PR for #16).
 

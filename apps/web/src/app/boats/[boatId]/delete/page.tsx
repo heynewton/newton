@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getCurrentPerson, getMyBoat } from "@/lib/db";
+import { canExport } from "@/lib/db/export";
 import { DeleteBoatForm } from "./delete-boat-form";
 
 export const metadata: Metadata = { title: "Delete boat · Hey Newton" };
@@ -33,14 +34,30 @@ async function Confirm({ params }: Pick<PageProps<"/boats/[boatId]/delete">, "pa
         boatName={boat.boatName}
         intro={
           <p className="text-zinc-700 dark:text-zinc-300">
-            {boat.deletingSince
-              ? "Deleting this boat started but didn't finish. Confirm again to finish it."
-              : "This deletes the boat for everyone on it: its documents and their files, renewals, maintenance, expenses, emails and members. It can't be undone. To keep a copy, download the files you need first."}
+            {boat.deletingSince ? (
+              "Deleting this boat started but didn't finish. Confirm again to finish it."
+            ) : (
+              <>
+                This deletes the boat for everyone on it: its documents and their files, renewals,
+                maintenance, expenses, emails and members. It can&apos;t be undone.{" "}
+                {canExport(boat.role) ? (
+                  <>
+                    To keep a copy,{" "}
+                    <a href={`/boats/${boat.boatId}/export`} download className="font-medium underline">
+                      download all of the boat&apos;s data
+                    </a>{" "}
+                    first.
+                  </>
+                ) : (
+                  "To keep a copy, download the files you need first."
+                )}
+              </>
+            )}
           </p>
         }
         cancel={
           !boat.deletingSince && (
-            <Link href={`/boats/${boat.boatId}`} className="flex min-h-11 items-center font-medium underline">
+            <Link href={`/boats/${boat.boatId}/settings`} className="flex min-h-11 items-center font-medium underline">
               Keep the boat
             </Link>
           )

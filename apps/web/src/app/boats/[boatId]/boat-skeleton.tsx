@@ -11,7 +11,6 @@ export function BoatSkeleton() {
       <LoadingLabel>Loading the boat…</LoadingLabel>
       <div aria-hidden className="flex flex-col gap-10">
         <div className="flex flex-col gap-3">
-          <Bone className="size-10" />
           <Bone className="h-9 w-64 max-w-full sm:h-10" />
           <Bone className="h-5 w-40" />
         </div>

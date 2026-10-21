@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
-import { EXPORT_MAX_FILE_BYTES, canExport } from "@/lib/db/export";
 import { boatEmailAddress } from "@/lib/email-in";
 import { attentionSummary, costSplit, schedule, todayUtc } from "@/lib/records";
 import { roleNames } from "../roles";
-import { AttentionSummary, CoOwnerBalance, ComingUp, Documents, ExportData } from "./records";
+import { AttentionSummary, CoOwnerBalance, ComingUp, Documents } from "./records";
 
 export const metadata: Metadata = { title: "Your boat · Hey Newton" };
 
@@ -80,7 +78,6 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
   return (
     <>
       <header className="flex flex-col gap-3">
-        <Image src="/icon.svg" alt="" width={40} height={40} />
         <h1 className="text-3xl font-semibold break-words sm:text-4xl">{boat.boatName}</h1>
         <p className="text-zinc-600 dark:text-zinc-400">You&apos;re its {roleNames[boat.role].toLowerCase()}.</p>
         <AttentionSummary parts={attentionSummary(due, split, person.id, DUE_SOON_DAYS)} />
@@ -125,26 +122,6 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
           Coming soon: {list.format(next.comingSoon)}.
         </p>
       </section>
-
-      {canExport(boat.role) && (
-        <ExportData
-          boatId={boat.boatId}
-          fileBytes={records.documents.reduce((n, d) => n + (d.sizeBytes ?? 0), 0)}
-          maxFileBytes={EXPORT_MAX_FILE_BYTES}
-        />
-      )}
-
-      {/* Switching boats, adding one and signing out are in the header (boats/layout.tsx). */}
-      {boat.role === "owner" && (
-        <footer className="border-t border-black/10 pt-6 dark:border-white/15">
-          <Link
-            href={`/boats/${boat.boatId}/delete`}
-            className="flex min-h-11 w-fit items-center font-medium text-red-700 underline dark:text-red-400"
-          >
-            Delete this boat
-          </Link>
-        </footer>
-      )}
     </>
   );
 }
