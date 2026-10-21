@@ -1,26 +1,27 @@
-## Get started registers people for the alpha test
+## Get started lets anyone sign up, with a note that Newton is in alpha
 
 **Prompt**
 
 > On https://heynewton.app/get-started move to alpha test. Offer to people to register for alpha test.
 
+Then, after the first version:
+
+> Dev deploy failed. Instead of specific list reviewed by maintainers, simply allow people to sign in with a text on the page saying application is in alpha
+
 **What Claude did**
 
-- Replaced the `/get-started` placeholder with a "Join the alpha test" page: what the alpha means
-  (free, places opened a few boats at a time, rough edges) and a form for an email and an optional
-  line about the boat.
-- Added an `alpha_signups` table that nobody can read or write through the API, and a
-  `register_for_alpha` function anyone can call, which keeps the first sign-up per address and
-  doesn't reveal whether an address was already on the list. pgTAP and unit tests for both.
-- Renamed the homepage button to "Join the alpha test", added the list to the privacy policy and
-  updated `docs/architecture.md`.
+- First built an alpha sign-up list: a form on `/get-started`, an `alpha_signups` table only a
+  `register_for_alpha` function could write, and pgTAP and unit tests.
+- On the follow-up, removed all of that and made `/get-started` the sign-in screen (Google, Apple
+  or an email link, whichever are on) under a "Get started" title, with a note that Newton is in
+  alpha, free while we test it, with rough edges. A first sign-in already creates the account, so
+  no new backend was needed. `/sign-in` and `/get-started` now share one `SignInScreen` component.
+- Renamed the homepage button to "Try the alpha for free" and updated `docs/architecture.md`.
 - Checked the page at three widths in light and dark.
 
 **What changed along the way**
 
-- Kept the form open to signed-in people too, and made a repeat sign-up succeed silently, so the
-  page never tells anyone whether an address is already registered.
-- No Docker in the session, so the database test runs in CI only. Rate limiting and a
-  confirmation email are left out and listed in the PR.
+- The "failed" dev runs were the first commit's, cancelled when the second push superseded them;
+  the latest commit's dev dry run and deploy had passed. The switch was a product choice, not a fix.
 
 **PR:** [#157](https://github.com/heynewton/newton/pull/157)
