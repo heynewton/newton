@@ -38,10 +38,10 @@ export function loadEvalSet(): EvalSet {
 export async function indexedManual(set: EvalSet, embedder: Embedder) {
   const store = new MemoryChunkStore();
   const pdf = new Uint8Array(readFileSync(new URL(`../evals/${set.document.file}`, import.meta.url)));
-  await indexDocument({ document: { id: "manual-1", boatId: "kittiwake" }, pdf, embedder, store });
+  await indexDocument({ document: { id: "manual-1", boatId: "test-boat" }, pdf, embedder, store });
   const indexedAt = new Date().toISOString();
   return async (question: string): Promise<SearchResult[]> =>
-    (await searchChunks({ question, embedder, store, boatId: "kittiwake", matchCount: MATCH_COUNT })).map((r) => ({
+    (await searchChunks({ question, embedder, store, boatId: "test-boat", matchCount: MATCH_COUNT })).map((r) => ({
       ...r,
       filename: set.document.filename,
       documentReceivedAt: set.document.receivedAt,

@@ -6,7 +6,7 @@ FACTURE                              Facture no. :  VE-2026-0412
                                      Date :         03.09.2026
                                      Echeance :     03.10.2026
 Client :   Alex Sample, 1 Imaginary Lane, Port Example, XX 00000
-Bateau :   Kittiwake, Example Yachts EY 34
+Bateau :   Test boat, Example Yachts EY 34
 
 DESIGNATION                               QTE    PRIX UNIT. HT     MONTANT HT
 Reparation grand-voile (couture, renforts)  1         640,00         640,00

@@ -40,10 +40,10 @@ const sha256 = (text: string) => createHash("sha256").update(text).digest("hex")
 
 const input = (overrides: Partial<ExportInput> = {}): ExportInput => ({
   exportedAt: new Date("2026-10-20T09:30:00Z"),
-  boat: { id: "b1", name: "Kittiwake" },
+  boat: { id: "b1", name: "Test boat" },
   exportedBy: { personId: "p1", role: "owner" },
   tables: [
-    { name: "boat", rows: [{ id: "b1", name: "Kittiwake" }] },
+    { name: "boat", rows: [{ id: "b1", name: "Test boat" }] },
     { name: "expenses", rows: [{ id: "e1", amount_cents: 4200 }, { id: "e2", amount_cents: -100 }] },
     { name: "renewals", rows: [] },
   ],
@@ -81,7 +81,7 @@ describe("buildExportArchive", () => {
       format: "newton-boat-export",
       format_version: EXPORT_FORMAT_VERSION,
       exported_at: "2026-10-20T09:30:00.000Z",
-      boat: { id: "b1", name: "Kittiwake" },
+      boat: { id: "b1", name: "Test boat" },
       exported_by: { person_id: "p1", role: "owner" },
       tables: [
         { name: "boat", path: "data/boat.json", rows: 1 },
@@ -148,7 +148,7 @@ describe("safeArchivePath", () => {
 
 describe("archiveFilename", () => {
   it("names the archive after the boat and the day", () => {
-    expect(archiveFilename("Kittiwake", new Date("2026-10-20T23:59:00Z"))).toBe("kittiwake-export-2026-10-20.zip");
+    expect(archiveFilename("Test boat", new Date("2026-10-20T23:59:00Z"))).toBe("test-boat-export-2026-10-20.zip");
     expect(archiveFilename("Île de Ré II", new Date("2026-10-20T00:00:00Z"))).toBe("ile-de-re-ii-export-2026-10-20.zip");
     expect(archiveFilename("???", new Date("2026-10-20T00:00:00Z"))).toBe("boat-export-2026-10-20.zip");
   });

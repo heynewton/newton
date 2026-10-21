@@ -114,7 +114,7 @@ function count(items: DigestItem[], status: ReminderStatus): number {
   return items.filter((i) => i.status === status).length;
 }
 
-// "Kittiwake: 1 overdue, 2 coming up" or, for several boats, "3 overdue, 2 coming up on your boats".
+// "Test boat: 1 overdue, 2 coming up" or, for several boats, "3 overdue, 2 coming up on your boats".
 export function digestSubject(digest: Digest): string {
   const items = digest.boats.flatMap((b) => b.items);
   const parts = [];

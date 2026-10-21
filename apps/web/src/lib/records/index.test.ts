@@ -19,7 +19,7 @@ import {
   type RenewalRow,
 } from ".";
 
-// Shaped like the Kittiwake sample boat (fixtures/sample-boat), with short IDs.
+// Shaped like the sample boat Test boat (fixtures/sample-boat), with short IDs.
 const renewal = (id: string, expires_on: string, document_id: string | null = null): RenewalRow => ({
   id,
   kind: "insurance",

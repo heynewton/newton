@@ -129,10 +129,10 @@ update the dev site (the `dev` environment, under **Deployments** on the repo pa
 ## Dev database
 
 - The hosted Supabase project `newton-dev`, in the project's Supabase organisation, is the dev
-  database. It only ever holds fixture data: the made-up boat Kittiwake from `fixtures/sample-boat`,
+  database. It only ever holds fixture data: the made-up boat Test boat from `fixtures/sample-boat`,
   and whatever is made while testing. Never put real boat data in it.
 - Every push to `main` updates it (`.github/workflows/dev-database.yml`): `supabase db push` applies
-  new migrations, then `psql` loads `supabase/seed.sql`. The seed runs every time, so Kittiwake's
+  new migrations, then `psql` loads `supabase/seed.sql`. The seed runs every time, so Test boat's
   rows go back to what `boat.json` says; other rows stay. A failed migration or seed fails the run
   and shows on the commit. Re-run it from the Actions tab (**Run workflow**).
 - PRs that touch `supabase/` or `fixtures/sample-boat/` get a **Dry run against dev** check: it

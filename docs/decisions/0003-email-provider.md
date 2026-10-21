@@ -156,7 +156,7 @@ existing team becomes prod's only.
 - **Dev inbound domain: `boats.dev.heynewton.app`**, receiving on. Receiving needs an MX record
   on the domain itself, which `dev` can't have next to its CNAME, so it's a subdomain; the name
   mirrors prod's `boats.heynewton.app`, so a dev boat's address reads as dev at a glance
-  (`kittiwake-…@boats.dev.heynewton.app`). Its records are on `boats.dev` and below, separate from
+  (`test-boat-…@boats.dev.heynewton.app`). Its records are on `boats.dev` and below, separate from
   prod's `boats` MX and from the root's Cloudflare Email Routing MX.
 - **Two domains of the free plan's three.** One domain doing both (sending from
   `noreply@boats.dev.heynewton.app`) would save one but reads oddly in a sign-in email; the third

@@ -26,7 +26,7 @@ T* (Registration number:  XX 0000 ZZ) Tj
 T* (Valid from:           2025-01-01) Tj
 T* (Expires:              2026-12-31) Tj
 T* (Hull ID:              XXX00001A909) Tj
-T* (Vessel name:          Kittiwake) Tj
+T* (Vessel name:          Test boat) Tj
 T* (Year / make:          2009 Example Yachts) Tj
 T* (Length:               34 ft 0 in) Tj
 T* (Hull material:        Fiberglass) Tj
@@ -46,7 +46,7 @@ ET
 endstream
 endobj
 6 0 obj
-<< /Title (Kittiwake registration certificate) /Producer (Newton sample fixtures) >>
+<< /Title (Test boat registration certificate) /Producer (Newton sample fixtures) >>
 endobj
 xref
 0 7

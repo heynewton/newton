@@ -30,7 +30,7 @@ T* (Named insured:      Alex Sample, Sam Placeholder, Jordan Fictional) Tj
 T* (Mailing address:    1 Imaginary Lane, Port Example, XX 00000) Tj
 T* () Tj
 T* (INSURED VESSEL) Tj
-T* (Name:               Kittiwake) Tj
+T* (Name:               Test boat) Tj
 T* (Year / make / model: 2009 Example Yachts EY 34 \(sloop\)) Tj
 T* (Hull ID:            XXX00001A909) Tj
 T* (Length:             34 ft) Tj
@@ -58,7 +58,7 @@ ET
 endstream
 endobj
 6 0 obj
-<< /Title (Kittiwake insurance certificate 2026-27) /Producer (Newton sample fixtures) >>
+<< /Title (Test boat insurance certificate 2026-27) /Producer (Newton sample fixtures) >>
 endobj
 xref
 0 7

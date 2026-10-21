@@ -8,7 +8,7 @@ import { createClient, supabaseSettings } from "./client";
 // FIXTURE_SIGN_IN=1 (the dev site and previews, set by .github/workflows/deploy.yml), and only
 // for the people below, whatever is posted.
 
-// Kittiwake's people and the address each signs in with (fixtures/sample-boat/boat.json; a test
+// Test boat's people and the address each signs in with (fixtures/sample-boat/boat.json; a test
 // checks the two agree).
 export const FIXTURE_PEOPLE = [
   { name: "Alex Sample", email: "alex@example.com" },

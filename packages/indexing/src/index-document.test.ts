@@ -11,12 +11,12 @@ import { MemoryChunkStore } from "./store";
 const manual = new Uint8Array(
   readFileSync(new URL("../../../fixtures/sample-boat/documents/manual-excerpt.pdf", import.meta.url)),
 );
-const kittiwake = { id: "manual-1", boatId: "kittiwake" };
+const testBoat = { id: "manual-1", boatId: "test-boat" };
 
 async function indexed(maxChars?: number) {
   const store = new MemoryChunkStore();
   const embedder = new FakeEmbedder();
-  const result = await indexDocument({ document: kittiwake, pdf: manual, embedder, store, maxChars });
+  const result = await indexDocument({ document: testBoat, pdf: manual, embedder, store, maxChars });
   return { store, embedder, result };
 }
 
@@ -47,7 +47,7 @@ describe("indexDocument on the fixture manual", () => {
     for (const row of store.rows) {
       expect(row.content.length).toBeLessThanOrEqual(400);
       expect(row.embedding).toHaveLength(EMBEDDING_DIMENSIONS);
-      expect(row).toMatchObject({ boatId: "kittiwake", documentId: "manual-1", embeddingModel: "fake-bag-of-words" });
+      expect(row).toMatchObject({ boatId: "test-boat", documentId: "manual-1", embeddingModel: "fake-bag-of-words" });
     }
   });
 
@@ -67,11 +67,11 @@ describe("indexDocument on the fixture manual", () => {
 
   it("replaces a document's chunks when indexed again, leaving other documents alone", async () => {
     const { store, embedder } = await indexed(400);
-    const other = { id: "manual-2", boatId: "kittiwake" };
+    const other = { id: "manual-2", boatId: "test-boat" };
     await indexDocument({ document: other, pdf: manual, embedder, store });
     const before = store.rows.length;
 
-    await indexDocument({ document: kittiwake, pdf: manual, embedder, store, maxChars: 400 });
+    await indexDocument({ document: testBoat, pdf: manual, embedder, store, maxChars: 400 });
     expect(store.rows.length).toBe(before);
     expect(store.rows.filter((row) => row.documentId === "manual-2").length).toBeGreaterThan(0);
   });
@@ -85,7 +85,7 @@ describe("indexDocument on the fixture manual", () => {
   it("refuses an embedder that returns the wrong size", async () => {
     const broken: Embedder = { model: "broken", embed: async (texts) => texts.map(() => [1, 2, 3]) };
     await expect(
-      indexDocument({ document: kittiwake, pdf: manual, embedder: broken, store: new MemoryChunkStore() }),
+      indexDocument({ document: testBoat, pdf: manual, embedder: broken, store: new MemoryChunkStore() }),
     ).rejects.toThrow(/1024 numbers/);
   });
 });
