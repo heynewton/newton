@@ -123,6 +123,8 @@ What a signed-in person can do in the app.
 - [#149](https://github.com/heynewton/newton/pull/149) · 2026-10-21 · Every section of the boat page says where its data came from and how recent it is · closes [#140](https://github.com/heynewton/newton/issues/140)
 - [#150](https://github.com/heynewton/newton/pull/150) · 2026-10-21 · The boat's email address is shown once, with a Copy button · closes [#137](https://github.com/heynewton/newton/issues/137)
 - [#148](https://github.com/heynewton/newton/pull/148) · 2026-10-21 · Branded 404, error and loading screens · closes [#138](https://github.com/heynewton/newton/issues/138)
+- [#147](https://github.com/heynewton/newton/pull/147) · 2026-10-21 · A header on the signed-in pages with a boat switcher and account menu · closes [#133](https://github.com/heynewton/newton/issues/133)
+- [#151](https://github.com/heynewton/newton/pull/151) · 2026-10-21 · Export and delete move into a boat settings page · closes [#142](https://github.com/heynewton/newton/issues/142)
 
 ### Manual Q&A
 
