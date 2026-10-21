@@ -1,4 +1,3 @@
-import { formatCents } from "@newton/calc";
 import type { ReactNode } from "react";
 import type { BoatDocument, BoatMember, DocumentType } from "@/lib/db";
 import {
@@ -6,13 +5,14 @@ import {
   dueLine,
   dueState,
   formatDate,
-  groupThousands,
   hours,
+  money,
   type CostSplit,
   type ExpenseRow,
   type MaintenanceRow,
   type Schedule,
   type ScheduledItem,
+  type SummaryPart,
 } from "@/lib/records";
 import { Contact } from "../../legal-page";
 
@@ -58,15 +58,46 @@ function Source({ boatId, documentId, documents }: { boatId: string; documentId:
   );
 }
 
-function money(cents: number, currency: string): string {
-  return `${currency} ${groupThousands(formatCents(cents))}`;
-}
-
 const statusStyles = {
   overdue: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
   "due-soon": "bg-spinnaker/20 text-amber-800 dark:text-spinnaker",
   later: "bg-black/5 text-zinc-700 dark:bg-white/10 dark:text-zinc-300",
 };
+
+// The line under the boat's name: what needs attention, each part a link to its section. A boat
+// with nothing to track yet gets what to do first instead.
+export function AttentionSummary({ parts }: { parts: SummaryPart[] | null }) {
+  if (parts === null) {
+    return (
+      <div className="flex flex-col">
+        <p className="text-zinc-700 dark:text-zinc-300">
+          Nothing to keep track of yet. Newton fills this page from the documents sent to the boat.
+        </p>
+        <a href="#documents" className={`${link} w-fit`}>
+          Start with an insurance certificate or a yard invoice
+        </a>
+      </div>
+    );
+  }
+  if (parts.length === 0) return null;
+  // The separator ends each part but the last, so a wrapped line never starts with one.
+  return (
+    <p className="flex flex-wrap items-center gap-x-2">
+      {parts.map((part, i) => (
+        <span key={part.text} className="inline-flex items-center gap-x-2">
+          <a href={`#${part.anchor}`} className={link}>
+            {part.text}
+          </a>
+          {i < parts.length - 1 && (
+            <span aria-hidden="true" className={muted}>
+              ·
+            </span>
+          )}
+        </span>
+      ))}
+    </p>
+  );
+}
 
 // A `details` summary keeps its disclosure chevron, which turns when open, and stays 44 px tall.
 // The browser's own marker is hidden because `display: flex` drops it in some browsers anyway.
@@ -169,7 +200,9 @@ export function ComingUp({
             </p>
           )}
           <div className="flex flex-col gap-3">
-            <h3 className="font-semibold">Overdue</h3>
+            <h3 id="overdue" className="scroll-mt-4 font-semibold">
+              Overdue
+            </h3>
             {overdue.length > 0 ? (
               <ItemList items={overdue} today={today} boatId={boatId} documents={documents} />
             ) : (
@@ -177,7 +210,9 @@ export function ComingUp({
             )}
           </div>
           <div className="flex flex-col gap-3">
-            <h3 className="font-semibold">Due in the next {withinDays} days</h3>
+            <h3 id="due-soon" className="scroll-mt-4 font-semibold">
+              Due in the next {withinDays} days
+            </h3>
             {dueSoon.length > 0 ? (
               <ItemList items={dueSoon} today={today} boatId={boatId} documents={documents} />
             ) : (
@@ -323,7 +358,7 @@ export function Documents({
 }) {
   return (
     <section aria-labelledby="documents" className="flex flex-col gap-4">
-      <h2 id="documents" className="text-xl font-semibold">
+      <h2 id="documents" className="scroll-mt-4 text-xl font-semibold">
         Documents
       </h2>
       {address && (
