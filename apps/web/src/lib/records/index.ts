@@ -1,5 +1,7 @@
 import {
+  daysBetween,
   findDue,
+  fullMonthsBetween,
   nextDue,
   splitCosts,
   type CoOwnerBalance,
@@ -180,6 +182,33 @@ export function dueLine(item: ScheduledItem): { due: string; basis: string } {
   const row = item.row;
   const doneAt = row.last_done_engine_hours !== null ? ` at ${hours(row.last_done_engine_hours)}` : "";
   return { due, basis: `Last done ${formatDate(row.last_done_on)}${doneAt}, ${interval(row)}.` };
+}
+
+// Up to this many days away, "Due in N days"; further off, months ("Due in 2 months").
+const STATE_IN_DAYS_UP_TO = 60;
+
+function count(n: number, unit: string): string {
+  return `${n} ${unit}${n === 1 ? "" : "s"}`;
+}
+
+// The item's state in words, so it doesn't rest on the badge colour: "Overdue by 2 days",
+// "Due in 34 days", "Due in 2 months".
+export function dueState(item: ScheduledItem, today: string): string {
+  const { dueOn } = item.due;
+  const days = dueOn === undefined ? undefined : daysBetween(today, dueOn);
+  const dateCounts = item.status === "later" || item.by.includes("date");
+  if (days === undefined || !dateCounts) {
+    // Overdue or due soon by engine hours alone, or later and due only by engine hours.
+    if (item.status === "overdue") return "Overdue by engine hours";
+    if (item.status === "due-soon") return "Due soon by engine hours";
+    return "Not due soon";
+  }
+  if (days < 0) return `Overdue by ${count(-days, "day")}`;
+  if (days === 0) return "Due today";
+  if (days === 1) return "Due tomorrow";
+  if (days <= STATE_IN_DAYS_UP_TO) return `Due in ${count(days, "day")}`;
+  const months = fullMonthsBetween(today, dueOn!);
+  return months < 24 ? `Due in ${count(months, "month")}` : `Due in ${count(Math.floor(months / 12), "year")}`;
 }
 
 export type CurrencySplit = {

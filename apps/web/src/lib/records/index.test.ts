@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   costSplit,
+  dueState,
   formatDate,
   groupThousands,
   latestEngineHours,
@@ -144,6 +145,64 @@ describe("schedule", () => {
 
   it("is empty with no records", () => {
     expect(schedule([], [], options)).toEqual({ overdue: [], dueSoon: [], later: [], engineHours: null });
+  });
+});
+
+describe("dueState", () => {
+  const options = { today: "2026-10-18", withinDays: 60, withinEngineHours: 25 };
+  const state = (renewals: RenewalRow[], items: MaintenanceRow[]) => {
+    const result = schedule(renewals, items, options);
+    return [...result.overdue, ...result.dueSoon, ...result.later].map((i) => [i.row.id, dueState(i, options.today)]);
+  };
+
+  it("says how many days overdue, or until due, and months when it's further off", () => {
+    expect(
+      state(
+        [
+          renewal("yesterday", "2026-10-17"),
+          renewal("today", "2026-10-18"),
+          renewal("tomorrow", "2026-10-19"),
+          renewal("soon", "2026-11-21"),
+          renewal("months", "2026-12-31"),
+          renewal("edge", "2026-12-17"),
+          renewal("years", "2029-01-01"),
+        ],
+        [maintenance("old", { every_months: 6, last_done_on: "2026-04-16" })],
+      ),
+    ).toEqual([
+      ["old", "Overdue by 2 days"],
+      ["yesterday", "Overdue by 1 day"],
+      ["today", "Due today"],
+      ["tomorrow", "Due tomorrow"],
+      ["soon", "Due in 34 days"],
+      ["edge", "Due in 60 days"],
+      ["months", "Due in 2 months"],
+      ["years", "Due in 2 years"],
+    ]);
+  });
+
+  it("counts in days up to 60 days, whatever the due-soon window", () => {
+    const result = schedule([renewal("r", "2026-12-17")], [], { ...options, withinDays: 30 });
+    expect(dueState(result.later[0]!, options.today)).toBe("Due in 60 days");
+  });
+
+  it("names engine hours when they, not the date, make it overdue or due soon", () => {
+    expect(
+      state(
+        [],
+        [
+          maintenance("past", { every_months: 12, every_engine_hours: 100, last_done_on: "2026-06-01", last_done_engine_hours: 1000 }),
+          maintenance("close", { every_months: 12, every_engine_hours: 100, last_done_on: "2026-06-01", last_done_engine_hours: 1030 }),
+          maintenance("hours-only", { every_engine_hours: 500, last_done_on: "2026-06-01", last_done_engine_hours: 1090 }),
+          maintenance("latest", { every_months: 12, last_done_on: "2026-10-02", last_done_engine_hours: 1105 }),
+        ],
+      ),
+    ).toEqual([
+      ["past", "Overdue by engine hours"],
+      ["close", "Due soon by engine hours"],
+      ["latest", "Due in 11 months"],
+      ["hours-only", "Not due soon"],
+    ]);
   });
 });
 

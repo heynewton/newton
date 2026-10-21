@@ -1,7 +1,9 @@
 import { formatCents } from "@newton/calc";
+import type { ReactNode } from "react";
 import type { BoatDocument, BoatMember, DocumentType } from "@/lib/db";
 import {
   dueLine,
+  dueState,
   formatDate,
   groupThousands,
   hours,
@@ -65,12 +67,31 @@ const statusStyles = {
   later: "bg-black/5 text-zinc-700 dark:bg-white/10 dark:text-zinc-300",
 };
 
+// A `details` summary keeps its disclosure chevron, which turns when open, and stays 44 px tall.
+// The browser's own marker is hidden because `display: flex` drops it in some browsers anyway.
+function Summary({ children }: { children: ReactNode }) {
+  return (
+    <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 20"
+        className="size-5 shrink-0 transition-transform group-open:rotate-90 motion-reduce:transition-none"
+      >
+        <path d="M7.5 4.5 13 10l-5.5 5.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {children}
+    </summary>
+  );
+}
+
 function ItemList({
   items,
+  today,
   boatId,
   documents,
 }: {
   items: ScheduledItem[];
+  today: string;
   boatId: string;
   documents: Documents;
 }) {
@@ -81,12 +102,13 @@ function ItemList({
         const byHours = item.by.includes("engine-hours");
         return (
           <li key={`${item.type}:${item.row.id}`} className={`${card} flex flex-col gap-1`}>
-            <div className="flex flex-wrap items-center gap-2">
-              <h4 className="font-semibold break-words">{item.row.title}</h4>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[item.status]}`}>
-                {item.type === "renewal" ? "Renewal" : "Maintenance"}
+            <h4 className="font-semibold break-words">{item.row.title}</h4>
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className={`rounded-full px-2 py-0.5 text-sm font-medium ${statusStyles[item.status]}`}>
+                {dueState(item, today)}
               </span>
-            </div>
+              <span className={`text-sm ${muted}`}>{item.type === "renewal" ? "Renewal" : "Maintenance"}</span>
+            </p>
             <p className="font-medium">{due}</p>
             {byHours && (
               <p className="text-sm">
@@ -148,7 +170,7 @@ export function ComingUp({
           <div className="flex flex-col gap-3">
             <h3 className="font-semibold">Overdue</h3>
             {overdue.length > 0 ? (
-              <ItemList items={overdue} boatId={boatId} documents={documents} />
+              <ItemList items={overdue} today={today} boatId={boatId} documents={documents} />
             ) : (
               <p className={muted}>Nothing overdue.</p>
             )}
@@ -156,17 +178,17 @@ export function ComingUp({
           <div className="flex flex-col gap-3">
             <h3 className="font-semibold">Due in the next {withinDays} days</h3>
             {dueSoon.length > 0 ? (
-              <ItemList items={dueSoon} boatId={boatId} documents={documents} />
+              <ItemList items={dueSoon} today={today} boatId={boatId} documents={documents} />
             ) : (
               <p className={muted}>Nothing due in the next {withinDays} days.</p>
             )}
           </div>
           {later.length > 0 && (
             <details className="group flex flex-col gap-3">
-              <summary className="flex min-h-11 cursor-pointer items-center font-semibold">
-                Later ({later.length})
-              </summary>
-              <ItemList items={later} boatId={boatId} documents={documents} />
+              <Summary>
+                <h3 className="font-semibold">Later ({later.length})</h3>
+              </Summary>
+              <ItemList items={later} today={today} boatId={boatId} documents={documents} />
             </details>
           )}
         </>
@@ -240,10 +262,10 @@ export function CoOwnerBalance({
                   .map((e) => `${e.description} (${money(e.amount_cents, c.currency)}, paid by ${name(e.paid_by)})`)
                   .join("; ")}, because the payer has no ownership share.`}
             </p>
-            <details>
-              <summary className="flex min-h-11 cursor-pointer items-center font-medium">
-                The expenses ({c.counted.length + c.notCounted.length})
-              </summary>
+            <details className="group">
+              <Summary>
+                <span className="font-medium">The expenses ({c.counted.length + c.notCounted.length})</span>
+              </Summary>
               <ul className="flex flex-col divide-y divide-black/10 dark:divide-white/15">
                 {[...c.counted, ...c.notCounted].map((e) => (
                   <li key={e.id} className="flex flex-col gap-1 py-3">
