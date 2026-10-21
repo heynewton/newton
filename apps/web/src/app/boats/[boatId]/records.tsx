@@ -2,10 +2,12 @@ import type { ReactNode } from "react";
 import type { BoatDocument, BoatMember, DocumentType } from "@/lib/db";
 import {
   balancesFor,
+  dateOf,
   dueLine,
   dueState,
   formatDate,
   hours,
+  latestOn,
   money,
   type CostSplit,
   type ExpenseRow,
@@ -47,15 +49,36 @@ function documentHref(boatId: string, documentId: string): string {
   return `/boats/${boatId}/documents/${documentId}`;
 }
 
-// Where a record came from: a link to its document, or a note that none is linked.
+// Where a record came from and when: its document and the day it arrived, or that it was entered
+// by hand and how to add the document.
 function Source({ boatId, documentId, documents }: { boatId: string; documentId: string | null; documents: Documents }) {
   const doc = documentId ? documents.get(documentId) : undefined;
-  if (!doc) return <span className={`text-sm ${muted}`}>No source document linked.</span>;
+  if (!doc) {
+    return (
+      <p className={`text-sm ${muted}`}>
+        Entered by hand, no document. Forward the invoice or certificate to the boat to file it.
+      </p>
+    );
+  }
   return (
-    <a href={documentHref(boatId, doc.id)} target="_blank" rel="noopener" className={`${link} break-all`}>
-      From {documentName(doc)}
-    </a>
+    <p className="flex flex-col">
+      <a href={documentHref(boatId, doc.id)} target="_blank" rel="noopener" className={`${link} w-fit break-all`}>
+        From {documentName(doc)}
+      </a>
+      <span className={`-mt-2 text-sm ${muted}`}>
+        {received(doc) === "emailed" ? "Emailed" : "Uploaded"} {formatDate(dateOf(doc.receivedAt))}
+      </span>
+    </p>
   );
+}
+
+function received(doc: BoatDocument): string {
+  return doc.source === "email" ? "emailed" : "uploaded";
+}
+
+// A section's "source · freshness" line, under its heading.
+function Freshness({ children }: { children: ReactNode }) {
+  return <p className={`text-sm ${muted}`}>{children}</p>;
 }
 
 const statusStyles = {
@@ -180,10 +203,10 @@ export function ComingUp({
         <h2 id="coming-up" className="text-xl font-semibold">
           Renewals and maintenance
         </h2>
-        <p className={`text-sm ${muted}`}>
+        <Freshness>
           As of {formatDate(today)}. Due dates are worked out from each record&apos;s expiry date or last service
           and interval.
-        </p>
+        </Freshness>
       </div>
       {empty ? (
         <p className={`${card} ${muted}`}>
@@ -270,11 +293,19 @@ export function CoOwnerBalance({
 }) {
   const names = new Map(members.map((m) => [m.personId, m.name]));
   const name = (personId: string) => names.get(personId) ?? "A former member";
+  const latest = latestOn(expenses.map((e) => e.spent_on));
   return (
     <section aria-labelledby="balance" className="flex flex-col gap-4">
-      <h2 id="balance" className="text-xl font-semibold">
-        Co-owner balance
-      </h2>
+      <div className="flex flex-col gap-1">
+        <h2 id="balance" className="scroll-mt-4 text-xl font-semibold">
+          Co-owner balance
+        </h2>
+        {latest && (
+          <Freshness>
+            From {expenses.length} expense{expenses.length === 1 ? "" : "s"}, the latest on {formatDate(latest)}.
+          </Freshness>
+        )}
+      </div>
       {expenses.length === 0 ? (
         <p className={`${card} ${muted}`}>
           No shared expenses yet. Invoices and receipts forwarded to the boat (coming soon) will be added here and
@@ -328,7 +359,7 @@ export function CoOwnerBalance({
                       <span className="shrink-0 font-medium">{money(e.amount_cents, e.currency)}</span>
                     </span>
                     <span className={`text-sm ${muted}`}>
-                      {formatDate(e.spent_on)}, paid by {name(e.paid_by)}
+                      Spent {formatDate(e.spent_on)}, paid by {name(e.paid_by)}
                     </span>
                     <Source boatId={boatId} documentId={e.document_id} documents={documents} />
                   </li>
@@ -356,11 +387,15 @@ export function Documents({
   boatId: string;
   address: string | null;
 }) {
+  const lastReceived = latestOn(documents.map((d) => d.receivedAt));
   return (
     <section aria-labelledby="documents" className="flex flex-col gap-4">
-      <h2 id="documents" className="scroll-mt-4 text-xl font-semibold">
-        Documents
-      </h2>
+      <div className="flex flex-col gap-1">
+        <h2 id="documents" className="scroll-mt-4 text-xl font-semibold">
+          Documents
+        </h2>
+        {lastReceived && <Freshness>Last received {formatDate(lastReceived)}.</Freshness>}
+      </div>
       {address && (
         <p className="text-zinc-700 dark:text-zinc-300">
           Forward emails with their attachments to <EmailAddress address={address} />. Mail from people who
@@ -385,8 +420,7 @@ export function Documents({
               >
                 <span className="font-medium break-all underline">{documentName(doc)}</span>
                 <span className={`shrink-0 text-sm ${muted}`}>
-                  {documentTypes[doc.type]}, {doc.source === "email" ? "emailed" : "uploaded"}{" "}
-                  {formatDate(doc.receivedAt.slice(0, 10))}
+                  {documentTypes[doc.type]}, {received(doc)} {formatDate(dateOf(doc.receivedAt))}
                 </span>
               </a>
             </li>
