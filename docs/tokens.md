@@ -33,6 +33,7 @@ Rules for all of them:
 | Resend SMTP keys | secret | Resend | The prod or dev Resend team (Free), one key each (#109) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | That environment's Resend team (#109); that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment: the dev site's on `heynewton-web` Production only, never Preview |
 | `ANTHROPIC_API_KEY` | secret | Anthropic | `heynewton` org in the Claude Console, one workspace per environment | Filing (#11) in the web app (after email-in and the daily `/api/filing` run); the live evals of filing and manual Q&A (`packages/agent`, #11, #14) | Local `.env` for the evals; Vercel env vars of each deployment for filing (without it, filing is off there and documents stay unsorted). Not in CI |
+| Google OAuth clients (`newton-dev`, `newton-prod`) | client ID, secret | Google Cloud | Project Google Cloud project `heynewton`, on dev@heynewton.app | Google sign-in on `/sign-in` (#131) | That Supabase project's Auth settings (set through the Management API); the dev client's also in a local `supabase/.env` for the local stack. Not in GitHub |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
@@ -349,6 +350,51 @@ settings):
 The preview pattern also matches any `*-hey-newton` Vercel team. A magic link sent somewhere else
 is useless without the PKCE cookie in the browser that asked for it, and dev holds only fixture
 data, so that is acceptable here; prod allows only its own domain.
+
+## Google sign-in (#131)
+
+"Continue with Google" on `/sign-in` uses Supabase Auth's Google provider. `/sign-in` shows the
+button only where the project's auth server reports Google as on (`/auth/v1/settings`), so a stack
+without these keys offers the email link only.
+
+**Google Cloud** (console.cloud.google.com, signed in as dev@heynewton.app; no CLI creates an OAuth
+consent screen or an OAuth client for a public app, so these are dashboard steps):
+
+- Project `heynewton`. Google Auth Platform → Branding: app name **Hey Newton**, support email
+  dev@heynewton.app, home page `https://heynewton.app`, privacy `https://heynewton.app/privacy`,
+  terms `https://heynewton.app/terms`, authorised domain `heynewton.app`. Audience: **External**,
+  published (In production). Data access: only `openid`, `…/auth/userinfo.email` and
+  `…/auth/userinfo.profile`, which are non-sensitive, so Google's app verification isn't needed.
+- Clients → Create client → **Web application**, one per Supabase project. No JavaScript origins
+  (the flow is a redirect through Supabase). Authorised redirect URIs:
+
+| Client | Authorised redirect URIs |
+| --- | --- |
+| `newton-dev` | `https://czmndtkrnphueurgoqfk.supabase.co/auth/v1/callback` (the dev site and previews), `http://127.0.0.1:54321/auth/v1/callback` (the local stack) |
+| `newton-prod` | `https://yipgqtxszsdkvpegyolv.supabase.co/auth/v1/callback` |
+
+- Download each client's JSON straight after creating it (the secret is shown once) and keep it
+  out of the repo; the next step reads it and then it can be deleted.
+
+**Supabase** (by Claude or a maintainer, with the CLI's access token; the secret goes from the
+downloaded JSON straight into the request, never printed):
+
+```bash
+jq '{external_google_enabled: true, external_google_client_id: .web.client_id, external_google_secret: .web.client_secret}' client_secret_dev.json | curl -sf -X PATCH -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @- "https://api.supabase.com/v1/projects/<ref>/config/auth" -o /dev/null
+```
+
+Check with `curl -s -H "apikey: <publishable key>" https://<ref>.supabase.co/auth/v1/settings`,
+which shows `"google": true`.
+
+**Local stack:** copy `supabase/.env.example` to `supabase/.env` and fill in the `newton-dev`
+client's ID and secret, then restart the stack. `supabase/config.toml` keeps Google off without it.
+
+- **Same person:** Supabase Auth links a Google identity to the existing user with the same
+  verified email, so Google and a magic link for one address land on the same `people` row.
+- **Consent screen:** Google shows "continue to `<ref>.supabase.co`", since the callback is on
+  Supabase's domain. A Supabase custom domain (paid add-on) would make it `heynewton.app`.
+- **Renewal:** the client secrets don't expire. If one leaks, add a new secret on the client in
+  Google Cloud, set it as above, then delete the old one.
 
 ## Supabase database passwords
 

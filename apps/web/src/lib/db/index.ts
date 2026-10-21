@@ -55,7 +55,40 @@ export async function sendSignInLink(
   return error ? { ok: false, reason: "failed" } : { ok: true };
 }
 
-// Turns the code from a magic link into a session cookie. False if the link is invalid
+// Whether the auth server has Google sign-in turned on. A stack without Google keys (a local
+// stack with none in .env) leaves the button out instead of offering one that fails. Cached for a
+// minute, so turning Google on or off shows within a minute.
+export async function isGoogleSignInAvailable(): Promise<boolean> {
+  const settings = supabaseSettings();
+  if (!settings) return false;
+  try {
+    const response = await fetch(`${settings.url}/auth/v1/settings`, {
+      headers: { apikey: settings.key },
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) return false;
+    const body = (await response.json()) as { external?: { google?: boolean } };
+    return body.external?.google === true;
+  } catch {
+    return false;
+  }
+}
+
+// Starts Google sign-in and returns the address to send the person to, or null if it can't
+// start. Google comes back to redirectTo with a code that finishSignIn swaps for a session, as
+// for a magic link. Supabase Auth gives a verified email the same user whichever way it signs in,
+// so Google and a magic link for one address land on the same person.
+export async function startGoogleSignIn(redirectTo: string): Promise<string | null> {
+  const supabase = await createClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo, skipBrowserRedirect: true },
+  });
+  return error ? null : data.url;
+}
+
+// Turns the code from a magic link or Google into a session cookie. False if the link is invalid
 // or expired.
 export async function finishSignIn(code: string): Promise<boolean> {
   const supabase = await createClient();

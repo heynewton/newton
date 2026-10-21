@@ -26,6 +26,7 @@ function query(table: string) {
 
 const fakeClient = {
   auth: {
+    signInWithOAuth: vi.fn(async (args: unknown) => (calls.push({ method: "auth.signInWithOAuth", args: [args] }), answer("signInWithOAuth"))),
     signInWithOtp: vi.fn(async (args: unknown) => (calls.push({ method: "auth.signInWithOtp", args: [args] }), answer("signInWithOtp"))),
     exchangeCodeForSession: vi.fn(async (code: string) => (calls.push({ method: "auth.exchangeCodeForSession", args: [code] }), answer("exchangeCodeForSession"))),
     signOut: vi.fn(async () => (calls.push({ method: "auth.signOut", args: [] }), answer("signOut"))),
@@ -59,6 +60,7 @@ beforeEach(() => {
   results = {};
   createServerClient.mockClear();
   cookieStore.set.mockReset();
+  vi.unstubAllGlobals();
   vi.stubEnv("SUPABASE_URL", "http://127.0.0.1:54321");
   vi.stubEnv("SUPABASE_PUBLISHABLE_KEY", "sb_publishable_test");
 });
@@ -100,6 +102,57 @@ describe("sendSignInLink", () => {
         args: [{ email: "alex@example.com", options: { emailRedirectTo: "https://heynewton.app/auth/callback" } }],
       },
     ]);
+  });
+});
+
+describe("Google sign-in", () => {
+  function authSettings(response: Response | Error) {
+    const fetch = vi.fn(async () => {
+      if (response instanceof Error) throw response;
+      return response;
+    });
+    vi.stubGlobal("fetch", fetch);
+    return fetch;
+  }
+
+  it("is available when the auth server has Google turned on", async () => {
+    const fetch = authSettings(Response.json({ external: { google: true, apple: false } }));
+    expect(await db.isGoogleSignInAvailable()).toBe(true);
+    expect(fetch).toHaveBeenCalledWith("http://127.0.0.1:54321/auth/v1/settings", expect.objectContaining({ headers: { apikey: "sb_publishable_test" } }));
+  });
+
+  it.each([
+    ["Google is off", Response.json({ external: { google: false } })],
+    ["the settings can't be read", new Response("nope", { status: 500 })],
+    ["the auth server is down", new Error("connection refused")],
+  ])("is not available when %s", async (_case, response) => {
+    authSettings(response);
+    expect(await db.isGoogleSignInAvailable()).toBe(false);
+  });
+
+  it("is not available, and doesn't start, without Supabase settings", async () => {
+    withoutSupabase();
+    const fetch = authSettings(Response.json({ external: { google: true } }));
+    expect(await db.isGoogleSignInAvailable()).toBe(false);
+    expect(await db.startGoogleSignIn("https://heynewton.app/auth/callback")).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(calls).toEqual([]);
+  });
+
+  it("starts with Google, back to the given page", async () => {
+    results.signInWithOAuth = { data: { provider: "google", url: "https://auth.example/authorize?provider=google" } };
+    expect(await db.startGoogleSignIn("https://heynewton.app/auth/callback")).toBe("https://auth.example/authorize?provider=google");
+    expect(calls).toEqual([
+      {
+        method: "auth.signInWithOAuth",
+        args: [{ provider: "google", options: { redirectTo: "https://heynewton.app/auth/callback", skipBrowserRedirect: true } }],
+      },
+    ]);
+  });
+
+  it("is null when the provider refuses", async () => {
+    results.signInWithOAuth = { error: { message: "Unsupported provider: provider is not enabled" } };
+    expect(await db.startGoogleSignIn("https://heynewton.app/auth/callback")).toBeNull();
   });
 });
 

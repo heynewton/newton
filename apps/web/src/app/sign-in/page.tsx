@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { isSignInAvailable } from "@/lib/db";
+import { Suspense } from "react";
+import { isGoogleSignInAvailable, isSignInAvailable } from "@/lib/db";
 import { FIXTURE_PEOPLE, isFixtureSignInShown } from "@/lib/db/fixture-sign-in";
 import { AuthPlaceholder } from "../auth-placeholder";
+import { signInWithGoogle } from "./actions";
 import { SignInForm } from "./sign-in-form";
 
 export const metadata: Metadata = { title: "Sign in · Hey Newton" };
 
-export default function SignIn() {
+export default function SignIn({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // Previews without a database keep the placeholder.
   if (!isSignInAvailable()) return <AuthPlaceholder title="Sign in" />;
 
@@ -15,12 +17,68 @@ export default function SignIn() {
     <main className="mx-auto flex w-full flex-1 max-w-md flex-col justify-center gap-4 px-4 py-16">
       <Image src="/icon.svg" alt="Hey Newton logo" width={56} height={56} />
       <h1 className="text-3xl font-semibold">Sign in</h1>
-      <p className="text-zinc-600 dark:text-zinc-400">
-        Enter your email and we&apos;ll send you a link. No password needed.
-      </p>
-      <SignInForm />
+      <Suspense fallback={<SignInOptionsShell google={false} />}>
+        <SignInOptions searchParams={searchParams} />
+      </Suspense>
       {isFixtureSignInShown() && <FixtureSignIn />}
     </main>
+  );
+}
+
+// Asks the auth server whether Google is on, so it renders per request, behind Suspense.
+async function SignInOptions({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const [google, { error }] = await Promise.all([isGoogleSignInAvailable(), searchParams]);
+  return <SignInOptionsShell google={google} googleFailed={error === "google"} />;
+}
+
+function SignInOptionsShell({ google, googleFailed = false }: { google: boolean; googleFailed?: boolean }) {
+  return (
+    <>
+      <p className="text-zinc-600 dark:text-zinc-400">
+        {google
+          ? "Continue with Google, or enter your email and we'll send you a link. No password needed."
+          : "Enter your email and we'll send you a link. No password needed."}
+      </p>
+      {googleFailed && (
+        <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+          Google sign-in didn&apos;t finish. Try again, or use a link by email.
+        </p>
+      )}
+      {google && <GoogleSignIn />}
+      <SignInForm />
+    </>
+  );
+}
+
+// Shown only where the auth server has Google turned on (#131).
+function GoogleSignIn() {
+  return (
+    <>
+      <form action={signInWithGoogle}>
+        <button
+          type="submit"
+          className="flex min-h-11 w-full items-center justify-center gap-3 rounded-md border border-zinc-300 px-4 py-2 font-medium hover:bg-black/5 dark:border-zinc-700 dark:hover:bg-white/10"
+        >
+          <GoogleLogo />
+          Continue with Google
+        </button>
+      </form>
+      <p className="flex items-center gap-3 text-sm text-zinc-500 before:h-px before:flex-1 before:bg-zinc-300 after:h-px after:flex-1 after:bg-zinc-300 dark:before:bg-zinc-700 dark:after:bg-zinc-700">
+        or
+      </p>
+    </>
+  );
+}
+
+// Google's "G", in its own colours as Google's sign-in branding asks.
+function GoogleLogo() {
+  return (
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 48 48">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
   );
 }
 
