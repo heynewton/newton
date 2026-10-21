@@ -97,6 +97,7 @@ The Supabase schema, row-level security, sign-in, storage and the sample boat.
 - [#104](https://github.com/heynewton/newton/pull/104) · 2026-10-19 · Dev sign-in redirect URLs checked, prod domain removed from dev
 - [#123](https://github.com/heynewton/newton/pull/123) · 2026-10-20 · A person's stored email follows their sign-in email, and email-in matches the current address · closes [#117](https://github.com/heynewton/newton/issues/117)
 - [#127](https://github.com/heynewton/newton/pull/127) · 2026-10-20 · Owners can delete a boat, and its files in Storage go with it · closes [#115](https://github.com/heynewton/newton/issues/115)
+- [#132](https://github.com/heynewton/newton/pull/132) · 2026-10-21 · Sign in with Google next to the magic link · closes [#131](https://github.com/heynewton/newton/issues/131)
 
 ### Email-in and filing
 
