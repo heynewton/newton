@@ -16,7 +16,7 @@ Then, after the first version:
   or an email link, whichever are on) under a "Get started" title, with a note that Newton is in
   alpha, free while we test it, with rough edges. A first sign-in already creates the account, so
   no new backend was needed. `/sign-in` and `/get-started` now share one `SignInScreen` component.
-- Renamed the homepage button to "Get started" and updated `docs/architecture.md`.
+- Renamed the homepage button to "Get started", headed the test-profile section "Sign in using one of these test profiles", and updated `docs/architecture.md` and `docs/tokens.md`.
 - Checked the page at three widths in light and dark.
 
 **What changed along the way**
