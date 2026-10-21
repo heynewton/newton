@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
-import { getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
+import { canInvite, getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
 import { boatEmailAddress } from "@/lib/email-in";
 import { attentionSummary, costSplit, schedule, todayUtc } from "@/lib/records";
 import { roleNames } from "../roles";
@@ -18,7 +18,12 @@ const list = new Intl.ListFormat("en-GB", { type: "conjunction" });
 
 // What to do next with the boat: steps that can be done now and aren't done yet. What isn't built
 // yet is listed in one line instead.
-function nextSteps(address: string | null, hasDocuments: boolean): { steps: { title: string; description: ReactNode }[]; comingSoon: string[] } {
+function nextSteps(
+  boatId: string,
+  address: string | null,
+  hasDocuments: boolean,
+  inviteOthers: boolean,
+): { steps: { title: string; description: ReactNode }[]; comingSoon: string[] } {
   const steps = [];
   const comingSoon = [];
   if (!address) {
@@ -37,8 +42,20 @@ function nextSteps(address: string | null, hasDocuments: boolean): { steps: { ti
       ),
     });
   }
+  if (inviteOthers) {
+    steps.push({
+      title: "Invite your co-owners",
+      description: (
+        <>
+          Co-owners see the boat&apos;s records and shared costs, and can forward documents too.{" "}
+          <Link href={`/boats/${boatId}/settings#people`} className="inline-flex min-h-11 items-center font-medium underline">
+            Invite someone
+          </Link>
+        </>
+      ),
+    });
+  }
   comingSoon.push("asking about the boat from its manuals"); // #14
-  comingSoon.push("inviting co-owners and crew"); // Phase 3 onboarding
   return { steps, comingSoon };
 }
 
@@ -73,7 +90,8 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
   );
   const documents = new Map(records.documents.map((d) => [d.id, d]));
   const address = boatEmailAddress(boat.emailAlias, process.env.INBOUND_EMAIL_DOMAIN);
-  const next = nextSteps(address, records.documents.length > 0);
+  // Until someone else is on the boat, its owners and co-owners are asked to invite them.
+  const next = nextSteps(boat.boatId, address, records.documents.length > 0, canInvite(boat.role) && records.members.length === 1);
 
   return (
     <>

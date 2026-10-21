@@ -18,6 +18,8 @@ function query(table: string) {
     select: (...args: unknown[]) => (calls.push({ method: `${table}.select`, args }), builder),
     update: (...args: unknown[]) => (calls.push({ method: `${table}.update`, args }), builder),
     eq: (...args: unknown[]) => (calls.push({ method: `${table}.eq`, args }), builder),
+    order: (...args: unknown[]) => (calls.push({ method: `${table}.order`, args }), builder),
+    delete: (...args: unknown[]) => (calls.push({ method: `${table}.delete`, args }), builder),
     maybeSingle: async () => answer(table),
     then: (resolve: (r: Result) => unknown, reject?: (e: unknown) => unknown) =>
       Promise.resolve(answer(table)).then(resolve, reject),
@@ -331,6 +333,76 @@ describe("deleteBoat", () => {
     results["rpc.begin_boat_deletion"] = { data: [] };
     results["rpc.delete_boat"] = { error: { message: "no", code } };
     expect(await db.deleteBoat(ALEX, BOAT_ID, "Test boat")).toEqual({ ok: false, reason });
+  });
+});
+
+describe("inviteToBoat", () => {
+  it.each(["", "  ", "nia", "nia@example", "a b@example.com"])("refuses the email %j without calling Supabase", async (email) => {
+    expect(await db.inviteToBoat(BOAT_ID, email, "co_owner")).toEqual({ ok: false, reason: "invalid_email" });
+    expect(calls).toEqual([]);
+  });
+
+  it.each(["owner", "captain", ""])("refuses the role %j without calling Supabase", async (role) => {
+    expect(await db.inviteToBoat(BOAT_ID, "nia@example.com", role)).toEqual({ ok: false, reason: "invalid_role" });
+    expect(calls).toEqual([]);
+  });
+
+  it.each(["added", "invited", "already_on_boat"])("passes on %s", async (outcome) => {
+    results["rpc.invite_to_boat"] = { data: outcome };
+    expect(await db.inviteToBoat(BOAT_ID, "  nia@example.com ", "crew")).toEqual({ ok: true, outcome });
+    expect(calls).toEqual([
+      { method: "rpc.invite_to_boat", args: [{ boat: BOAT_ID, invitee_email: "nia@example.com", invitee_role: "crew" }] },
+    ]);
+  });
+
+  it.each([
+    ["42501", "not_allowed"],
+    ["55000", "not_allowed"],
+    ["54000", "too_many"],
+    ["22023", "invalid_email"],
+    ["XX000", "failed"],
+  ])("maps database error %s to %s", async (code, reason) => {
+    results["rpc.invite_to_boat"] = { error: { message: "no", code } };
+    expect(await db.inviteToBoat(BOAT_ID, "nia@example.com", "co_owner")).toEqual({ ok: false, reason });
+  });
+
+  it("fails without Supabase settings", async () => {
+    withoutSupabase();
+    expect(await db.inviteToBoat(BOAT_ID, "nia@example.com", "co_owner")).toEqual({ ok: false, reason: "failed" });
+  });
+});
+
+describe("listInvitations and cancelInvitation", () => {
+  it("lists the boat's invitations, newest first", async () => {
+    results.invitations = {
+      data: [{ id: "i1", email: "nia@example.com", role: "co_owner", created_at: "2026-10-21T10:00:00Z" }],
+    };
+    expect(await db.listInvitations(BOAT_ID)).toEqual([
+      { id: "i1", email: "nia@example.com", role: "co_owner", createdAt: "2026-10-21T10:00:00Z" },
+    ]);
+    expect(calls).toContainEqual({ method: "invitations.eq", args: ["boat_id", BOAT_ID] });
+    expect(calls).toContainEqual({ method: "invitations.order", args: ["created_at", { ascending: false }] });
+  });
+
+  it("throws when invitations can't be read", async () => {
+    results.invitations = { error: { message: "boom" } };
+    await expect(db.listInvitations(BOAT_ID)).rejects.toThrow("Could not load invitations: boom");
+  });
+
+  it("cancels one invitation of the boat", async () => {
+    expect(await db.cancelInvitation(BOAT_ID, "i1")).toBe(true);
+    expect(calls).toEqual([
+      { method: "invitations.delete", args: [] },
+      { method: "invitations.eq", args: ["boat_id", BOAT_ID] },
+      { method: "invitations.eq", args: ["id", "i1"] },
+    ]);
+  });
+});
+
+describe("canInvite", () => {
+  it("is owners and co-owners", () => {
+    const roles = ["owner", "co_owner", "crew", "read_only"] as const;
+    expect(roles.filter((role) => db.canInvite(role))).toEqual(["owner", "co_owner"]);
   });
 });
 

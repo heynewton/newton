@@ -6,3 +6,11 @@ export const roleNames: Record<MembershipRole, string> = {
   crew: "Crew",
   read_only: "Read-only",
 };
+
+// How a role reads after "as": "invited you to Kestrel as a co-owner".
+export const roleInSentence: Record<MembershipRole, string> = {
+  owner: "an owner",
+  co_owner: "a co-owner",
+  crew: "crew",
+  read_only: "a read-only member",
+};

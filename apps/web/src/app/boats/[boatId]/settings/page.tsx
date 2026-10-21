@@ -2,16 +2,25 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { BOAT_NAME_MAX_LENGTH, getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
+import {
+  BOAT_NAME_MAX_LENGTH,
+  canInvite,
+  getBoatRecords,
+  getCurrentPerson,
+  getMyBoat,
+  listInvitations,
+  type Invitation,
+} from "@/lib/db";
 import { EXPORT_MAX_FILE_BYTES, canExport } from "@/lib/db/export";
 import { ExportData } from "../records";
+import { People } from "./people";
 import { RenameBoatForm } from "./rename-boat-form";
 
 export const metadata: Metadata = { title: "Boat settings · Hey Newton" };
 
-// Rename (#158), export and delete (#142), away from the everyday links of the boat page and linked
-// from the header's account menu. Owners and co-owners only: crew and read-only members get the
-// same 404 as a boat they're not on, and only owners see delete.
+// Rename (#158), people (#160), export and delete (#142), away from the everyday links of the boat
+// page and linked from the header's account menu. Owners and co-owners only: crew and read-only
+// members get the same 404 as a boat they're not on, and only owners see delete.
 export default function BoatSettings({ params }: PageProps<"/boats/[boatId]/settings">) {
   return (
     <main className="mx-auto flex w-full flex-1 max-w-2xl flex-col gap-10 px-4 py-10 sm:py-16">
@@ -29,7 +38,9 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
   const boat = await getMyBoat(person, boatId);
   if (!boat || !canExport(boat.role)) notFound();
   // A boat being deleted can't be exported (its files are partly gone), only finished off.
-  const records = boat.deletingSince ? null : await getBoatRecords(boat.boatId);
+  const [records, invitations] = boat.deletingSince
+    ? [null, []]
+    : await Promise.all([getBoatRecords(boat.boatId), canInvite(boat.role) ? loadInvitations(boat.boatId) : []]);
 
   return (
     <>
@@ -47,6 +58,17 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
             <RenameBoatForm boatId={boat.boatId} boatName={boat.boatName} maxLength={BOAT_NAME_MAX_LENGTH} />
           </div>
         </section>
+      )}
+
+      {records && canInvite(boat.role) && (
+        <People
+          boatId={boat.boatId}
+          boatName={boat.boatName}
+          members={records.members}
+          invitations={invitations}
+          personId={person.id}
+          siteUrl={process.env.SITE_URL ?? null}
+        />
       )}
 
       {records && (
@@ -84,4 +106,15 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
       </Link>
     </>
   );
+}
+
+// Null when the invitations can't be read, so the rest of settings still loads. On a preview, the
+// shared dev database only gets this PR's migration once it merges.
+async function loadInvitations(boatId: string): Promise<Invitation[] | null> {
+  try {
+    return await listInvitations(boatId);
+  } catch (error) {
+    console.error("settings: invitations not loaded", error instanceof Error ? error.message : error);
+    return null;
+  }
 }
