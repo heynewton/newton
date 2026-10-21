@@ -3,12 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
-import { getBoatRecords, getCurrentPerson, getMyBoat, listMyBoats } from "@/lib/db";
+import { getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
 import { EXPORT_MAX_FILE_BYTES, canExport } from "@/lib/db/export";
 import { boatEmailAddress } from "@/lib/email-in";
 import { costSplit, schedule, todayUtc } from "@/lib/records";
 import { roleNames } from "../roles";
-import { SignOut } from "../sign-out";
 import { CoOwnerBalance, ComingUp, Documents, EmailAddress, ExportData } from "./records";
 
 export const metadata: Metadata = { title: "Your boat · Hey Newton" };
@@ -59,7 +58,7 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
   const { boatId } = await params;
   const person = await getCurrentPerson();
   if (!person) redirect("/sign-in");
-  const [boat, boats] = await Promise.all([getMyBoat(person, boatId), listMyBoats(person)]);
+  const boat = await getMyBoat(person, boatId);
   if (!boat) notFound();
   if (boat.deletingSince) return <BeingDeleted boatId={boat.boatId} boatName={boat.boatName} isOwner={boat.role === "owner"} />;
 
@@ -134,27 +133,17 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
         />
       )}
 
-      <footer className="flex flex-col gap-2 border-t border-black/10 pt-6 dark:border-white/15">
-        <nav className="flex flex-wrap gap-x-6">
-          {boats.length > 1 && (
-            <Link href="/boats" className="flex min-h-11 items-center font-medium underline">
-              Your boats
-            </Link>
-          )}
-          <Link href="/boats/new" className="flex min-h-11 items-center font-medium underline">
-            Add another boat
+      {/* Switching boats, adding one and signing out are in the header (boats/layout.tsx). */}
+      {boat.role === "owner" && (
+        <footer className="border-t border-black/10 pt-6 dark:border-white/15">
+          <Link
+            href={`/boats/${boat.boatId}/delete`}
+            className="flex min-h-11 w-fit items-center font-medium text-red-700 underline dark:text-red-400"
+          >
+            Delete this boat
           </Link>
-          {boat.role === "owner" && (
-            <Link
-              href={`/boats/${boat.boatId}/delete`}
-              className="flex min-h-11 items-center font-medium text-red-700 underline dark:text-red-400"
-            >
-              Delete this boat
-            </Link>
-          )}
-        </nav>
-        <SignOut person={person} />
-      </footer>
+        </footer>
+      )}
     </>
   );
 }
