@@ -25,9 +25,9 @@ T* () Tj
 T* (INVOICE                             Invoice no.:  EPB-2026-0917) Tj
 T* (                                    Date:         2026-10-02) Tj
 T* (                                    Due:          2026-11-01) Tj
-T* (Bill to:   Kittiwake owners, c/o Sam Placeholder) Tj
+T* (Bill to:   Test boat owners, c/o Sam Placeholder) Tj
 T* (           1 Imaginary Lane, Port Example, XX 00000) Tj
-T* (Vessel:    Kittiwake, 2009 Example Yachts EY 34, hull ID XXX00001A909) Tj
+T* (Vessel:    Test boat, 2009 Example Yachts EY 34, hull ID XXX00001A909) Tj
 T* (Work done: 2026-09-28 to 2026-10-02.  Engine hours at service: 1,412) Tj
 T* () Tj
 T* (DESCRIPTION                              QTY   UNIT PRICE      AMOUNT) Tj

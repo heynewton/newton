@@ -5,7 +5,7 @@ import type { MaintenanceRow, RenewalRow } from "../records";
 import { buildDigests, digestSubject, renderDigest, sentKey, type Digest, type ReminderBoat } from "./index";
 import { runReminders, type Mailer, type ReminderStore } from "./run";
 
-// The made-up sample boat Kittiwake (fixtures/sample-boat/boat.json), as the database holds it.
+// The made-up sample boat Test boat (fixtures/sample-boat/boat.json), as the database holds it.
 type Fixture = {
   boat: { id: string; name: string };
   people: { id: string; name: string; verifiedSenders: string[] }[];
@@ -26,7 +26,7 @@ const fixture: Fixture = JSON.parse(
 );
 const docId = (name: string) => `doc-${name}`;
 
-function kittiwake(): ReminderBoat {
+function testBoat(): ReminderBoat {
   const documentNames = new Set([...fixture.renewals, ...fixture.maintenance].map((r) => r.sourceDocument).filter(Boolean));
   return {
     boatId: fixture.boat.id,
@@ -66,9 +66,9 @@ const ALEX = "00000000-0000-4000-8000-000000000101";
 const ANODES = "00000000-0000-4000-8000-000000000404";
 const REGISTRATION = "00000000-0000-4000-8000-000000000302";
 
-describe("buildDigests on Kittiwake", () => {
+describe("buildDigests on Test boat", () => {
   it("on 19 Oct 2026, tells each owner and co-owner about the overdue anodes, and nobody else", () => {
-    const digests = buildDigests([kittiwake()], new Set(), "2026-10-19");
+    const digests = buildDigests([testBoat()], new Set(), "2026-10-19");
 
     expect(digests.map((d) => d.recipient.name)).toEqual(["Alex Sample", "Sam Placeholder", "Jordan Fictional"]);
     for (const digest of digests) {
@@ -91,7 +91,7 @@ describe("buildDigests on Kittiwake", () => {
   });
 
   it("adds the registration once it is within 30 days, with its source document", () => {
-    const [alex] = buildDigests([kittiwake()], new Set(), "2026-12-01");
+    const [alex] = buildDigests([testBoat()], new Set(), "2026-12-01");
     const registration = alex.boats[0].items.find((i) => i.itemId === REGISTRATION);
     expect(registration).toMatchObject({
       status: "due_soon",
@@ -106,13 +106,13 @@ describe("buildDigests on Kittiwake", () => {
     const sent = new Set([
       sentKey(ALEX, { itemType: "maintenance", itemId: ANODES, dueOn: "2026-10-18", dueAtEngineHours: 1471, status: "overdue" }),
     ]);
-    const digests = buildDigests([kittiwake()], sent, "2026-10-19");
+    const digests = buildDigests([testBoat()], sent, "2026-10-19");
     expect(digests.map((d) => d.recipient.personId)).not.toContain(ALEX);
     expect(digests).toHaveLength(2);
   });
 
   it("reminds again when a due-soon item becomes overdue, and when its due date moves", () => {
-    const boat = kittiwake();
+    const boat = testBoat();
     const soon = buildDigests([boat], new Set(), "2026-10-10")[0].boats[0].items.find((i) => i.itemId === ANODES)!;
     expect(soon.status).toBe("due_soon");
     const sent = new Set([sentKey(ALEX, soon)]);
@@ -135,30 +135,30 @@ describe("buildDigests on Kittiwake", () => {
   });
 
   it("sends one digest per person across all their boats", () => {
-    const second = { ...kittiwake(), boatId: "boat-2", boatName: "Petrel", recipients: kittiwake().recipients.slice(0, 1) };
-    const digests = buildDigests([kittiwake(), second], new Set(), "2026-10-19");
+    const second = { ...testBoat(), boatId: "boat-2", boatName: "Petrel", recipients: testBoat().recipients.slice(0, 1) };
+    const digests = buildDigests([testBoat(), second], new Set(), "2026-10-19");
     expect(digests).toHaveLength(3);
-    expect(digests[0].boats.map((b) => b.boatName)).toEqual(["Kittiwake", "Petrel"]);
+    expect(digests[0].boats.map((b) => b.boatName)).toEqual(["Test boat", "Petrel"]);
     expect(digestSubject(digests[0])).toBe("2 overdue on your boats");
-    expect(digestSubject(digests[1])).toBe("Kittiwake: 1 overdue");
+    expect(digestSubject(digests[1])).toBe("Test boat: 1 overdue");
   });
 
   it("sends nothing when nothing is due", () => {
-    expect(buildDigests([kittiwake()], new Set(), "2026-09-01")).toEqual([]);
+    expect(buildDigests([testBoat()], new Set(), "2026-09-01")).toEqual([]);
   });
 });
 
 describe("renderDigest", () => {
-  const digest = buildDigests([kittiwake()], new Set(), "2026-12-01")[0];
+  const digest = buildDigests([testBoat()], new Set(), "2026-12-01")[0];
 
   it("says what is due, what the date comes from, where the record came from, and when this was worked out", () => {
     const { subject, text, html } = renderDigest(digest, "https://heynewton.app/");
-    expect(subject).toMatch(/^Kittiwake: \d+ overdue, \d+ coming up$/);
+    expect(subject).toMatch(/^Test boat: \d+ overdue, \d+ coming up$/);
     expect(text).toContain("Hi Alex Sample,");
     expect(text).toContain("- State vessel registration (renewal) - Coming up\n  Expires 31 Dec 2026.\n  Reference XX 0000 ZZ.\n  From registration.pdf.");
-    expect(text).toContain(`Open Kittiwake: https://heynewton.app/boats/${fixture.boat.id}`);
+    expect(text).toContain(`Open Test boat: https://heynewton.app/boats/${fixture.boat.id}`);
     expect(text).toContain("Worked out on 1 Dec 2026 from the records on Newton.");
-    expect(html).toContain(`<a href="https://heynewton.app/boats/${fixture.boat.id}">Open Kittiwake</a>`);
+    expect(html).toContain(`<a href="https://heynewton.app/boats/${fixture.boat.id}">Open Test boat</a>`);
   });
 
   it("escapes names in HTML", () => {
@@ -173,7 +173,7 @@ describe("runReminders", () => {
   class MemoryStore implements ReminderStore {
     sent = new Set<string>();
     async loadBoats() {
-      return [kittiwake()];
+      return [testBoat()];
     }
     async loadSent() {
       return new Set(this.sent);
@@ -197,7 +197,7 @@ describe("runReminders", () => {
     const deps = { store, mailer, today: "2026-10-19", siteUrl: "https://heynewton.app" };
     expect(await runReminders(deps)).toEqual({ digests: 3, sent: 3, failed: [] });
     expect(mailer.sent.map((s) => s.to)).toEqual(["alex@example.com", "sam@example.net", "jordan@example.com"]);
-    expect(mailer.sent[0]).toEqual({ to: "alex@example.com", subject: "Kittiwake: 1 overdue", key: `reminders/${ALEX}/2026-10-19` });
+    expect(mailer.sent[0]).toEqual({ to: "alex@example.com", subject: "Test boat: 1 overdue", key: `reminders/${ALEX}/2026-10-19` });
 
     expect(await runReminders(deps)).toEqual({ digests: 0, sent: 0, failed: [] });
     expect(mailer.sent).toHaveLength(3);

@@ -6,7 +6,7 @@ Registration number:  XX 0000 ZZ
 Valid from:           2025-01-01
 Expires:              2026-12-31
 Hull ID:              XXX00001A909
-Vessel name:          Kittiwake
+Vessel name:          Test boat
 Year / make:          2009 Example Yachts
 Length:               34 ft 0 in
 Hull material:        Fiberglass

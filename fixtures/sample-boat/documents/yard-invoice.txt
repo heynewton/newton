@@ -5,9 +5,9 @@ Phone (555) 010-0142   office@boatyard.example.net
 INVOICE                             Invoice no.:  EPB-2026-0917
                                     Date:         2026-10-02
                                     Due:          2026-11-01
-Bill to:   Kittiwake owners, c/o Sam Placeholder
+Bill to:   Test boat owners, c/o Sam Placeholder
            1 Imaginary Lane, Port Example, XX 00000
-Vessel:    Kittiwake, 2009 Example Yachts EY 34, hull ID XXX00001A909
+Vessel:    Test boat, 2009 Example Yachts EY 34, hull ID XXX00001A909
 Work done: 2026-09-28 to 2026-10-02.  Engine hours at service: 1,412
 
 DESCRIPTION                              QTY   UNIT PRICE      AMOUNT
