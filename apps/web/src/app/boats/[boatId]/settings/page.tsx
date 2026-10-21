@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
+import { canInvite, getBoatRecords, getCurrentPerson, getMyBoat, listInvitations } from "@/lib/db";
 import { EXPORT_MAX_FILE_BYTES, canExport } from "@/lib/db/export";
 import { ExportData } from "../records";
+import { People } from "./people";
 
 export const metadata: Metadata = { title: "Boat settings · Hey Newton" };
 
-// Export and delete (#142), away from the everyday links of the boat page and linked from the
-// header's account menu. Owners and co-owners only: crew and read-only members get the same 404 as
-// a boat they're not on, and only owners see delete.
+// People, export and delete (#142), away from the everyday links of the boat page and linked from
+// the header's account menu. Owners and co-owners only: crew and read-only members get the same 404
+// as a boat they're not on, and only owners see delete.
 export default function BoatSettings({ params }: PageProps<"/boats/[boatId]/settings">) {
   return (
     <main className="mx-auto flex w-full flex-1 max-w-2xl flex-col gap-10 px-4 py-10 sm:py-16">
@@ -28,7 +29,9 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
   const boat = await getMyBoat(person, boatId);
   if (!boat || !canExport(boat.role)) notFound();
   // A boat being deleted can't be exported (its files are partly gone), only finished off.
-  const records = boat.deletingSince ? null : await getBoatRecords(boat.boatId);
+  const [records, invitations] = boat.deletingSince
+    ? [null, []]
+    : await Promise.all([getBoatRecords(boat.boatId), canInvite(boat.role) ? listInvitations(boat.boatId) : []]);
 
   return (
     <>
@@ -36,6 +39,17 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
         <h1 className="text-3xl font-semibold">Boat settings</h1>
         <p className="break-words text-zinc-600 dark:text-zinc-400">{boat.boatName}</p>
       </header>
+
+      {records && canInvite(boat.role) && (
+        <People
+          boatId={boat.boatId}
+          boatName={boat.boatName}
+          members={records.members}
+          invitations={invitations}
+          personId={person.id}
+          siteUrl={process.env.SITE_URL ?? null}
+        />
+      )}
 
       {records && (
         <ExportData
