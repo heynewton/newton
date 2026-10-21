@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-// Stands in for sign-up, and for sign-in where no database is configured (previews).
+// Stands in for sign-in and get-started where no database is configured (previews).
 export function AuthPlaceholder({ title }: { title: string }) {
   return (
     <main className="mx-auto flex w-full flex-1 max-w-md flex-col justify-center gap-4 px-4 py-16">
