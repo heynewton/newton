@@ -29,6 +29,23 @@ every change through a PR.
 - Most PRs are written by Claude, so review time is the bottleneck. Ask for a smaller PR rather
   than skimming a big one.
 
+## Releasing
+
+**Merge = dev, release = prod.** Merging a PR updates the dev site and `newton-dev` only.
+Production (heynewton.app and `newton-prod`) moves when you publish a GitHub Release (#163).
+
+- Say "release" to Claude. It checks that the commit passed on dev, drafts the notes from the
+  history files (`npm run release-notes -- --create`), tidies them and gives you the draft's link.
+  It never publishes.
+- Read the draft, above all **Database changes**: migrations can't be undone, so check each is safe
+  on prod's existing data. Then **Publish release**: that is the approval, and the Production
+  workflow does the rest.
+- Roll back with Actions → **Production** → **Run workflow** with the earlier tag: the code goes
+  back, the migrations stay. Hotfixes go through `main` like any change, then a new release.
+- At weekly planning, `npm run release-notes` shows what is merged but not released yet.
+
+Details, including what the workflow refuses: [process.md](process.md#production).
+
 ## The backlog
 
 - **Triage** moves issues from Inbox to Ready, once they meet the
@@ -39,7 +56,8 @@ every change through a PR.
 - **Milestones** are the build phases. Every open issue has one; we are in Phase 1.
 - **Ideas** for later phases go in the spec's "Feature ideas" section, not in issues, and become
   issues at weekly planning when their phase gets close.
-- **Weekly planning** (about 15 minutes): order the top of Ready and refine those issues.
+- **Weekly planning** (about 15 minutes): order the top of Ready and refine those issues, and look
+  at what is waiting to be released.
 
 ## Keeping the lights on
 

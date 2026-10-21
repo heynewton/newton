@@ -151,29 +151,52 @@ Vercel with the proxy off). It is where real boat data lives, so it is never see
 dev or previews holds its keys. Its Auth URL configuration allows only `https://heynewton.app`, so a
 sign-in link always comes back there.
 
-- **Release path.** Merge to `main` → the Dev database workflow migrates and seeds `newton-dev` →
-  when that succeeds, the **Production** workflow (`.github/workflows/production.yml`) starts on
-  the same commit. Its first job checks the prod settings and lists the migrations `newton-prod`
-  hasn't applied (in the run summary). Then:
-  - **No migration pending:** it releases straight away, no click: builds and deploys the web app
-    to `heynewton-prod`. Most merges, docs-only ones included, take this path; a docs-only one
-    just redeploys the same app.
-  - **Migrations pending:** it waits for the maintainer's approval on `production-migrations`
-    (Actions → the run → **Review deployments**). Approved, it applies exactly those migrations to
-    `newton-prod` (migrations only, no seed), then deploys. Rejected, nothing is released.
+**Merge = dev, release = prod** (#163). A merge to `main` updates the dev site and `newton-dev`,
+never production. Production moves only when a maintainer publishes a GitHub Release.
 
-  Every PR's preview has already exercised the change against dev. Production is never released
-  from a PR or another branch: the workflow only runs after a push to `main`, and the
-  `production` environment, which holds the prod keys, only allows `main` (#120).
-- **What to look at before approving:** the migrations the run summary lists (each links to its
-  file at that commit), and whether each is safe on data that already exists: dev's seed resets
-  its rows, prod's don't, and a dropped or rewritten column can't be undone. Code can: revert and
-  the next release puts the old app back. Leave a run waiting, or reject it, to hold a release.
-  While one waits, later merges queue behind it (only the newest is kept) and release once it is
-  approved or rejected; a rejected migration is still on `main`, so the next run asks again.
+- **Release path.** PR → its own preview. Merge → the Dev database workflow migrates and seeds
+  `newton-dev`, and Deploy updates the dev site. Release → a maintainer publishes a GitHub Release
+  on a commit of `main`, and its `release: published` event starts the **Production** workflow
+  (`.github/workflows/production.yml`) on the release's tag. Its first job (no secrets) refuses
+  the tag unless it is a calendar tag with a published release that isn't a prerelease, on a
+  commit that is on `main` and **passed on dev**: the Dev database workflow succeeded on that
+  commit, and Deploy succeeded on the last commit up to it that changed the app
+  (`scripts/release-check.mjs`, through the REST API). Then the release job (environment
+  `production`) checks the prod settings, lists the migrations `newton-prod` hasn't applied in the
+  run summary, applies them (migrations only, no seed) and deploys the web app to
+  `heynewton-prod`. Publishing is the approval: there is no other click.
+- **Versions** are calendar tags: `2026.10.21`, then `2026.10.21.2` for a second release the same
+  day. Each release's notes say what changed since the last one, with **What's new**, **Under the
+  hood** and **Database changes** (the migrations it applies, which can't be undone).
+- **How to release.** Say "release" to Claude (or run it yourself):
+  1. `npm run release-notes -- --create` (optionally `--to <sha>`; default `origin/main`) checks
+     that the commit passed on dev, drafts the notes from `docs/history/` and saves them as a
+     **draft** release with the next tag. It never publishes. An existing draft is updated rather
+     than duplicated.
+  2. Claude tidies the wording (the script's lines are the PRs' history summaries) and hands over
+     the draft's link.
+  3. The maintainer reads it, above all **Database changes**: is each migration safe on data
+     that already exists? Dev's seed resets its rows, prod's don't, and a dropped or rewritten
+     column can't be undone. Then **Publish release**. The Production run appears under Actions;
+     the release lists its migrations again in the run summary.
+- **What a draft covers.** Everything merged on `main` after the newest release tag, up to the
+  target commit. Before the first tag, everything after the commit production last deployed
+  (its latest successful deployment to the `production` environment). `--from <ref>` overrides
+  either. Without `--create` the script only prints the notes, which is also how to see what is
+  waiting to be released.
+- **Roll back.** Actions → **Production** → **Run workflow** on `main`, with the earlier tag. It
+  checks that tag as above and redeploys its code. **Migrations don't roll back:** the run summary
+  lists the ones `newton-prod` has that the older tag doesn't, they stay applied, and the old code
+  runs against the newer schema. So a release with a migration needs a fix forward rather than a
+  rollback, unless its migration only added things the old code ignores. The workflow refuses a
+  tag that is both older than prod and has migrations prod hasn't applied.
+- **Hotfix.** There are no release branches: fix on a branch, merge to `main` as usual, let dev
+  pass, then release `main` (or the fix's own commit with `--to <sha>`, to leave out anything merged
+  since). The next day's tag, or `.2` the same day.
 - **A failed release** leaves prod as it was, or with the migrations applied and the old app if
-  it failed after them. Fix on `main`; the next merge releases. To try again without a merge:
-  Actions → the run → **Re-run all jobs** (it checks and asks again as needed).
+  it failed after them. To retry the same tag: Actions → the run → **Re-run all jobs**, or **Run
+  workflow** with that tag. If the release itself was wrong, fix on `main` and release again.
+- **Releases queue:** one at a time; a newer one waiting replaces an older one in the queue.
 - **Fixture sign-in is never on:** the workflow fails if `FIXTURE_SIGN_IN` is set anywhere for
   production, and after deploying checks that `/auth/fixture-sign-in` answers 404.
 - **Email-in and reminders** run on prod from the `heynewton-prod` project's own env vars: its
@@ -181,24 +204,23 @@ sign-in link always comes back there.
   ([tokens.md](tokens.md#production)). Vercel Cron calls `/api/reminders` on prod daily, as on dev.
 - **The `production` environment** holds every prod value: the Supabase access token and database
   password (secrets), the project ref, URL, publishable key and site URL (variables). Its
-  deployment branch policy only allows `main`. Since #120 it has no required reviewer: that is on
-  **`production-migrations`**, which holds nothing and only gates migrations. Any workflow on
-  `main` could now use the prod keys without a click, so a PR that adds one to the `production`
-  environment needs the same care as one that changes `production.yml`.
-- **Approving every release again.** Repo settings → Environments → `production` → Required
-  reviewers: add the maintainer back. The workflow needs no change: the check and the release
-  jobs each wait for that approval, so a release takes two clicks (three with migrations, the
-  gate in between). Do this **before anyone outside the
-  team can sign up (#33) or the app ships to an app store**: it's step 8 of the
-  [prod setup checklist](tokens.md#production). To go back to releasing without a click, remove
-  the reviewer again.
+  deployment policy allows `main` (for **Run workflow**) and release tags (`20*`), and it has no
+  required reviewer: publishing the release is the approval. A tag ruleset lets only maintainers
+  create release tags, so only they can publish a release (step 7 of the
+  [prod setup checklist](tokens.md#production)). Any workflow on `main` could use the
+  prod keys without a click, so a PR that adds one to the `production` environment needs the same
+  care as one that changes `production.yml`.
+- **Who can release.** Since #163 a maintainer decides every release, and the release notes show
+  what goes out, so the step 8 switch of #120 (a required reviewer on `production` before
+  outsiders sign up) is no longer needed. A required reviewer can still be added for a second pair
+  of eyes; the release job then waits for it after the tag checks.
 - **Setup** (once, by the maintainer): the checklist in [tokens.md](tokens.md#production).
 
 ## Rhythm
 
 | When | What | Who |
 | --- | --- | --- |
-| Weekly, ~15 min | **Planning**: order the top of Ready; refine those issues; turn ideas for the next phase into issues. | Maintainers, Claude |
+| Weekly, ~15 min | **Planning**: order the top of Ready; refine those issues; turn ideas for the next phase into issues; look at what is merged but not released (`npm run release-notes`) and decide whether to release. | Maintainers, Claude |
 | Continuously | **Flow**: take the top unblocked Ready issue, ship it with the `ship-change` skill. | Claude, contributors |
 | Weekly | **Review**: demo what merged, on real boat data kept locally. A short update to contributors, based on the build log. | Maintainers, contributors |
 | Monthly | **Retro**: what slowed us down, what broke, what to change. Changes go into CLAUDE.md or the skill. | Everyone |
@@ -216,7 +238,8 @@ Each overnight session:
   (cloud sessions can't reach the board themselves);
 - relies on CI for the database tests (the `database` job), since the local Supabase stack may not
   run in the cloud;
-- opens a PR and stops: no merges, since a merge to `main` releases to production;
+- opens a PR and stops: no merges and no releases (a merge updates dev; a release is the
+  maintainer's);
 - writes any decision only a maintainer can make as a question in its PR, picks the safest default
   and carries on.
 

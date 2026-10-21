@@ -136,8 +136,9 @@ as Read where possible, and update this table in the same PR.
 - **Resource access:** `newton-prod` only, never both projects in one token.
 - **Stored in:** the GitHub environment `production` (Settings → Environments → production →
   Environment secrets) as `SUPABASE_PROD_ACCESS_TOKEN`. The environment only allows `main`, so
-  a dev workflow on another branch or a PR can never use it. Since #120 it needs no approval:
-  migrations wait for it on `production-migrations` instead ([Production](#production), step 7).
+  a dev workflow on another branch or a PR can never use it (release tags aside, which only
+  maintainers can create). It needs no approval: publishing a release is the approval
+  ([Production](#production), step 7).
 - **Expiry:** the same, with its own calendar reminder.
 
 ## `VOYAGE_API_KEY`
@@ -571,8 +572,8 @@ up, at the prod `vercel.app` URL, and step 6 says what changes.
 **2. GitHub environment `production`**
 
 - [x] Repo settings → Environments → New environment `production`. Deployment protection rules:
-      **Required reviewers** the maintainer, **Deployment branches** `main` only. Step 7 moved the
-      reviewer to `production-migrations` (#120).
+      **Required reviewers** the maintainer, **Deployment branches** `main` only. #120 moved the
+      reviewer to `production-migrations`; step 7 (#163) removed that and allowed release tags.
 - [x] Environment secrets: `SUPABASE_PROD_ACCESS_TOKEN`, `SUPABASE_PROD_DB_PASSWORD`.
 - [x] Environment variables: `SUPABASE_PROD_PROJECT_REF`, `SUPABASE_PROD_URL`
       (`https://<ref>.supabase.co`), `SUPABASE_PROD_PUBLISHABLE_KEY` (`sb_publishable_…`),
@@ -664,27 +665,34 @@ from the redirect URL the site sends); the prod email-in webhook at
 which runs on whichever deployment is production; and everything on dev. To undo, put both domains
 back on `heynewton-web` and `https://heynewton.app/**` back on `newton-dev`'s redirect list.
 
-**7. Approval only when migrations are pending (#120)**
+**7. Release by publishing a GitHub Release (#163)**
 
-The Production workflow's first job (environment `production`) checks the settings and lists the
-migrations `newton-prod` hasn't applied; a gate job in `production-migrations` waits for approval
-only when there are some; the release job (environment `production`) applies them and deploys
-([process.md](process.md#production)). In this order, so migrations never release without a gate:
+Replaces #120's `production-migrations` gate (steps a–c of it were done on 20 October 2026, per
+#122): a merge now only updates dev, and production releases when a maintainer publishes a release
+([process.md](process.md#production)). In this order, so prod is never without a guard:
 
-- [ ] a. Before merging the #120 PR: Repo settings → Environments → New environment
-      `production-migrations`. **Required reviewers** the maintainer; **Deployment branches**
-      `main` only; no secrets, no variables. It must exist first: a workflow that names a missing
-      environment creates it with no protection.
-- [ ] b. Merge the #120 PR. Its own release still asks on `production` (on the check and on the
-      release job) and, if a migration is pending, on `production-migrations` too.
-- [ ] c. Only then: Environments → `production` → remove the required reviewer. Keep
-      **Deployment branches** `main` only and every secret and variable.
-- [ ] d. The next merge with no migration reaches heynewton.app without a click (run summary:
-      "No migrations pending"). The next one with a migration waits on `production-migrations`
-      and its summary lists the files.
+- [ ] a. Merge the #163 PR. From then on a merge no longer releases, and nothing releases until
+      step d.
+- [ ] b. Environments → `production` → Deployment branches and tags: keep `main` (for **Run
+      workflow**) and add a **tag** rule `20*`, so a release's run can reach the prod keys. Keep
+      no required reviewer and every secret and variable.
+- [ ] c. Settings → Rules → Rulesets → New tag ruleset "Release tags": target tags `20*`,
+      restrict creations, updates and deletions, bypass for the Repository admin role. Publishing a
+      release creates its tag, so only maintainers can then publish one, and nobody can move a
+      released tag. (The workflow refuses a tag whose commit isn't on `main` anyway; the ruleset is
+      what keeps anyone else's tag from reaching the prod keys, since environment rules match tag
+      names, not where the tag points.)
+- [ ] d. First release: ask Claude to "release" (or run `npm run release-notes -- --create`),
+      read the draft and publish it. Check the run passed "Check the release tag" and "Fixture
+      sign-in answers 404", and that heynewton.app serves the release.
+- [ ] e. Environments → delete `production-migrations` (no workflow names it any more). Close #122
+      as superseded.
+
+The first draft covers everything merged after the commit production last deployed under #120's
+workflow, since there is no release tag yet.
 
 **8. Before anyone outside the team signs up, or an app-store release**
 
-- [ ] Approve every release again: Environments → `production` → **Required reviewers**: add the
-      maintainer. The gate on `production-migrations` stays as it is. Do this before sign-up opens
-      to outsiders (#33) or the app ships to an app store, and note the date here.
+- [ ] Nothing more is needed for releases: since step 7 each one is a maintainer's decision. If a
+      second pair of eyes is wanted, Environments → `production` → **Required reviewers**: the
+      release job then also waits for that approval. Note the date here either way.

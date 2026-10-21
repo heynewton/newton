@@ -20,9 +20,11 @@ summary: Build log and history entries that don't conflict between open PRs
 
 - `phase` and `topic` must match an entry in [`topics.json`](topics.json); the script stops with
   the list of valid ones if they don't. A new topic is added to `topics.json` in the same PR,
-  with a one-line description.
+  with a one-line description and its `release` section: `new` for what users see (What's new in
+  the release notes) or `hood` for process, repo and infrastructure (Under the hood).
 - `closes` lists the issues the PR closes, separated by commas. Leave the line out if it closes none.
-- `summary` says what the PR gave us, in a few words, usually close to its title.
+- `summary` says what the PR gave us, in a few words, usually close to its title. It is also the
+  PR's line in the release notes (`npm run release-notes`, #164).
 - `merged` is optional: without it, the script uses the time the file landed on `main`, which is
   the PR's merge time with squash merges. The entries from before #89 have it filled in.
 

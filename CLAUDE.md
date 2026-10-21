@@ -86,6 +86,13 @@ We are in **Phase 1**.
   Secret values are piped from the service or a generator into their destination, never shown in
   the conversation. Confirm before anything hard to undo on prod. Details in `docs/maintainers.md`.
 - The `ship-change` skill (`.claude/skills/ship-change/SKILL.md`) is the checklist for landing a change.
+- **Merge = dev, release = prod.** A merge to `main` updates the dev site and `newton-dev` only.
+  Production moves when a maintainer publishes a GitHub Release (calendar tag like `2026.10.21`).
+  When a maintainer says "release", Claude runs `npm run release-notes -- --create` (with
+  `--to <sha>` if they named a commit), which checks the commit passed on dev and saves a **draft**
+  release; then tidies the notes' wording and hands over the draft's link. Publishing is always the
+  maintainer's: Claude never publishes, edits a published release or tags by hand. Roll back and
+  hotfix as in "Production" in `docs/process.md`.
 - Roles, the project board and the weekly rhythm are in `docs/process.md`. Ready issues are worked
   top-down in board order; move issues across the board as they progress. The Board workflow moves
   most cards: assign the issue when you start it, and open the PR with `Closes #N`. Cloud sessions

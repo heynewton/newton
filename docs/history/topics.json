@@ -2,46 +2,55 @@
   {
     "phase": "Phase 1: Home side",
     "topic": "How we work",
+    "release": "hood",
     "description": "Workflow, board and process: how changes land, how issues are picked up, and how cards move."
   },
   {
     "phase": "Phase 1: Home side",
     "topic": "Architecture and decisions",
+    "release": "hood",
     "description": "The architecture page, the phase order and the recorded decisions."
   },
   {
     "phase": "Phase 1: Home side",
     "topic": "Repo and infrastructure",
+    "release": "hood",
     "description": "The workspace, checks and CI, preview deployments and the domain."
   },
   {
     "phase": "Phase 1: Home side",
     "topic": "Brand and website",
+    "release": "new",
     "description": "The Hey Newton logo and the public homepage."
   },
   {
     "phase": "Phase 1: Home side",
     "topic": "Calculations",
+    "release": "new",
     "description": "Deterministic, tested functions in `calc` for the numbers Newton reports."
   },
   {
     "phase": "Phase 1: Home side",
     "topic": "Data and security",
+    "release": "new",
     "description": "The Supabase schema, row-level security, sign-in, storage and the sample boat."
   },
   {
     "phase": "Phase 1: Home side",
     "topic": "Email-in and filing",
+    "release": "new",
     "description": "Mail forwarded to a boat's own address, filed as documents."
   },
   {
     "phase": "Phase 1: Home side",
     "topic": "Web app features",
+    "release": "new",
     "description": "What a signed-in person can do in the app."
   },
   {
     "phase": "Phase 1: Home side",
     "topic": "Manual Q&A",
+    "release": "new",
     "description": "Answers from a boat's manuals through Claude, with the page they came from, and their evals."
   }
 ]
