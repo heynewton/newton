@@ -322,7 +322,7 @@ SMTP back to `noreply@heynewton.app`. After step 11 there's nothing to go back t
 
 The sample boat's people (`fixtures/sample-boat`) sign in with addresses on reserved domains, so
 their magic links can't be delivered. On the dev site and previews, `/sign-in` also lists them
-under "Sign in as a sample-boat person" (#97): the server makes a magic link with `newton-dev`'s
+under "Sign in using one of these test profiles" (#97): the server makes a magic link with `newton-dev`'s
 secret key (`auth.admin.generateLink`) and verifies it at once, which sets the session cookie. No
 email is sent.
 

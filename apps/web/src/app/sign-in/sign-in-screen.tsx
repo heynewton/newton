@@ -126,7 +126,7 @@ function GoogleLogo() {
 function FixtureSignIn() {
   return (
     <section className="mt-6 flex flex-col gap-3 border-t border-zinc-300 pt-6 dark:border-zinc-700">
-      <h2 className="font-medium">Sign in as a sample-boat person</h2>
+      <h2 className="font-medium">Sign in using one of these test profiles</h2>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         Dev site and previews only. These people are made up, so no email is sent.
       </p>
