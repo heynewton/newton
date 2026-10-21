@@ -129,6 +129,7 @@ What a signed-in person can do in the app.
 - [#151](https://github.com/heynewton/newton/pull/151) · 2026-10-21 · Export and delete move into a boat settings page · closes [#142](https://github.com/heynewton/newton/issues/142)
 - [#156](https://github.com/heynewton/newton/pull/156) · 2026-10-21 · Every page has the header, with the logo back to the homepage and the profile on the right · closes [#155](https://github.com/heynewton/newton/issues/155)
 - [#159](https://github.com/heynewton/newton/pull/159) · 2026-10-21 · Owners and co-owners can rename their boat in boat settings · closes [#158](https://github.com/heynewton/newton/issues/158)
+- [#161](https://github.com/heynewton/newton/pull/161) · 2026-10-21 · Co-owners can invite another co-owner (or crew, or read-only) by email from boat settings · closes [#160](https://github.com/heynewton/newton/issues/160)
 
 ### Manual Q&A
 
