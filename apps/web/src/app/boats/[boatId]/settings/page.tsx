@@ -2,7 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { BOAT_NAME_MAX_LENGTH, canInvite, getBoatRecords, getCurrentPerson, getMyBoat, listInvitations } from "@/lib/db";
+import {
+  BOAT_NAME_MAX_LENGTH,
+  canInvite,
+  getBoatRecords,
+  getCurrentPerson,
+  getMyBoat,
+  listInvitations,
+  type Invitation,
+} from "@/lib/db";
 import { EXPORT_MAX_FILE_BYTES, canExport } from "@/lib/db/export";
 import { ExportData } from "../records";
 import { People } from "./people";
@@ -32,7 +40,7 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
   // A boat being deleted can't be exported (its files are partly gone), only finished off.
   const [records, invitations] = boat.deletingSince
     ? [null, []]
-    : await Promise.all([getBoatRecords(boat.boatId), canInvite(boat.role) ? listInvitations(boat.boatId) : []]);
+    : await Promise.all([getBoatRecords(boat.boatId), canInvite(boat.role) ? loadInvitations(boat.boatId) : []]);
 
   return (
     <>
@@ -98,4 +106,15 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
       </Link>
     </>
   );
+}
+
+// Null when the invitations can't be read, so the rest of settings still loads. On a preview, the
+// shared dev database only gets this PR's migration once it merges.
+async function loadInvitations(boatId: string): Promise<Invitation[] | null> {
+  try {
+    return await listInvitations(boatId);
+  } catch (error) {
+    console.error("settings: invitations not loaded", error instanceof Error ? error.message : error);
+    return null;
+  }
 }

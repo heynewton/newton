@@ -7,7 +7,8 @@ const card = "rounded-2xl border border-black/10 p-5 dark:border-white/15";
 const muted = "text-zinc-600 dark:text-zinc-400";
 
 // Who is on the boat, who is invited, and the form to invite someone. Shown to owners and
-// co-owners; only they can invite (supabase/migrations/…_invitations.sql).
+// co-owners; only they can invite (supabase/migrations/…_invitations.sql). `invitations` is null
+// when they couldn't be read: the members still show, without the form.
 export function People({
   boatId,
   boatName,
@@ -19,7 +20,7 @@ export function People({
   boatId: string;
   boatName: string;
   members: BoatMember[];
-  invitations: Invitation[];
+  invitations: Invitation[] | null;
   personId: string;
   siteUrl: string | null;
 }) {
@@ -40,7 +41,7 @@ export function People({
         ))}
       </ul>
 
-      {invitations.length > 0 && (
+      {invitations && invitations.length > 0 && (
         <>
           <h3 className="font-semibold">Waiting to sign in</h3>
           <ul className={`${card} flex flex-col divide-y divide-black/10 py-0 dark:divide-white/15`}>
@@ -65,14 +66,18 @@ export function People({
         </>
       )}
 
-      <div className={`${card} flex flex-col gap-4`}>
-        <h3 className="font-semibold">Invite someone</h3>
-        <p className="text-zinc-700 dark:text-zinc-300">
-          If they already use Newton, they&apos;re on {boatName} at once. If not, they are as soon as they sign in
-          with that address. Either way we email them.
-        </p>
-        <InviteForm boatId={boatId} boatName={boatName} siteUrl={siteUrl} />
-      </div>
+      {invitations === null ? (
+        <p className={muted}>Inviting people isn&apos;t available right now. Try again later.</p>
+      ) : (
+        <div className={`${card} flex flex-col gap-4`}>
+          <h3 className="font-semibold">Invite someone</h3>
+          <p className="text-zinc-700 dark:text-zinc-300">
+            If they already use Newton, they&apos;re on {boatName} at once. If not, they are as soon as they sign in
+            with that address. Either way we email them.
+          </p>
+          <InviteForm boatId={boatId} boatName={boatName} siteUrl={siteUrl} />
+        </div>
+      )}
     </section>
   );
 }
