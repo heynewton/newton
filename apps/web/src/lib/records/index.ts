@@ -287,6 +287,22 @@ export function formatDate(date: string): string {
   return dateFormat.format(new Date(`${date}T00:00:00Z`));
 }
 
+// The calendar date (UTC) of a timestamp: "2026-10-03T16:45:12Z" → "2026-10-03", for formatDate.
+export function dateOf(timestamp: string): string {
+  return new Date(timestamp).toISOString().slice(0, 10);
+}
+
+// The most recent of some dates or timestamps, as a calendar date, or null when there are none.
+// Says how fresh a section is: "Last received 11 Oct 2026".
+export function latestOn(dates: string[]): string | null {
+  let latest: string | null = null;
+  for (const date of dates) {
+    const day = dateOf(date.length === 10 ? `${date}T00:00:00Z` : date);
+    if (latest === null || day > latest) latest = day;
+  }
+  return latest;
+}
+
 // Thousands separators on calc's formatted amount: "1234.56" → "1,234.56".
 export function groupThousands(amount: string): string {
   return amount.replace(/\B(?=(\d{3})+(?!\d))(?=\d*\.)/g, ",");

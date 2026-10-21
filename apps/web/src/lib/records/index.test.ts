@@ -3,10 +3,12 @@ import {
   attentionSummary,
   balancesFor,
   costSplit,
+  dateOf,
   dueState,
   formatDate,
   groupThousands,
   latestEngineHours,
+  latestOn,
   money,
   maintenanceRule,
   renewalRule,
@@ -386,5 +388,21 @@ describe("money", () => {
   it("formats cents with the currency and thousands separators", () => {
     expect(money(123456, "USD")).toBe("USD 1,234.56");
     expect(money(5, "EUR")).toBe("EUR 0.05");
+  });
+});
+
+describe("latestOn and dateOf", () => {
+  it("gives a timestamp's UTC calendar date", () => {
+    expect(dateOf("2026-10-03T16:45:12Z")).toBe("2026-10-03");
+    expect(dateOf("2026-10-03T23:30:00-02:00")).toBe("2026-10-04");
+  });
+
+  it("finds the most recent date among dates and timestamps", () => {
+    expect(latestOn(["2026-04-14T18:22:05Z", "2026-10-11T08:15:40Z", "2025-01-18T10:04:51Z"])).toBe("2026-10-11");
+    expect(latestOn(["2026-10-02", "2024-12-15", "2026-10-01"])).toBe("2026-10-02");
+  });
+
+  it("is null with nothing to go on", () => {
+    expect(latestOn([])).toBeNull();
   });
 });
