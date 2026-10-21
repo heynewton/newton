@@ -34,6 +34,7 @@ Rules for all of them:
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | That environment's Resend team (#109); that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment: the dev site's on `heynewton-web` Production only, never Preview |
 | `ANTHROPIC_API_KEY` | secret | Anthropic | `heynewton` org in the Claude Console, one workspace per environment | Filing (#11) in the web app (after email-in and the daily `/api/filing` run); the live evals of filing and manual Q&A (`packages/agent`, #11, #14) | Local `.env` for the evals; Vercel env vars of each deployment for filing (without it, filing is off there and documents stay unsorted). Not in CI |
 | Google OAuth clients (`newton-dev`, `newton-prod`) | client ID, secret | Google Cloud | Project Google Cloud project `heynewton`, on dev@heynewton.app | Google sign-in on `/sign-in` (#131) | That Supabase project's Auth settings (set through the Management API); the dev client's also in a local `supabase/.env` for the local stack. Not in GitHub |
+| Sign in with Apple key and client secrets (`newton-dev`, `newton-prod`) | private key (`.p8`); client secret (a JWT, expires every 6 months) | Apple | The project Apple Developer account, on dev@heynewton.app | Apple sign-in on `/sign-in` (#27) | The `.p8` in the project password manager only; each client secret in that Supabase project's Auth settings (set through the Management API). Not in GitHub |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14) | Local `.env`; the indexing job's environment when it exists (#11). Not in CI |
 
 ## `VERCEL_TOKEN`
@@ -403,6 +404,58 @@ then restart the stack. `supabase/config.toml` keeps Google off without it.
   Supabase's domain. A Supabase custom domain (paid add-on) would make it `heynewton.app`.
 - **Renewal:** the client secrets don't expire. If one leaks, add a new secret on the client in
   Google Cloud, set it as above, then delete the old one.
+
+## Apple sign-in (#27)
+
+"Continue with Apple" on `/sign-in` uses Supabase Auth's Apple provider, and shows only where the
+project's auth server reports Apple as on, like Google.
+
+**Apple Developer** (developer.apple.com, signed in with the project Apple Account on
+dev@heynewton.app; enrolling, identifiers and keys have no CLI or API, so these are dashboard steps):
+
+- Enrol in the Apple Developer Program (99 USD a year). As an organisation it needs a D-U-N-S
+  number; as an individual, the account holder's name is what Apple shows on the consent sheet.
+- Identifiers → **App ID** `app.heynewton` with **Sign in with Apple** ticked (the Expo app reuses it).
+- Identifiers → **Services IDs**, one per Supabase project, each with Sign in with Apple configured
+  against the App ID above. Apple accepts only https return URLs on real domains, so the local
+  stack can't finish an Apple sign-in:
+
+| Services ID | Domains | Return URL |
+| --- | --- | --- |
+| `app.heynewton.web.dev` | `czmndtkrnphueurgoqfk.supabase.co` | `https://czmndtkrnphueurgoqfk.supabase.co/auth/v1/callback` |
+| `app.heynewton.web` | `yipgqtxszsdkvpegyolv.supabase.co` | `https://yipgqtxszsdkvpegyolv.supabase.co/auth/v1/callback` |
+
+- Keys → a key with **Sign in with Apple** for the App ID. Download the `.p8` (Apple offers it
+  once) into the project password manager, and note the key ID and the team ID (top right).
+- Email relay: Certificates, Identifiers & Profiles → Services → Sign in with Apple for Email
+  Communication, register `heynewton.app` and `noreply@heynewton.app`, so sign-in and reminder
+  emails reach people who hide their address. Without it Apple drops them.
+
+**Client secret.** Supabase wants a JWT signed with the key, not the key itself, and Apple accepts
+one for at most 6 months. `scripts/apple-client-secret.mjs` makes one valid for about 181 days and
+prints its expiry date on stderr. With the `.p8` saved to a temporary file:
+
+```bash
+read -s "SB_TOKEN?Supabase access token: "; echo
+```
+
+```bash
+node scripts/apple-client-secret.mjs <key.p8> <team ID> <key ID> <Services ID> | jq -Rn --arg id "<Services ID>" '{external_apple_enabled: true, external_apple_client_id: $id, external_apple_secret: input}' | curl -sf -X PATCH -H "Authorization: Bearer $SB_TOKEN" -H "Content-Type: application/json" --data @- "https://api.supabase.com/v1/projects/<ref>/config/auth" -o /dev/null && echo "Apple on"
+```
+
+Check with `curl -s -H "apikey: <publishable key>" https://<ref>.supabase.co/auth/v1/settings`,
+which shows `"apple": true`, then delete the temporary `.p8` and `unset SB_TOKEN`.
+
+- **Renewal, every 6 months:** run the same two commands for each project before the printed
+  expiry date. When the secret expires, "Continue with Apple" fails until it is renewed (the email
+  link and Google keep working). Whoever holds the Apple Developer account keeps a calendar
+  reminder two weeks before each expiry.
+- **Same person:** an Apple sign-in that shares its real address lands on the same person as a
+  magic link or Google for that address. "Hide My Email" gives a `…@privaterelay.appleid.com`
+  address, which is a new person until linking sign-in methods and verified sender addresses
+  land (#27).
+- **Local stack:** `supabase/.env` can turn Apple on (see `supabase/.env.example`) to check the
+  button and the trip to Apple; finishing a sign-in needs the dev site.
 
 ## Supabase database passwords
 
