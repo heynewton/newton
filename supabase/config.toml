@@ -341,10 +341,12 @@ url = ""
 skip_nonce_check = false
 email_optional = false
 
+# Apple sign-in (#27). Off here for the same reason as Google; supabase/.env turns it on with the
+# Services ID and the client secret (a JWT that expires every 6 months, docs/tokens.md). Apple won't
+# return to 127.0.0.1, so locally the button only gets as far as Apple.
 [auth.external.apple]
 enabled = false
-client_id = ""
-# DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
+client_id = "env(SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
 # Overrides the default auth callback URL derived from auth.external_url.
 redirect_uri = ""

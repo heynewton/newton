@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Where the magic link and Google sign-in come back to, with the data layer mocked out.
+// Where the magic link and Google and Apple sign-in come back to, with the data layer mocked out.
 
 const finishSignIn = vi.fn<(code: string) => Promise<boolean>>(async () => true);
 vi.mock("@/lib/db", () => ({ finishSignIn: (code: string) => finishSignIn(code) }));
@@ -27,9 +27,9 @@ describe("the sign-in callback", () => {
     expect((await get("")).headers.get("location")).toBe("https://heynewton.app/sign-in/link-expired");
   });
 
-  it("sends a cancelled Google sign-in back to sign-in with a message", async () => {
+  it("sends a cancelled Google or Apple sign-in back to sign-in with a message", async () => {
     const response = await get("?error=access_denied&error_description=The+user+denied+access");
     expect(finishSignIn).not.toHaveBeenCalled();
-    expect(response.headers.get("location")).toBe("https://heynewton.app/sign-in?error=google");
+    expect(response.headers.get("location")).toBe("https://heynewton.app/sign-in?error=provider");
   });
 });
