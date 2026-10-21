@@ -23,7 +23,21 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "boats": {
+            "alpha_signups": {
+                  Row: {
+                    "about_boat": string | null,"created_at": string,"email": string,"id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "about_boat"?: string | null,"created_at"?: string,"email": string,"id"?: string
+                  }
+                  Update: {
+                    "about_boat"?: string | null,"created_at"?: string,"email"?: string,"id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"boats": {
                   Row: {
                     "created_at": string,"deleting_since": string | null,"email_alias": string,"id": string,"name": string
                   }
@@ -381,6 +395,9 @@ isOneToOne: false
                            },
 "record_document_filing_failure":
 { Args: { "document_id": string,"error": string,"model": string }; Returns: undefined
+                           },
+"register_for_alpha":
+{ Args: { "boat_note"?: string,"email_address": string }; Returns: undefined
                            },
 "save_document_filing":
 { Args: { "confidence": string,"document_id": string,"document_type": Database["public"]['Enums']["document_type"],"flags": Json,"model": string,"proposal": Json,"records": Json,"status": Database["public"]['Enums']["filing_status"],"summary": string,"vendor": string }; Returns: {

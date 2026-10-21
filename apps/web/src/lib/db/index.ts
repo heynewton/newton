@@ -55,6 +55,31 @@ export async function sendSignInLink(
   return error ? { ok: false, reason: "failed" } : { ok: true };
 }
 
+export type AlphaSignUpResult =
+  | { ok: true }
+  | { ok: false; reason: "invalid_email" | "boat_note_too_long" | "unavailable" | "failed" };
+
+// The longest line about the boat the database accepts (alpha_signups.about_boat).
+export const ALPHA_BOAT_NOTE_MAX_LENGTH = 500;
+
+// Puts an address on the alpha test list (signed in or not). Signing up twice is fine: the
+// database keeps the first one and doesn't say whether the address was already there.
+export async function registerForAlpha(email: string, boatNote: string): Promise<AlphaSignUpResult> {
+  const address = email.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address) || address.length > 320) {
+    return { ok: false, reason: "invalid_email" };
+  }
+  const note = boatNote.trim();
+  if (note.length > ALPHA_BOAT_NOTE_MAX_LENGTH) return { ok: false, reason: "boat_note_too_long" };
+  const supabase = await createClient();
+  if (!supabase) return { ok: false, reason: "unavailable" };
+  const { error } = await supabase.rpc("register_for_alpha", {
+    email_address: address,
+    ...(note ? { boat_note: note } : {}),
+  });
+  return error ? { ok: false, reason: "failed" } : { ok: true };
+}
+
 // The sign-in providers, besides the magic link, that /sign-in can offer (#131, #27).
 export type SignInProvider = "google" | "apple";
 

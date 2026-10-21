@@ -97,6 +97,11 @@ export default function Privacy() {
             each request, such as your IP address, to keep accounts secure.
           </li>
           <li>
+            <strong>The alpha test list.</strong> If you register for the alpha test, your email
+            address, what you tell us about your boat and when you registered. We use them only to
+            invite you, and delete them on request.
+          </li>
+          <li>
             <strong>One cookie.</strong> A sign-in cookie keeps you signed in. There are no
             analytics, advertising or tracking cookies.
           </li>

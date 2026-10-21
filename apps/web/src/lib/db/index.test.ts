@@ -333,6 +333,43 @@ describe("deleteBoat", () => {
   });
 });
 
+describe("registerForAlpha", () => {
+  it.each(["", "   ", "sam", "sam@example", "a b@example.com", `${"x".repeat(310)}@example.com`])(
+    "refuses the address %j without calling Supabase",
+    async (email) => {
+      expect(await db.registerForAlpha(email, "")).toEqual({ ok: false, reason: "invalid_email" });
+      expect(calls).toEqual([]);
+    },
+  );
+
+  it("refuses an overlong line about the boat without calling Supabase", async () => {
+    expect(await db.registerForAlpha("sam@example.com", "x".repeat(501))).toEqual({ ok: false, reason: "boat_note_too_long" });
+    expect(calls).toEqual([]);
+  });
+
+  it("registers the trimmed address and line about the boat", async () => {
+    expect(await db.registerForAlpha(" sam@example.com ", "  Sample 30, sample harbour ")).toEqual({ ok: true });
+    expect(calls).toEqual([
+      { method: "rpc.register_for_alpha", args: [{ email_address: "sam@example.com", boat_note: "Sample 30, sample harbour" }] },
+    ]);
+  });
+
+  it("leaves out an empty line about the boat", async () => {
+    expect(await db.registerForAlpha("sam@example.com", "   ")).toEqual({ ok: true });
+    expect(calls).toEqual([{ method: "rpc.register_for_alpha", args: [{ email_address: "sam@example.com" }] }]);
+  });
+
+  it("fails when the database does", async () => {
+    results["rpc.register_for_alpha"] = { error: { message: "no", code: "XX000" } };
+    expect(await db.registerForAlpha("sam@example.com", "")).toEqual({ ok: false, reason: "failed" });
+  });
+
+  it("is unavailable without Supabase settings", async () => {
+    withoutSupabase();
+    expect(await db.registerForAlpha("sam@example.com", "")).toEqual({ ok: false, reason: "unavailable" });
+  });
+});
+
 describe("createBoat", () => {
   it.each(["", "   ", "x".repeat(101)])("refuses the name %j without calling Supabase", async (name) => {
     expect(await db.createBoat(name)).toEqual({ ok: false, reason: "invalid_name" });
