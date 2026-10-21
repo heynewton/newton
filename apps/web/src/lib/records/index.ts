@@ -260,6 +260,15 @@ export function costSplit(expenses: ExpenseRow[], shareRows: ShareRow[]): CostSp
   return { ok: true, shares, byCurrency };
 }
 
+export type ViewerBalance = CoOwnerBalance & { isYou: boolean };
+
+// The balance as one person sees it: their own line first and marked, the others in costSplit's
+// order (by share, then person ID). Someone with no ownership share has no line, so none is marked.
+export function balancesFor(balances: CoOwnerBalance[], personId: string): ViewerBalance[] {
+  const marked = balances.map((b) => ({ ...b, isYou: b.owner === personId }));
+  return [...marked.filter((b) => b.isYou), ...marked.filter((b) => !b.isYou)];
+}
+
 // Today's calendar date, YYYY-MM-DD, in UTC. Boats don't have a time zone yet.
 export function todayUtc(now: Date): string {
   return now.toISOString().slice(0, 10);
