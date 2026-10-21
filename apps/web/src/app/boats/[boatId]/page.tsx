@@ -4,11 +4,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
-import { EXPORT_MAX_FILE_BYTES, canExport } from "@/lib/db/export";
 import { boatEmailAddress } from "@/lib/email-in";
 import { costSplit, schedule, todayUtc } from "@/lib/records";
 import { roleNames } from "../roles";
-import { CoOwnerBalance, ComingUp, Documents, EmailAddress, ExportData } from "./records";
+import { CoOwnerBalance, ComingUp, Documents, EmailAddress } from "./records";
 
 export const metadata: Metadata = { title: "Your boat · Hey Newton" };
 
@@ -124,26 +123,6 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
           ))}
         </ul>
       </section>
-
-      {canExport(boat.role) && (
-        <ExportData
-          boatId={boat.boatId}
-          fileBytes={records.documents.reduce((n, d) => n + (d.sizeBytes ?? 0), 0)}
-          maxFileBytes={EXPORT_MAX_FILE_BYTES}
-        />
-      )}
-
-      {/* Switching boats, adding one and signing out are in the header (boats/layout.tsx). */}
-      {boat.role === "owner" && (
-        <footer className="border-t border-black/10 pt-6 dark:border-white/15">
-          <Link
-            href={`/boats/${boat.boatId}/delete`}
-            className="flex min-h-11 w-fit items-center font-medium text-red-700 underline dark:text-red-400"
-          >
-            Delete this boat
-          </Link>
-        </footer>
-      )}
     </>
   );
 }
