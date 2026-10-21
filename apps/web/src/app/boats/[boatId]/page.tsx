@@ -97,6 +97,7 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
         split={split}
         expenses={records.expenses}
         members={records.members}
+        personId={person.id}
         boatId={boat.boatId}
         documents={documents}
       />

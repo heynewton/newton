@@ -2,6 +2,7 @@ import { formatCents } from "@newton/calc";
 import type { ReactNode } from "react";
 import type { BoatDocument, BoatMember, DocumentType } from "@/lib/db";
 import {
+  balancesFor,
   dueLine,
   dueState,
   formatDate,
@@ -197,22 +198,38 @@ export function ComingUp({
   );
 }
 
-function BalancePhrase({ cents, currency }: { cents: number; currency: string }) {
-  if (cents > 0) return <span className="text-teal-700 dark:text-teal">is owed {money(cents, currency)}</span>;
-  if (cents < 0) return <span className="text-red-700 dark:text-red-300">owes {money(-cents, currency)}</span>;
-  return <span>is square</span>;
+// "is owed USD 312.44", or "are owed …" after "You (Alex Sample)".
+function BalancePhrase({ cents, currency, isYou }: { cents: number; currency: string; isYou: boolean }) {
+  if (cents > 0) {
+    return (
+      <span className="text-teal-700 dark:text-teal">
+        {isYou ? "are" : "is"} owed {money(cents, currency)}
+      </span>
+    );
+  }
+  if (cents < 0) {
+    return (
+      <span className="text-red-700 dark:text-red-300">
+        {isYou ? "owe" : "owes"} {money(-cents, currency)}
+      </span>
+    );
+  }
+  return <span>{isYou ? "are" : "is"} square</span>;
 }
 
 export function CoOwnerBalance({
   split,
   expenses,
   members,
+  personId,
   boatId,
   documents,
 }: {
   split: CostSplit;
   expenses: ExpenseRow[];
   members: BoatMember[];
+  /** The signed-in person, whose line comes first as "You". */
+  personId: string;
   boatId: string;
   documents: Documents;
 }) {
@@ -237,13 +254,15 @@ export function CoOwnerBalance({
         split.byCurrency.map((c) => (
           <div key={c.currency} className={`${card} flex flex-col gap-4`}>
             <ul className="flex flex-col divide-y divide-black/10 dark:divide-white/15">
-              {c.balances.map((b) => (
+              {balancesFor(c.balances, personId).map((b) => (
                 <li key={b.owner} className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 sm:flex-row sm:justify-between">
                   <span className="font-medium">
-                    {name(b.owner)} <BalancePhrase cents={b.balanceCents} currency={c.currency} />
+                    {b.isYou ? `You (${name(b.owner)})` : name(b.owner)}{" "}
+                    <BalancePhrase cents={b.balanceCents} currency={c.currency} isYou={b.isYou} />
                   </span>
                   <span className={`text-sm ${muted}`}>
-                    Paid {money(b.paidCents, c.currency)}, their part {money(b.shareCents, c.currency)}
+                    Paid {money(b.paidCents, c.currency)}, {b.isYou ? "your" : "their"} part{" "}
+                    {money(b.shareCents, c.currency)}
                   </span>
                 </li>
               ))}

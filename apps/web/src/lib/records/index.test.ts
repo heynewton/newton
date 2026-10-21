@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  balancesFor,
   costSplit,
   dueState,
   formatDate,
@@ -202,6 +203,31 @@ describe("dueState", () => {
       ["close", "Due soon by engine hours"],
       ["latest", "Due in 11 months"],
       ["hours-only", "Not due soon"],
+    ]);
+  });
+});
+
+describe("balancesFor", () => {
+  const balances = [
+    { owner: "alex", paidCents: 170400, shareCents: 139156, balanceCents: 31244 },
+    { owner: "sam", paidCents: 167690, shareCents: 121762, balanceCents: 45928 },
+    { owner: "jordan", paidCents: 9800, shareCents: 86972, balanceCents: -77172 },
+  ];
+
+  it("puts the signed-in co-owner first and marks them, keeping the others' order", () => {
+    expect(balancesFor(balances, "sam").map((b) => [b.owner, b.isYou])).toEqual([
+      ["sam", true],
+      ["alex", false],
+      ["jordan", false],
+    ]);
+    expect(balancesFor(balances, "alex")[0]).toEqual({ ...balances[0], isYou: true });
+  });
+
+  it("marks no one for a member with no ownership share", () => {
+    expect(balancesFor(balances, "riley").map((b) => [b.owner, b.isYou])).toEqual([
+      ["alex", false],
+      ["sam", false],
+      ["jordan", false],
     ]);
   });
 });
