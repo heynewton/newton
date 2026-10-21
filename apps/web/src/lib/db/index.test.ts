@@ -105,7 +105,7 @@ describe("sendSignInLink", () => {
   });
 });
 
-describe("Google sign-in", () => {
+describe("Google and Apple sign-in", () => {
   function authSettings(response: Response | Error) {
     const fetch = vi.fn(async () => {
       if (response instanceof Error) throw response;
@@ -115,44 +115,48 @@ describe("Google sign-in", () => {
     return fetch;
   }
 
-  it("is available when the auth server has Google turned on", async () => {
-    const fetch = authSettings(Response.json({ external: { google: true, apple: false } }));
-    expect(await db.isGoogleSignInAvailable()).toBe(true);
+  it.each([
+    [{ google: true, apple: false, github: true }, ["google"]],
+    [{ google: false, apple: true }, ["apple"]],
+    [{ google: true, apple: true }, ["google", "apple"]],
+  ])("offers the providers the auth server has turned on (%o)", async (external, expected) => {
+    const fetch = authSettings(Response.json({ external }));
+    expect(await db.availableSignInProviders()).toEqual(expected);
     expect(fetch).toHaveBeenCalledWith("http://127.0.0.1:54321/auth/v1/settings", expect.objectContaining({ headers: { apikey: "sb_publishable_test" } }));
   });
 
   it.each([
-    ["Google is off", Response.json({ external: { google: false } })],
+    ["both are off", Response.json({ external: { google: false, apple: false } })],
     ["the settings can't be read", new Response("nope", { status: 500 })],
     ["the auth server is down", new Error("connection refused")],
-  ])("is not available when %s", async (_case, response) => {
+  ])("offers none when %s", async (_case, response) => {
     authSettings(response);
-    expect(await db.isGoogleSignInAvailable()).toBe(false);
+    expect(await db.availableSignInProviders()).toEqual([]);
   });
 
-  it("is not available, and doesn't start, without Supabase settings", async () => {
+  it("offers none, and doesn't start, without Supabase settings", async () => {
     withoutSupabase();
-    const fetch = authSettings(Response.json({ external: { google: true } }));
-    expect(await db.isGoogleSignInAvailable()).toBe(false);
-    expect(await db.startGoogleSignIn("https://heynewton.app/auth/callback")).toBeNull();
+    const fetch = authSettings(Response.json({ external: { google: true, apple: true } }));
+    expect(await db.availableSignInProviders()).toEqual([]);
+    expect(await db.startProviderSignIn("apple", "https://heynewton.app/auth/callback")).toBeNull();
     expect(fetch).not.toHaveBeenCalled();
     expect(calls).toEqual([]);
   });
 
-  it("starts with Google, back to the given page", async () => {
-    results.signInWithOAuth = { data: { provider: "google", url: "https://auth.example/authorize?provider=google" } };
-    expect(await db.startGoogleSignIn("https://heynewton.app/auth/callback")).toBe("https://auth.example/authorize?provider=google");
+  it.each(["google", "apple"] as const)("starts with %s, back to the given page", async (provider) => {
+    results.signInWithOAuth = { data: { provider, url: `https://auth.example/authorize?provider=${provider}` } };
+    expect(await db.startProviderSignIn(provider, "https://heynewton.app/auth/callback")).toBe(`https://auth.example/authorize?provider=${provider}`);
     expect(calls).toEqual([
       {
         method: "auth.signInWithOAuth",
-        args: [{ provider: "google", options: { redirectTo: "https://heynewton.app/auth/callback", skipBrowserRedirect: true } }],
+        args: [{ provider, options: { redirectTo: "https://heynewton.app/auth/callback", skipBrowserRedirect: true } }],
       },
     ]);
   });
 
   it("is null when the provider refuses", async () => {
     results.signInWithOAuth = { error: { message: "Unsupported provider: provider is not enabled" } };
-    expect(await db.startGoogleSignIn("https://heynewton.app/auth/callback")).toBeNull();
+    expect(await db.startProviderSignIn("apple", "https://heynewton.app/auth/callback")).toBeNull();
   });
 });
 

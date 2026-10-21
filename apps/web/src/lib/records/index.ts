@@ -1,5 +1,8 @@
 import {
+  daysBetween,
   findDue,
+  formatCents,
+  fullMonthsBetween,
   nextDue,
   splitCosts,
   type CoOwnerBalance,
@@ -182,6 +185,33 @@ export function dueLine(item: ScheduledItem): { due: string; basis: string } {
   return { due, basis: `Last done ${formatDate(row.last_done_on)}${doneAt}, ${interval(row)}.` };
 }
 
+// Up to this many days away, "Due in N days"; further off, months ("Due in 2 months").
+const STATE_IN_DAYS_UP_TO = 60;
+
+function count(n: number, unit: string): string {
+  return `${n} ${unit}${n === 1 ? "" : "s"}`;
+}
+
+// The item's state in words, so it doesn't rest on the badge colour: "Overdue by 2 days",
+// "Due in 34 days", "Due in 2 months".
+export function dueState(item: ScheduledItem, today: string): string {
+  const { dueOn } = item.due;
+  const days = dueOn === undefined ? undefined : daysBetween(today, dueOn);
+  const dateCounts = item.status === "later" || item.by.includes("date");
+  if (days === undefined || !dateCounts) {
+    // Overdue or due soon by engine hours alone, or later and due only by engine hours.
+    if (item.status === "overdue") return "Overdue by engine hours";
+    if (item.status === "due-soon") return "Due soon by engine hours";
+    return "Not due soon";
+  }
+  if (days < 0) return `Overdue by ${count(-days, "day")}`;
+  if (days === 0) return "Due today";
+  if (days === 1) return "Due tomorrow";
+  if (days <= STATE_IN_DAYS_UP_TO) return `Due in ${count(days, "day")}`;
+  const months = fullMonthsBetween(today, dueOn!);
+  return months < 24 ? `Due in ${count(months, "month")}` : `Due in ${count(Math.floor(months / 12), "year")}`;
+}
+
 export type CurrencySplit = {
   currency: string;
   balances: CoOwnerBalance[];
@@ -231,6 +261,15 @@ export function costSplit(expenses: ExpenseRow[], shareRows: ShareRow[]): CostSp
   return { ok: true, shares, byCurrency };
 }
 
+export type ViewerBalance = CoOwnerBalance & { isYou: boolean };
+
+// The balance as one person sees it: their own line first and marked, the others in costSplit's
+// order (by share, then person ID). Someone with no ownership share has no line, so none is marked.
+export function balancesFor(balances: CoOwnerBalance[], personId: string): ViewerBalance[] {
+  const marked = balances.map((b) => ({ ...b, isYou: b.owner === personId }));
+  return [...marked.filter((b) => b.isYou), ...marked.filter((b) => !b.isYou)];
+}
+
 // Today's calendar date, YYYY-MM-DD, in UTC. Boats don't have a time zone yet.
 export function todayUtc(now: Date): string {
   return now.toISOString().slice(0, 10);
@@ -248,7 +287,72 @@ export function formatDate(date: string): string {
   return dateFormat.format(new Date(`${date}T00:00:00Z`));
 }
 
+// The calendar date (UTC) of a timestamp: "2026-10-03T16:45:12Z" → "2026-10-03", for formatDate.
+export function dateOf(timestamp: string): string {
+  return new Date(timestamp).toISOString().slice(0, 10);
+}
+
+// The most recent of some dates or timestamps, as a calendar date, or null when there are none.
+// Says how fresh a section is: "Last received 11 Oct 2026".
+export function latestOn(dates: string[]): string | null {
+  let latest: string | null = null;
+  for (const date of dates) {
+    const day = dateOf(date.length === 10 ? `${date}T00:00:00Z` : date);
+    if (latest === null || day > latest) latest = day;
+  }
+  return latest;
+}
+
 // Thousands separators on calc's formatted amount: "1234.56" → "1,234.56".
 export function groupThousands(amount: string): string {
   return amount.replace(/\B(?=(\d{3})+(?!\d))(?=\d*\.)/g, ",");
+}
+
+// "USD 1,234.56", from calc's cents.
+export function money(cents: number, currency: string): string {
+  return `${currency} ${groupThousands(formatCents(cents))}`;
+}
+
+export type SummaryPart = { text: string; anchor: string };
+
+// The one line under the boat's name: what needs attention, each part pointing at its section.
+// Built from the same schedule and split the sections show, so the counts always agree. Null
+// when the boat has nothing to track yet, so the page can say what to do first instead of zeros.
+export function attentionSummary(
+  due: Schedule,
+  split: CostSplit,
+  personId: string,
+  withinDays: number,
+): SummaryPart[] | null {
+  const records = due.overdue.length + due.dueSoon.length + due.later.length;
+  const currencies = split.ok ? split.byCurrency : [];
+  if (records === 0 && currencies.length === 0) return null;
+  const parts: SummaryPart[] = [];
+  // With no records the section shows a "nothing yet" note instead of these headings.
+  if (records > 0) {
+    parts.push(
+      { text: due.overdue.length > 0 ? `${due.overdue.length} overdue` : "Nothing overdue", anchor: "overdue" },
+      {
+        text:
+          due.dueSoon.length > 0
+            ? `${due.dueSoon.length} due in the next ${withinDays} days`
+            : `nothing due in the next ${withinDays} days`,
+        anchor: "due-soon",
+      },
+    );
+  }
+  for (const c of currencies) {
+    const mine = c.balances.find((b) => b.owner === personId);
+    if (!mine) continue;
+    const text =
+      mine.balanceCents > 0
+        ? `you're owed ${money(mine.balanceCents, c.currency)}`
+        : mine.balanceCents < 0
+          ? `you owe ${money(-mine.balanceCents, c.currency)}`
+          : currencies.length > 1
+            ? `you're square in ${c.currency}`
+            : "you're square";
+    parts.push({ text, anchor: "balance" });
+  }
+  return parts.map((p, i) => (i === 0 ? { ...p, text: p.text[0]!.toUpperCase() + p.text.slice(1) } : p));
 }
