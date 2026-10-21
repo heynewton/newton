@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  attentionSummary,
   balancesFor,
   costSplit,
   dueState,
   formatDate,
   groupThousands,
   latestEngineHours,
+  money,
   maintenanceRule,
   renewalRule,
   schedule,
@@ -309,5 +311,80 @@ describe("formatting", () => {
     expect(groupThousands("1234567.00")).toBe("1,234,567.00");
     expect(groupThousands("98.00")).toBe("98.00");
     expect(groupThousands("-1000.50")).toBe("-1,000.50");
+  });
+});
+
+describe("attentionSummary", () => {
+  const options = { today: "2026-10-18", withinDays: 60, withinEngineHours: 25 };
+  const shares = [
+    { person_id: "alex", ownership_share: 40 },
+    { person_id: "sam", ownership_share: 35 },
+    { person_id: "jordan", ownership_share: 25 },
+  ];
+  const expenses = [
+    expense("yard", 167690, "sam", "2026-10-02"),
+    expense("insurance", 128400, "alex", "2026-04-14"),
+    expense("registration", 9800, "jordan", "2024-12-15"),
+    expense("mooring", 42000, "alex", "2026-10-01"),
+  ];
+  const due = schedule(
+    [renewal("insurance", "2027-04-30")],
+    [maintenance("old", { every_months: 6, last_done_on: "2026-01-10" })],
+    options,
+  );
+  const summary = (personId: string, split = costSplit(expenses, shares), s = due) =>
+    attentionSummary(s, split, personId, options.withinDays);
+
+  it("counts overdue and due-soon items and says the signed-in co-owner's balance", () => {
+    expect(summary("alex")).toEqual([
+      { text: "1 overdue", anchor: "overdue" },
+      { text: "nothing due in the next 60 days", anchor: "due-soon" },
+      { text: "you're owed USD 312.44", anchor: "balance" },
+    ]);
+    expect(summary("jordan")?.[2]).toEqual({ text: "you owe USD 771.72", anchor: "balance" });
+  });
+
+  it("uses the counts the section shows", () => {
+    expect(summary("alex")?.[0]?.text).toBe(`${due.overdue.length} overdue`);
+    const soon = schedule([renewal("a", "2026-10-20"), renewal("b", "2026-11-01")], [], options);
+    expect(summary("alex", costSplit([], shares), soon)).toEqual([
+      { text: "Nothing overdue", anchor: "overdue" },
+      { text: "2 due in the next 60 days", anchor: "due-soon" },
+    ]);
+  });
+
+  it("leaves the balance out for a member with no ownership share", () => {
+    expect(summary("riley")?.map((p) => p.anchor)).toEqual(["overdue", "due-soon"]);
+  });
+
+  it("says square, naming the currency only when there are several", () => {
+    const even = [expense("a", 10000, "alex", "2026-05-01"), expense("b", 10000, "sam", "2026-05-01")];
+    const half = [
+      { person_id: "alex", ownership_share: 1 },
+      { person_id: "sam", ownership_share: 1 },
+    ];
+    expect(summary("alex", costSplit(even, half))?.[2]?.text).toBe("you're square");
+    const twoCurrencies = [...even, expense("c", 500, "alex", "2026-05-01", "EUR"), expense("d", 500, "sam", "2026-05-01", "EUR")];
+    expect(summary("alex", costSplit(twoCurrencies, half))?.slice(2).map((p) => p.text)).toEqual([
+      "you're square in EUR",
+      "you're square in USD",
+    ]);
+  });
+
+  it("starts with the balance, capitalised, when the boat has expenses but no renewals or maintenance", () => {
+    expect(summary("alex", costSplit(expenses, shares), schedule([], [], options))).toEqual([
+      { text: "You're owed USD 312.44", anchor: "balance" },
+    ]);
+  });
+
+  it("is null for a boat with nothing to track yet", () => {
+    expect(summary("alex", costSplit([], shares), schedule([], [], options))).toBeNull();
+  });
+});
+
+describe("money", () => {
+  it("formats cents with the currency and thousands separators", () => {
+    expect(money(123456, "USD")).toBe("USD 1,234.56");
+    expect(money(5, "EUR")).toBe("EUR 0.05");
   });
 });

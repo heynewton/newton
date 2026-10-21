@@ -1,6 +1,7 @@
 import {
   daysBetween,
   findDue,
+  formatCents,
   fullMonthsBetween,
   nextDue,
   splitCosts,
@@ -289,4 +290,53 @@ export function formatDate(date: string): string {
 // Thousands separators on calc's formatted amount: "1234.56" → "1,234.56".
 export function groupThousands(amount: string): string {
   return amount.replace(/\B(?=(\d{3})+(?!\d))(?=\d*\.)/g, ",");
+}
+
+// "USD 1,234.56", from calc's cents.
+export function money(cents: number, currency: string): string {
+  return `${currency} ${groupThousands(formatCents(cents))}`;
+}
+
+export type SummaryPart = { text: string; anchor: string };
+
+// The one line under the boat's name: what needs attention, each part pointing at its section.
+// Built from the same schedule and split the sections show, so the counts always agree. Null
+// when the boat has nothing to track yet, so the page can say what to do first instead of zeros.
+export function attentionSummary(
+  due: Schedule,
+  split: CostSplit,
+  personId: string,
+  withinDays: number,
+): SummaryPart[] | null {
+  const records = due.overdue.length + due.dueSoon.length + due.later.length;
+  const currencies = split.ok ? split.byCurrency : [];
+  if (records === 0 && currencies.length === 0) return null;
+  const parts: SummaryPart[] = [];
+  // With no records the section shows a "nothing yet" note instead of these headings.
+  if (records > 0) {
+    parts.push(
+      { text: due.overdue.length > 0 ? `${due.overdue.length} overdue` : "Nothing overdue", anchor: "overdue" },
+      {
+        text:
+          due.dueSoon.length > 0
+            ? `${due.dueSoon.length} due in the next ${withinDays} days`
+            : `nothing due in the next ${withinDays} days`,
+        anchor: "due-soon",
+      },
+    );
+  }
+  for (const c of currencies) {
+    const mine = c.balances.find((b) => b.owner === personId);
+    if (!mine) continue;
+    const text =
+      mine.balanceCents > 0
+        ? `you're owed ${money(mine.balanceCents, c.currency)}`
+        : mine.balanceCents < 0
+          ? `you owe ${money(-mine.balanceCents, c.currency)}`
+          : currencies.length > 1
+            ? `you're square in ${c.currency}`
+            : "you're square";
+    parts.push({ text, anchor: "balance" });
+  }
+  return parts.map((p, i) => (i === 0 ? { ...p, text: p.text[0]!.toUpperCase() + p.text.slice(1) } : p));
 }

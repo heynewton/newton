@@ -6,10 +6,10 @@ import { Suspense, type ReactNode } from "react";
 import { getBoatRecords, getCurrentPerson, getMyBoat, listMyBoats } from "@/lib/db";
 import { EXPORT_MAX_FILE_BYTES, canExport } from "@/lib/db/export";
 import { boatEmailAddress } from "@/lib/email-in";
-import { costSplit, schedule, todayUtc } from "@/lib/records";
+import { attentionSummary, costSplit, schedule, todayUtc } from "@/lib/records";
 import { roleNames } from "../roles";
 import { SignOut } from "../sign-out";
-import { CoOwnerBalance, ComingUp, Documents, EmailAddress, ExportData } from "./records";
+import { AttentionSummary, CoOwnerBalance, ComingUp, Documents, EmailAddress, ExportData } from "./records";
 
 export const metadata: Metadata = { title: "Your boat · Hey Newton" };
 
@@ -83,6 +83,7 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
         <Image src="/icon.svg" alt="" width={40} height={40} />
         <h1 className="text-3xl font-semibold break-words sm:text-4xl">{boat.boatName}</h1>
         <p className="text-zinc-600 dark:text-zinc-400">You&apos;re its {roleNames[boat.role].toLowerCase()}.</p>
+        <AttentionSummary parts={attentionSummary(due, split, person.id, DUE_SOON_DAYS)} />
       </header>
 
       <ComingUp
