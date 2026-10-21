@@ -5,7 +5,7 @@ import { changeBoatName, type RenameBoatState } from "./actions";
 
 const errors = {
   invalid_name: "Give the boat a name of up to 100 characters.",
-  not_owner: "Only the boat's owners can rename it.",
+  not_owner: "Only the boat's owners and co-owners can rename it.",
   failed: "We couldn't rename the boat. Try again in a minute.",
 };
 

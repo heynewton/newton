@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Boat settings · Hey Newton" };
 
 // Rename (#158), export and delete (#142), away from the everyday links of the boat page and linked
 // from the header's account menu. Owners and co-owners only: crew and read-only members get the
-// same 404 as a boat they're not on, and only owners see rename and delete.
+// same 404 as a boat they're not on, and only owners see delete.
 export default function BoatSettings({ params }: PageProps<"/boats/[boatId]/settings">) {
   return (
     <main className="mx-auto flex w-full flex-1 max-w-2xl flex-col gap-10 px-4 py-10 sm:py-16">
@@ -38,7 +38,7 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
         <p className="break-words text-zinc-600 dark:text-zinc-400">{boat.boatName}</p>
       </header>
 
-      {boat.role === "owner" && !boat.deletingSince && (
+      {!boat.deletingSince && (
         <section aria-labelledby="rename" className="flex flex-col gap-4">
           <h2 id="rename" className="text-xl font-semibold">
             Name

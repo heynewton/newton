@@ -362,7 +362,13 @@ describe("renameBoat", () => {
     expect(calls.some((c) => c.method === "boats.update")).toBe(false);
   });
 
-  it.each(["co_owner", "crew", "read_only"])("refuses a %s without writing", async (role) => {
+  it("lets a co-owner rename", async () => {
+    results.memberships = { data: { ...owner, role: "co_owner" } };
+    results.boats = { data: [{ id: BOAT_ID }] };
+    expect(await db.renameBoat(ALEX, BOAT_ID, "Petrel")).toEqual({ ok: true, boatName: "Petrel" });
+  });
+
+  it.each(["crew", "read_only"])("refuses a %s without writing", async (role) => {
     results.memberships = { data: { ...owner, role } };
     expect(await db.renameBoat(ALEX, BOAT_ID, "Petrel")).toEqual({ ok: false, reason: "not_owner" });
     expect(calls.some((c) => c.method === "boats.update")).toBe(false);

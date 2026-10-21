@@ -170,16 +170,18 @@ export type RenameBoatResult =
   | { ok: true; boatName: string }
   | { ok: false; reason: "invalid_name" | "not_owner" | "failed" };
 
-// Renames one of the signed-in person's boats (#158). Owners only: checked here. The database
-// lets co-owners edit the name too ("boats: owners and co-owners edit"), so this check is the
-// app's rule, not a security boundary. Only the name changes: the boat's email address stays.
+// Renames one of the signed-in person's boats (#158). Owners and co-owners only: checked here, and
+// again by the "boats: owners and co-owners edit" policy. Only the name changes: the boat's email
+// address stays.
 export async function renameBoat(person: Person, boatId: string, name: string): Promise<RenameBoatResult> {
   const boatName = name.trim();
   if (boatName.length === 0 || boatName.length > BOAT_NAME_MAX_LENGTH) {
     return { ok: false, reason: "invalid_name" };
   }
   const boat = await getMyBoat(person, boatId);
-  if (!boat || boat.role !== "owner" || boat.deletingSince) return { ok: false, reason: "not_owner" };
+  if (!boat || (boat.role !== "owner" && boat.role !== "co_owner") || boat.deletingSince) {
+    return { ok: false, reason: "not_owner" };
+  }
   if (boatName === boat.boatName) return { ok: true, boatName };
   const supabase = await createClient();
   if (!supabase) return { ok: false, reason: "failed" };
