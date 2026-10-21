@@ -16,6 +16,7 @@ function answer(key: string): Result {
 function query(table: string) {
   const builder = {
     select: (...args: unknown[]) => (calls.push({ method: `${table}.select`, args }), builder),
+    update: (...args: unknown[]) => (calls.push({ method: `${table}.update`, args }), builder),
     eq: (...args: unknown[]) => (calls.push({ method: `${table}.eq`, args }), builder),
     maybeSingle: async () => answer(table),
     then: (resolve: (r: Result) => unknown, reject?: (e: unknown) => unknown) =>
@@ -330,6 +331,63 @@ describe("deleteBoat", () => {
     results["rpc.begin_boat_deletion"] = { data: [] };
     results["rpc.delete_boat"] = { error: { message: "no", code } };
     expect(await db.deleteBoat(ALEX, BOAT_ID, "Kittiwake")).toEqual({ ok: false, reason });
+  });
+});
+
+describe("renameBoat", () => {
+  const owner = { role: "owner", boats: { id: BOAT_ID, name: "Kittiwake", email_alias: "kittiwake", deleting_since: null } };
+
+  it("updates the name, trimmed, and only the name", async () => {
+    results.memberships = { data: owner };
+    results.boats = { data: [{ id: BOAT_ID }] };
+    expect(await db.renameBoat(ALEX, BOAT_ID, "  Kittiwake II ")).toEqual({ ok: true, boatName: "Kittiwake II" });
+    expect(calls).toContainEqual({ method: "boats.update", args: [{ name: "Kittiwake II" }] });
+    expect(calls).toContainEqual({ method: "boats.eq", args: ["id", BOAT_ID] });
+  });
+
+  it.each(["", "   ", "x".repeat(101)])("refuses the name %j without calling Supabase", async (name) => {
+    expect(await db.renameBoat(ALEX, BOAT_ID, name)).toEqual({ ok: false, reason: "invalid_name" });
+    expect(calls).toEqual([]);
+  });
+
+  it("accepts a 100-character name", async () => {
+    results.memberships = { data: owner };
+    results.boats = { data: [{ id: BOAT_ID }] };
+    expect(await db.renameBoat(ALEX, BOAT_ID, "x".repeat(100))).toEqual({ ok: true, boatName: "x".repeat(100) });
+  });
+
+  it("doesn't write when the name is unchanged", async () => {
+    results.memberships = { data: owner };
+    expect(await db.renameBoat(ALEX, BOAT_ID, " Kittiwake")).toEqual({ ok: true, boatName: "Kittiwake" });
+    expect(calls.some((c) => c.method === "boats.update")).toBe(false);
+  });
+
+  it.each(["co_owner", "crew", "read_only"])("refuses a %s without writing", async (role) => {
+    results.memberships = { data: { ...owner, role } };
+    expect(await db.renameBoat(ALEX, BOAT_ID, "Petrel")).toEqual({ ok: false, reason: "not_owner" });
+    expect(calls.some((c) => c.method === "boats.update")).toBe(false);
+  });
+
+  it("refuses a boat the person isn't on, or one being deleted", async () => {
+    expect(await db.renameBoat(ALEX, BOAT_ID, "Petrel")).toEqual({ ok: false, reason: "not_owner" });
+    results.memberships = { data: { ...owner, boats: { ...owner.boats, deleting_since: "2026-10-21T10:00:00Z" } } };
+    expect(await db.renameBoat(ALEX, BOAT_ID, "Petrel")).toEqual({ ok: false, reason: "not_owner" });
+    expect(calls.some((c) => c.method === "boats.update")).toBe(false);
+  });
+
+  it("is refused when the database updates no row", async () => {
+    results.memberships = { data: owner };
+    results.boats = { data: [] };
+    expect(await db.renameBoat(ALEX, BOAT_ID, "Petrel")).toEqual({ ok: false, reason: "not_owner" });
+  });
+
+  it.each([
+    ["23514", "invalid_name"],
+    ["XX000", "failed"],
+  ])("maps database error %s to %s", async (code, reason) => {
+    results.memberships = { data: owner };
+    results.boats = { error: { message: "no", code } };
+    expect(await db.renameBoat(ALEX, BOAT_ID, "Petrel")).toEqual({ ok: false, reason });
   });
 });
 

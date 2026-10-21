@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
+import { BOAT_NAME_MAX_LENGTH, getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
 import { EXPORT_MAX_FILE_BYTES, canExport } from "@/lib/db/export";
 import { ExportData } from "../records";
+import { RenameBoatForm } from "./rename-boat-form";
 
 export const metadata: Metadata = { title: "Boat settings · Hey Newton" };
 
-// Export and delete (#142), away from the everyday links of the boat page and linked from the
-// header's account menu. Owners and co-owners only: crew and read-only members get the same 404 as
-// a boat they're not on, and only owners see delete.
+// Rename (#158), export and delete (#142), away from the everyday links of the boat page and linked
+// from the header's account menu. Owners and co-owners only: crew and read-only members get the
+// same 404 as a boat they're not on, and only owners see rename and delete.
 export default function BoatSettings({ params }: PageProps<"/boats/[boatId]/settings">) {
   return (
     <main className="mx-auto flex w-full flex-1 max-w-2xl flex-col gap-10 px-4 py-10 sm:py-16">
@@ -36,6 +37,17 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
         <h1 className="text-3xl font-semibold">Boat settings</h1>
         <p className="break-words text-zinc-600 dark:text-zinc-400">{boat.boatName}</p>
       </header>
+
+      {boat.role === "owner" && !boat.deletingSince && (
+        <section aria-labelledby="rename" className="flex flex-col gap-4">
+          <h2 id="rename" className="text-xl font-semibold">
+            Name
+          </h2>
+          <div className="flex flex-col gap-3 rounded-2xl border border-black/10 p-5 dark:border-white/15">
+            <RenameBoatForm boatId={boat.boatId} boatName={boat.boatName} maxLength={BOAT_NAME_MAX_LENGTH} />
+          </div>
+        </section>
+      )}
 
       {records && (
         <ExportData
