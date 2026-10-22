@@ -22,8 +22,8 @@ insert into public.documents (
   1024
 );
 
-select is_null(
-  (select storage_path from public.documents where id = '20000000-0000-0000-0000-000000000111'),
+select ok(
+  (select storage_path is null from public.documents where id = '20000000-0000-0000-0000-000000000111'),
   'a Drive document has no stored file path'
 );
 
