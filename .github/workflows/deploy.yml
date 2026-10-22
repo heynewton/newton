@@ -47,6 +47,9 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       # main deploys to Vercel's "production" target, which has the stable URL; it is our dev site.
       VERCEL_TARGET: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+      # The footer embeds these at build time. Previews identify the PR's head commit, not the merge ref.
+      NEXT_PUBLIC_NEWTON_BUILD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      NEXT_PUBLIC_NEWTON_PR_NUMBER: ${{ github.event_name == 'pull_request' && github.event.pull_request.number || '' }}
       # The dev site and every preview sign in against the hosted dev database, newton-dev (#62).
       # Repo variables, not secrets: the publishable key is public by design and RLS protects the
       # data. Unset, the site builds and deploys anyway and sign-in shows as unavailable.
