@@ -17,7 +17,7 @@ interface DeleteQuery extends PromiseLike<Result> {
   eq(column: string, value: string): DeleteQuery;
 }
 
-interface ChunkInsert {
+interface DocumentChunkInsert {
   boat_id: string;
   document_id: string;
   page: number;
@@ -27,15 +27,27 @@ interface ChunkInsert {
   embedding_model: string;
 }
 
+interface ProcedureChunkInsert {
+  boat_id: string;
+  procedure_id: string;
+  chunk_index: number;
+  content: string;
+  embedding: string;
+  embedding_model: string;
+}
+
+interface ChunkQuery<T> {
+  delete(): DeleteQuery;
+  insert(rows: T[]): PromiseLike<Result>;
+}
+
 /**
  * The part of a supabase-js client this store uses, so the package needn't depend on it. Pass a
  * service-role client from the indexing job, or a signed-in person's client to search as them.
  */
 export interface SupabaseLike {
-  from(table: "document_chunks" | "procedure_chunks"): {
-    delete(): DeleteQuery;
-    insert(rows: ChunkInsert[]): PromiseLike<Result>;
-  };
+  from(table: "document_chunks"): ChunkQuery<DocumentChunkInsert>;
+  from(table: "procedure_chunks"): ChunkQuery<ProcedureChunkInsert>;
   rpc(
     fn: "search_document_chunks",
     args: {

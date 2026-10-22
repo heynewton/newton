@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { SupabaseChunkStore, VoyageEmbedder, indexDocument, shouldIndex } from "@newton/indexing";
+import { SupabaseChunkStore, VoyageEmbedder, indexDocument, shouldIndex, type SupabaseLike } from "@newton/indexing";
 import { fileDocument, type DocumentFile } from "@newton/agent";
 import { driveImportDatabase } from "@/lib/db/drive";
 import { filingStoreFromEnv } from "@/lib/db/filing";
@@ -15,14 +15,24 @@ async function indexManual(
   boatId: string,
   pdf: Uint8Array,
 ) {
+  const documentChunksQuery = () => database.from("document_chunks");
+  const procedureChunksQuery = () => database.from("procedure_chunks");
+  function from(table: "document_chunks"): ReturnType<typeof documentChunksQuery>;
+  function from(table: "procedure_chunks"): ReturnType<typeof procedureChunksQuery>;
+  function from(table: "document_chunks" | "procedure_chunks") {
+    return table === "document_chunks"
+      ? documentChunksQuery()
+      : procedureChunksQuery();
+  }
+
   await indexDocument({
     document: { id: documentId, boatId },
     pdf,
     embedder: new VoyageEmbedder(),
     store: new SupabaseChunkStore({
-      from: (table) => database.from(table),
+      from,
       rpc: (fn, args) => database.rpc(fn, args),
-    }),
+    } satisfies SupabaseLike),
   });
 }
 
