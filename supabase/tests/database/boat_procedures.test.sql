@@ -13,6 +13,30 @@ create function pg_temp.unit(i integer) returns extensions.vector language sql a
 $$;
 grant execute on function pg_temp.unit(integer) to authenticated, anon;
 
+create function pg_temp.update_boat_procedure(target_id uuid, new_content text)
+returns integer language plpgsql as $$
+declare
+  affected integer;
+begin
+  update public.boat_procedures set content = new_content where id = target_id;
+  get diagnostics affected = row_count;
+  return affected;
+end;
+$$;
+grant execute on function pg_temp.update_boat_procedure(uuid, text) to authenticated, anon;
+
+create function pg_temp.delete_boat_procedure(target_id uuid)
+returns integer language plpgsql as $$
+declare
+  affected integer;
+begin
+  delete from public.boat_procedures where id = target_id;
+  get diagnostics affected = row_count;
+  return affected;
+end;
+$$;
+grant execute on function pg_temp.delete_boat_procedure(uuid) to authenticated, anon;
+
 insert into public.documents (id, boat_id, storage_path, type, source, filename)
 values
   ('60000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001',
@@ -139,34 +163,24 @@ select throws_ok(
   '42501', null, 'crew cannot add procedure search chunks'
 );
 select is(
-  (with changed as (
-    update public.boat_procedures set content = 'Crew edit'
-    where id = '80000000-0000-0000-0000-000000000001' returning id
-  ) select count(*)::integer from changed),
+  pg_temp.update_boat_procedure('80000000-0000-0000-0000-000000000001', 'Crew edit'),
   0,
   'crew cannot edit procedures'
 );
 select is(
-  (with removed as (
-    delete from public.boat_procedures where id = '80000000-0000-0000-0000-000000000001' returning id
-  ) select count(*)::integer from removed),
+  pg_temp.delete_boat_procedure('80000000-0000-0000-0000-000000000001'),
   0,
   'crew cannot delete procedures'
 );
 
 select pg_temp.sign_in_as('ada@example.test');
 select is(
-  (with changed as (
-    update public.boat_procedures set content = 'Read-only edit'
-    where id = '80000000-0000-0000-0000-000000000002' returning id
-  ) select count(*)::integer from changed),
+  pg_temp.update_boat_procedure('80000000-0000-0000-0000-000000000002', 'Read-only edit'),
   0,
   'read-only members cannot edit procedures'
 );
 select is(
-  (with removed as (
-    delete from public.boat_procedures where id = '80000000-0000-0000-0000-000000000002' returning id
-  ) select count(*)::integer from removed),
+  pg_temp.delete_boat_procedure('80000000-0000-0000-0000-000000000002'),
   0,
   'read-only members cannot delete procedures'
 );
