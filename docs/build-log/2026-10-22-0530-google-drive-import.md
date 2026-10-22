@@ -13,6 +13,7 @@ new feature: instead of uploading or emailing docs, allow to point to a gDrive f
 - Added retry handling for unfinished filings and manual indexing, plus an import summary with skipped and failed file reasons.
 - Updated privacy, export, architecture and maintainer documentation; added database migrations and RLS-focused tests.
 - Ran `npm run check` and `npm run build`. `npm run db:test` could not connect because local Docker/Supabase was not running. The authenticated boat screen was not browser-tested without local app configuration.
+- CI's database job exposed an assumption about PostgreSQL's generated storage-path constraint name; updated the migration to locate the existing check by its definition.
 
 **What changed along the way**
 
