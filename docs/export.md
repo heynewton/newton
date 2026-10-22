@@ -53,7 +53,7 @@ those of the database; the migrations in `supabase/migrations/` describe each on
 | `boat.json` | The boat: `id`, `name`, `email_alias` (the part of its Newton email address before the @), `created_at`, `deleting_since` (always empty in an export). |
 | `people.json` | Everyone the other files refer to (members, expense payers, who added a document, who sent filed mail): `id` and `display_name` only. A former member who is no longer on any of the exporter's boats appears as an ID in the other files without a row here. |
 | `memberships.json` | Who is on the boat: `person_id`, `role` (`owner`, `co_owner`, `crew`, `read_only`), `ownership_share` (only the ratio between shares matters), `created_at`. |
-| `documents.json` | One row per stored file: `id`, `storage_path`, `type`, `source` (`email` or `upload`), `received_at`, `filename` (as sent), `content_type`, `size_bytes`, `added_by`, `inbound_email_id`. |
+| `documents.json` | One row per document: `id`, `storage_path` (null for Drive imports), `type`, `source` (`email`, `upload` or `drive`), `received_at`, `filename`, `content_type`, `size_bytes`, `added_by`, and source-specific metadata. Drive rows include the source file ID, URL and modification time. |
 | `boat_procedures.json` | Owner-written routines: `title`, `content`, `created_at` and `updated_at`. |
 | `renewals.json` | Insurance, registration and licences: `kind`, `title`, `reference`, `expires_on`, `notes`, `document_id`. |
 | `maintenance_items.json` | `title`, `every_months` and/or `every_engine_hours`, `last_done_on`, `last_done_engine_hours`, `notes`, `document_id`. |
@@ -68,8 +68,10 @@ currency code, never a float. Engine hours are numbers in tenths, like the meter
 
 ### The files
 
-Every file in `documents.json` is in the archive at `files/<storage_path>`, byte for byte as
-stored (email-in keeps the original message as an `.eml` file next to its attachments). Paths are
+Every document with a non-null `storage_path` is in the archive at `files/<storage_path>`, byte for
+byte as stored (email-in keeps the original message as an `.eml` file next to its attachments).
+Drive imports have no stored original file; their `source_url` in `documents.json` links back to
+Google Drive, and only metadata and derived manual passages are held by Newton. Paths are
 cleaned so they can't unpack outside the folder: no leading `/`, no `..`, no control characters.
 If two paths clean up to the same name, the second gets ` (2)` appended. The manifest gives each
 file's path in the archive with its document ID, so use the manifest rather than rebuilding paths.
@@ -101,7 +103,9 @@ file's path in the archive with its document ID, so use the manifest rather than
 - `exported_at` is when the export started. The tables are read one after another, not in one
   transaction, so a change made during the export may show in one file and not another.
 - `files` lists every file with its size and SHA-256, to check the archive is complete and intact.
-- `manifest.json` is written **last**. An archive without it was cut off and is incomplete.
+- `manifest.json` is written **last**. An archive without it was cut off and is incomplete. The
+  manifest's `files` array lists retained files only; Drive originals stay in Drive and are
+  represented by their source links and metadata in `documents.json`.
 
 ## What is left out, and why
 

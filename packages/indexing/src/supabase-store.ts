@@ -17,6 +17,16 @@ interface DeleteQuery extends PromiseLike<Result> {
   eq(column: string, value: string): DeleteQuery;
 }
 
+interface ChunkInsert {
+  boat_id: string;
+  document_id: string;
+  page: number;
+  chunk_index: number;
+  content: string;
+  embedding: string;
+  embedding_model: string;
+}
+
 /**
  * The part of a supabase-js client this store uses, so the package needn't depend on it. Pass a
  * service-role client from the indexing job, or a signed-in person's client to search as them.
@@ -24,9 +34,17 @@ interface DeleteQuery extends PromiseLike<Result> {
 export interface SupabaseLike {
   from(table: "document_chunks" | "procedure_chunks"): {
     delete(): DeleteQuery;
-    insert(rows: Record<string, unknown>[]): PromiseLike<Result>;
+    insert(rows: ChunkInsert[]): PromiseLike<Result>;
   };
-  rpc(fn: "search_document_chunks", args: Record<string, unknown>): PromiseLike<Result & { data: unknown }>;
+  rpc(
+    fn: "search_document_chunks",
+    args: {
+      query_embedding: string;
+      model: string;
+      match_count: number;
+      only_boat_id?: string;
+    },
+  ): PromiseLike<Result & { data: unknown }>;
 }
 
 interface SearchRow {
@@ -102,7 +120,7 @@ export class SupabaseChunkStore implements ChunkStore {
       query_embedding: toVector(embedding),
       model,
       match_count: clampMatchCount(options.matchCount),
-      only_boat_id: options.boatId ?? null,
+      ...(options.boatId ? { only_boat_id: options.boatId } : {}),
     });
     if (error) throw new Error(`Search failed: ${error.message}`);
     return ((data ?? []) as SearchRow[]).map((row): SearchResult => {

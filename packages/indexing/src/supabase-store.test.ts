@@ -138,7 +138,7 @@ describe("SupabaseChunkStore", () => {
     });
     const results = await new SupabaseChunkStore(client).search([1, 0], "voyage-4", { matchCount: 500 });
     expect(calls).toEqual([
-      ["rpc", "search_document_chunks", { query_embedding: "[1,0]", model: "voyage-4", match_count: 50, only_boat_id: null }],
+      ["rpc", "search_document_chunks", { query_embedding: "[1,0]", model: "voyage-4", match_count: 50 }],
     ]);
     expect(results).toEqual([
       {

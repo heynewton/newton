@@ -137,14 +137,14 @@ isOneToOne: false
                   ]
                 },"documents": {
                   Row: {
-                    "added_by": string | null,"boat_id": string,"content_type": string | null,"created_at": string,"filename": string | null,"id": string,"inbound_email_id": string | null,"received_at": string,"size_bytes": number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type": Database["public"]['Enums']["document_type"]
+                    "added_by": string | null,"boat_id": string,"content_type": string | null,"created_at": string,"drive_file_id": string | null,"source_url": string | null,"source_modified_at": string | null,"filename": string | null,"id": string,"inbound_email_id": string | null,"received_at": string,"size_bytes": number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string | null,"type": Database["public"]['Enums']["document_type"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "added_by"?: string | null,"boat_id": string,"content_type"?: string | null,"created_at"?: string,"filename"?: string | null,"id"?: string,"inbound_email_id"?: string | null,"received_at"?: string,"size_bytes"?: number | null,"source": Database["public"]['Enums']["document_source"],"storage_path": string,"type"?: Database["public"]['Enums']["document_type"]
+                    "added_by"?: string | null,"boat_id": string,"content_type"?: string | null,"created_at"?: string,"drive_file_id"?: string | null,"source_url"?: string | null,"source_modified_at"?: string | null,"filename"?: string | null,"id"?: string,"inbound_email_id"?: string | null,"received_at"?: string,"size_bytes"?: number | null,"source": Database["public"]['Enums']["document_source"],"storage_path"?: string | null,"type"?: Database["public"]['Enums']["document_type"]
                   }
                   Update: {
-                    "added_by"?: string | null,"boat_id"?: string,"content_type"?: string | null,"created_at"?: string,"filename"?: string | null,"id"?: string,"inbound_email_id"?: string | null,"received_at"?: string,"size_bytes"?: number | null,"source"?: Database["public"]['Enums']["document_source"],"storage_path"?: string,"type"?: Database["public"]['Enums']["document_type"]
+                    "added_by"?: string | null,"boat_id"?: string,"content_type"?: string | null,"created_at"?: string,"drive_file_id"?: string | null,"source_url"?: string | null,"source_modified_at"?: string | null,"filename"?: string | null,"id"?: string,"inbound_email_id"?: string | null,"received_at"?: string,"size_bytes"?: number | null,"source"?: Database["public"]['Enums']["document_source"],"storage_path"?: string | null,"type"?: Database["public"]['Enums']["document_type"]
                   }
                   Relationships: [
                     {
@@ -475,7 +475,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "document_source": "email"|"upload","document_type": "unsorted"|"email"|"invoice"|"receipt"|"insurance"|"registration"|"manual"|"contract"|"survey"|"other","filing_status": "filed"|"needs_review"|"failed","inbound_email_status": "filed"|"held","membership_role": "owner"|"co_owner"|"crew"|"read_only","reminder_item_type": "renewal"|"maintenance","reminder_status": "due_soon"|"overdue","renewal_kind": "insurance"|"registration"|"licence"|"other"
+            "document_source": "email"|"upload"|"drive","document_type": "unsorted"|"email"|"invoice"|"receipt"|"insurance"|"registration"|"manual"|"contract"|"survey"|"other","filing_status": "filed"|"needs_review"|"failed","inbound_email_status": "filed"|"held","membership_role": "owner"|"co_owner"|"crew"|"read_only","reminder_item_type": "renewal"|"maintenance","reminder_status": "due_soon"|"overdue","renewal_kind": "insurance"|"registration"|"licence"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -595,7 +595,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "document_source": ["email", "upload"],"document_type": ["unsorted", "email", "invoice", "receipt", "insurance", "registration", "manual", "contract", "survey", "other"],"filing_status": ["filed", "needs_review", "failed"],"inbound_email_status": ["filed", "held"],"membership_role": ["owner", "co_owner", "crew", "read_only"],"reminder_item_type": ["renewal", "maintenance"],"reminder_status": ["due_soon", "overdue"],"renewal_kind": ["insurance", "registration", "licence", "other"]
+            "document_source": ["email", "upload", "drive"],"document_type": ["unsorted", "email", "invoice", "receipt", "insurance", "registration", "manual", "contract", "survey", "other"],"filing_status": ["filed", "needs_review", "failed"],"inbound_email_status": ["filed", "held"],"membership_role": ["owner", "co_owner", "crew", "read_only"],"reminder_item_type": ["renewal", "maintenance"],"reminder_status": ["due_soon", "overdue"],"renewal_kind": ["insurance", "registration", "licence", "other"]
           }
         }
 } as const

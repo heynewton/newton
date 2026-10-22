@@ -35,7 +35,7 @@ function check<T>(what: string, result: { data: T; error: { message: string } | 
 export class SupabaseFilingStore implements ServerFilingStore {
   constructor(private readonly db: Client) {}
 
-  async load(documentId: string): Promise<{ file: DocumentFile; context: FilingContext } | null> {
+  async load(documentId: string, fileOverride?: DocumentFile): Promise<{ file: DocumentFile; context: FilingContext } | null> {
     const filing = check(
       "document_filings",
       await this.db.from("document_filings").select("status").eq("document_id", documentId).maybeSingle(),
@@ -74,15 +74,18 @@ export class SupabaseFilingStore implements ServerFilingStore {
         .order("title"),
       this.db.from("renewals").select("kind, expires_on").eq("boat_id", boatId),
       this.db.from("expenses").select("amount_cents, currency, spent_on").eq("boat_id", boatId),
-      this.db.storage.from("documents").download(document.storage_path),
+      fileOverride || !document.storage_path
+        ? Promise.resolve({ data: null, error: null })
+        : this.db.storage.from("documents").download(document.storage_path),
     ]);
-    if (download.error) throw new Error(`Storage download ${document.storage_path}: ${download.error.message}`);
+    if (!fileOverride && download.error) throw new Error(`Storage download ${document.storage_path}: ${download.error.message}`);
+    if (!fileOverride && !download.data) throw new Error(`Document ${documentId} has no stored file`);
 
     return {
       file: {
-        filename: document.filename,
-        contentType: document.content_type,
-        content: new Uint8Array(await download.data.arrayBuffer()),
+        filename: fileOverride?.filename ?? document.filename,
+        contentType: fileOverride?.contentType ?? document.content_type,
+        content: fileOverride?.content ?? new Uint8Array(await download.data!.arrayBuffer()),
       },
       context: {
         filename: document.filename,

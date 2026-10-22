@@ -430,7 +430,7 @@ export interface SavedFiling {
 /** The database side, implemented on Supabase in the web app and in memory in tests. */
 export interface FilingStore {
   /** The file and what filing needs to know, or null when the document is gone or already filed. */
-  load(documentId: string): Promise<{ file: DocumentFile; context: FilingContext } | null>;
+  load(documentId: string, fileOverride?: DocumentFile): Promise<{ file: DocumentFile; context: FilingContext } | null>;
   /** Saves the filing and its records once. `alreadyFiled` when another run got there first. */
   save(documentId: string, filing: SavedFiling): Promise<{ alreadyFiled: boolean }>;
   /** Records a failed attempt, for the sweep to retry. */
@@ -450,6 +450,8 @@ export interface FileDocumentInput {
   documentId: string;
   store: FilingStore;
   model: FilingModel;
+  /** A file held only in memory, such as a Google Drive import that is not stored in Newton. */
+  fileOverride?: DocumentFile;
   /** The text layer of a PDF, or empty pages for a scan. @newton/indexing's extractPages. */
   extractText: (pdf: Uint8Array) => Promise<string>;
 }
@@ -472,8 +474,8 @@ async function documentText(file: DocumentFile, kind: ReadableKind, extractText:
  * reading the file is recorded as a failed attempt and returned, not thrown, so one bad document
  * doesn't stop the others; a database error is thrown.
  */
-export async function fileDocument({ documentId, store, model, extractText }: FileDocumentInput): Promise<FileDocumentResult> {
-  const loaded = await store.load(documentId);
+export async function fileDocument({ documentId, store, model, extractText, fileOverride }: FileDocumentInput): Promise<FileDocumentResult> {
+  const loaded = await store.load(documentId, fileOverride);
   if (!loaded) return { documentId, outcome: "already_filed" };
   const { file, context } = loaded;
 
