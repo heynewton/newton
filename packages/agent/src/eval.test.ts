@@ -1,6 +1,6 @@
 import { FakeEmbedder } from "@newton/indexing";
 import { describe, expect, it } from "vitest";
-import { grade, indexedManual, loadEvalSet, MATCH_COUNT, runEval } from "./eval";
+import { grade, indexedBoatKnowledge, loadEvalSet, MATCH_COUNT, runEval } from "./eval";
 import type { AnswerModel, ModelAnswer } from "./manual-qa";
 
 const set = loadEvalSet();
@@ -22,11 +22,11 @@ function oracle(): AnswerModel {
 }
 
 describe("the manual Q&A eval set", () => {
-  it("has covered and not-covered questions, each covered one with a page and what to mention", () => {
+  it("has covered and not-covered questions with a source and what to mention", () => {
     expect(set.cases.filter((c) => c.covered).length).toBeGreaterThanOrEqual(5);
     expect(set.cases.filter((c) => !c.covered).length).toBeGreaterThanOrEqual(3);
     for (const c of set.cases.filter((x) => x.covered)) {
-      expect(c.page, c.id).toBeDefined();
+      expect(c.page !== undefined || c.procedureTitle !== undefined, c.id).toBe(true);
       expect(c.mentions?.length, c.id).toBeGreaterThan(0);
     }
     expect(new Set(set.cases.map((c) => c.id)).size).toBe(set.cases.length);
@@ -35,13 +35,19 @@ describe("the manual Q&A eval set", () => {
   // Retrieval runs for real here, with the deterministic fake embedder: the excerpt with the
   // answer has to reach the model. The live eval checks the same with Voyage.
   it.each(set.cases.filter((c) => c.covered).map((c) => [c.id, c] as const))(
-    "finds the page with the answer for %s in the top results",
+    "finds the source with the answer for %s in the top results",
     async (_id, c) => {
-      const search = await indexedManual(set, new FakeEmbedder());
+      const search = await indexedBoatKnowledge(set, new FakeEmbedder());
       const results = await search(c.question);
       expect(results).toHaveLength(Math.min(MATCH_COUNT, results.length));
       const hit = results.find((r) => (c.mentions ?? []).every((m) => r.content.toLowerCase().includes(m.toLowerCase())));
-      expect(hit?.page, c.question).toBe(c.page);
+      if (c.sourceType === "procedure") {
+        expect(hit?.sourceType, c.question).toBe("procedure");
+        expect(hit?.procedureTitle, c.question).toBe(c.procedureTitle);
+      } else {
+        expect(hit?.sourceType, c.question).toBe("document");
+        expect(hit?.page, c.question).toBe(c.page);
+      }
     },
   );
 

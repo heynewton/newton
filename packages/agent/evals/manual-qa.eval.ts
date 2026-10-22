@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { ClaudeAnswerModel } from "../src/claude";
 import { loadEvalSet, runEval } from "../src/eval";
 
-// The live manual Q&A eval (#14): every question in manual-qa.json through Claude, graded on
-// answering or declining, citing the right page and quoting the figures. Costs a few cents a run.
+// The live boat Q&A eval (#14, #21): every question in manual-qa.json through Claude, graded on
+// answering or declining, citing the right source and quoting figures. Costs a few cents a run.
 // Needs ANTHROPIC_API_KEY; uses Voyage when VOYAGE_API_KEY is set, otherwise the fake embedder
 // (then it only measures the answering half).
 

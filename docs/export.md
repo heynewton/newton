@@ -28,6 +28,7 @@ test-boat-export-2026-10-20.zip
 │   ├── people.json
 │   ├── memberships.json
 │   ├── documents.json
+│   ├── boat_procedures.json
 │   ├── renewals.json
 │   ├── maintenance_items.json
 │   ├── expenses.json
@@ -53,6 +54,7 @@ those of the database; the migrations in `supabase/migrations/` describe each on
 | `people.json` | Everyone the other files refer to (members, expense payers, who added a document, who sent filed mail): `id` and `display_name` only. A former member who is no longer on any of the exporter's boats appears as an ID in the other files without a row here. |
 | `memberships.json` | Who is on the boat: `person_id`, `role` (`owner`, `co_owner`, `crew`, `read_only`), `ownership_share` (only the ratio between shares matters), `created_at`. |
 | `documents.json` | One row per stored file: `id`, `storage_path`, `type`, `source` (`email` or `upload`), `received_at`, `filename` (as sent), `content_type`, `size_bytes`, `added_by`, `inbound_email_id`. |
+| `boat_procedures.json` | Owner-written routines: `title`, `content`, `created_at` and `updated_at`. |
 | `renewals.json` | Insurance, registration and licences: `kind`, `title`, `reference`, `expires_on`, `notes`, `document_id`. |
 | `maintenance_items.json` | `title`, `every_months` and/or `every_engine_hours`, `last_done_on`, `last_done_engine_hours`, `notes`, `document_id`. |
 | `expenses.json` | `description`, `amount_cents` (integer, negative for a refund), `currency` (ISO 4217), `spent_on`, `paid_by` (a person ID), `notes`, `document_id`. |
@@ -105,7 +107,7 @@ file's path in the archive with its document ID, so use the manifest rather than
 
 | Left out | Why |
 | --- | --- |
-| `document_chunks` (manual passages and their embeddings) | Derived data: Newton recomputes it from the files, which are in the archive. Embeddings are specific to the model that made them and of no use elsewhere. |
+| `document_chunks` and `procedure_chunks` (manual passages, procedures and their embeddings) | Derived data: Newton recomputes it from the files and procedures in the archive. Embeddings are specific to the model that made them and of no use elsewhere. |
 | People's email addresses and sign-in details (`people.email`, `auth_subject`, Supabase Auth records) | Personal to each member, not the boat's. The boat's records refer to people by ID and name, which is enough to read them. The exporter's own account data is part of a personal data request, not the boat export. |
 | `sender_addresses` | The other addresses a person forwards mail from: personal to that person, and RLS shows each person only their own. |
 | `reminders_sent` | The log of which reminder emails went to whom, kept so nobody is reminded twice. It is about each recipient's inbox, not the boat, and RLS shows each person only their own. |

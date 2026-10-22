@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { BoatDocument, BoatMember, DocumentType } from "@/lib/db";
+import type { BoatProcedure } from "@/lib/db/procedures";
 import {
   balancesFor,
   dateOf,
@@ -422,6 +423,32 @@ export function Documents({
                   {documentTypes[doc.type]}, {received(doc)} {formatDate(dateOf(doc.receivedAt))}
                 </span>
               </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+export function BoatProcedures({ procedures }: { procedures: BoatProcedure[] }) {
+  return (
+    <section aria-labelledby="boat-procedures" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <h2 id="boat-procedures" className="text-xl font-semibold">
+          Boat procedures
+        </h2>
+        <Freshness>Owner-written routines for this boat, available to everyone on it.</Freshness>
+      </div>
+      {procedures.length === 0 ? (
+        <p className={`${card} ${muted}`}>No boat procedures have been added yet.</p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {procedures.map((procedure) => (
+            <li key={procedure.id} className={`${card} flex flex-col gap-2`}>
+              <h3 className="font-semibold break-words">{procedure.title}</h3>
+              <p className="whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">{procedure.content}</p>
+              <p className={`text-sm ${muted}`}>Last edited {formatDate(dateOf(procedure.updatedAt))}.</p>
             </li>
           ))}
         </ul>

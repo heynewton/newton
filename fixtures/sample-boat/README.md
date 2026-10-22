@@ -7,9 +7,10 @@ fictional 555-01xx range. Never add real boat data here (see the repo rules in `
 
 ## The boat and its people
 
-`boat.json` holds the boat, who is on it, its documents and the boat's records, shaped like the
-`boats`, `people`, `memberships`, `documents`, `renewals`, `maintenance_items` and `expenses` tables
-(see `docs/architecture.md`). Records filed from a fixture document name it in `sourceDocument`.
+`boat.json` holds the boat, who is on it, its documents, owner-written procedures and the boat's
+records, shaped like the `boats`, `people`, `memberships`, `documents`, `boat_procedures`,
+`renewals`, `maintenance_items` and `expenses` tables (see `docs/architecture.md`). Records filed
+from a fixture document name it in `sourceDocument`.
 
 | Person | Role | Ownership | Verified sender addresses |
 | --- | --- | --- | --- |
@@ -89,6 +90,13 @@ Edit `documents/*.txt` (plain ASCII, one page of at most 56 lines) or the email 
 ```bash
 node fixtures/sample-boat/build.mjs
 ```
+
+## Owner-written procedures
+
+`boat.json` includes two invented routines—"Picking up our mooring" and "Guest safety briefing"—
+to seed the boat page and exercise procedure retrieval in `packages/agent/evals/manual-qa.json`.
+Owners and co-owners can add, edit and delete procedures from boat settings; everyone on the boat
+can read them on its home page.
 
 After changing `boat.json` or a PDF, also regenerate the database seed (CI fails if it is out of
 date, and the seed records each PDF's size):

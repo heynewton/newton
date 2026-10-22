@@ -8,8 +8,22 @@ export { FakeEmbedder, fakeEmbedding } from "./fake-embedder";
 export { VoyageEmbedder } from "./voyage-embedder";
 export type { VoyageEmbedderOptions } from "./voyage-embedder";
 export { MemoryChunkStore } from "./store";
-export type { ChunkRow, ChunkStore, DocumentRef, SearchOptions, SearchResult } from "./store";
+export type {
+  ChunkRow,
+  ChunkStore,
+  DocumentChunkRow,
+  DocumentRef,
+  ProcedureChunkRow,
+  ProcedureRef,
+  SearchOptions,
+  SearchResult,
+} from "./store";
 export { SupabaseChunkStore } from "./supabase-store";
 export type { SupabaseLike } from "./supabase-store";
-export { indexDocument, searchChunks, shouldIndex } from "./index-document";
-export type { IndexDocumentInput, IndexDocumentResult, SearchInput } from "./index-document";
+export { indexDocument, indexProcedure, prepareProcedureChunks, searchChunks, shouldIndex } from "./index-document";
+export type {
+  IndexDocumentInput,
+  IndexDocumentResult,
+  IndexProcedureInput,
+  SearchInput,
+} from "./index-document";

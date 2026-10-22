@@ -14,7 +14,9 @@ import {
 import { EXPORT_MAX_FILE_BYTES, canExport } from "@/lib/db/export";
 import { ExportData } from "../records";
 import { People } from "./people";
+import { ProcedureManager } from "./procedure-manager";
 import { RenameBoatForm } from "./rename-boat-form";
+import { getBoatProcedures, PROCEDURE_CONTENT_MAX_LENGTH, PROCEDURE_TITLE_MAX_LENGTH } from "@/lib/db/procedures";
 
 export const metadata: Metadata = { title: "Boat settings · Hey Newton" };
 
@@ -38,9 +40,13 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
   const boat = await getMyBoat(person, boatId);
   if (!boat || !canExport(boat.role)) notFound();
   // A boat being deleted can't be exported (its files are partly gone), only finished off.
-  const [records, invitations] = boat.deletingSince
-    ? [null, []]
-    : await Promise.all([getBoatRecords(boat.boatId), canInvite(boat.role) ? loadInvitations(boat.boatId) : []]);
+  const [records, invitations, procedures] = boat.deletingSince
+    ? [null, [], []]
+    : await Promise.all([
+        getBoatRecords(boat.boatId),
+        canInvite(boat.role) ? loadInvitations(boat.boatId) : [],
+        getBoatProcedures(boat.boatId),
+      ]);
 
   return (
     <>
@@ -76,6 +82,15 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
           boatId={boat.boatId}
           fileBytes={records.documents.reduce((n, d) => n + (d.sizeBytes ?? 0), 0)}
           maxFileBytes={EXPORT_MAX_FILE_BYTES}
+        />
+      )}
+
+      {records && (
+        <ProcedureManager
+          boatId={boat.boatId}
+          procedures={procedures}
+          titleMaxLength={PROCEDURE_TITLE_MAX_LENGTH}
+          contentMaxLength={PROCEDURE_CONTENT_MAX_LENGTH}
         />
       )}
 

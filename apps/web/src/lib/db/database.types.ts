@@ -37,6 +37,26 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"boat_procedures": {
+                  Row: {
+                    "boat_id": string,"content": string,"created_at": string,"id": string,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "boat_id": string,"content": string,"created_at"?: string,"id"?: string,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "boat_id"?: string,"content"?: string,"created_at"?: string,"id"?: string,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "boat_procedures_boat_id_fkey"
+      columns: ["boat_id"]
+isOneToOne: false
+      referencedRelation: "boats"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"document_chunks": {
                   Row: {
                     "boat_id": string,"chunk_index": number,"content": string,"created_at": string,"document_id": string,"embedding": string,"embedding_model": string,"id": string,"page": number
@@ -60,6 +80,32 @@ isOneToOne: false
       columns: ["document_id","boat_id"]
 isOneToOne: false
       referencedRelation: "documents"
+      referencedColumns: ["id","boat_id"]
+    }
+                  ]
+                },"procedure_chunks": {
+                  Row: {
+                    "boat_id": string,"chunk_index": number,"content": string,"created_at": string,"embedding": string,"embedding_model": string,"id": string,"procedure_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "boat_id": string,"chunk_index": number,"content": string,"created_at"?: string,"embedding": string,"embedding_model": string,"id"?: string,"procedure_id": string
+                  }
+                  Update: {
+                    "boat_id"?: string,"chunk_index"?: number,"content"?: string,"created_at"?: string,"embedding"?: string,"embedding_model"?: string,"id"?: string,"procedure_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "procedure_chunks_boat_id_fkey"
+      columns: ["boat_id"]
+isOneToOne: false
+      referencedRelation: "boats"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "procedure_chunks_procedure_id_boat_id_fkey"
+      columns: ["procedure_id","boat_id"]
+isOneToOne: false
+      referencedRelation: "boat_procedures"
       referencedColumns: ["id","boat_id"]
     }
                   ]
@@ -411,6 +457,9 @@ isOneToOne: false
 "record_document_filing_failure":
 { Args: { "document_id": string,"error": string,"model": string }; Returns: undefined
                            },
+"save_boat_procedure":
+{ Args: { "chunks_to_store": Json,"procedure_content": string,"procedure_title": string,"target_boat_id": string,"target_procedure_id": string | null }; Returns: string
+                           },
 "save_document_filing":
 { Args: { "confidence": string,"document_id": string,"document_type": Database["public"]['Enums']["document_type"],"flags": Json,"model": string,"proposal": Json,"records": Json,"status": Database["public"]['Enums']["filing_status"],"summary": string,"vendor": string }; Returns: {
               "already_filed": boolean,"filing_id": string
@@ -418,7 +467,7 @@ isOneToOne: false
                            },
 "search_document_chunks":
 { Args: { "match_count"?: number,"model": string,"only_boat_id"?: string,"query_embedding": string }; Returns: {
-              "boat_id": string,"chunk_id": string,"content": string,"document_id": string,"document_received_at": string,"filename": string,"indexed_at": string,"page": number,"similarity": number
+              "boat_id": string,"chunk_id": string,"content": string,"document_id": string | null,"document_received_at": string | null,"filename": string | null,"indexed_at": string,"page": number | null,"procedure_id": string | null,"procedure_title": string | null,"procedure_updated_at": string | null,"similarity": number,"source_type": string
             }[]
                            },
 "shares_boat_with":

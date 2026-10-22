@@ -4,9 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { canInvite, getBoatRecords, getCurrentPerson, getMyBoat } from "@/lib/db";
 import { boatEmailAddress } from "@/lib/email-in";
+import { getBoatProcedures } from "@/lib/db/procedures";
 import { attentionSummary, costSplit, schedule, todayUtc } from "@/lib/records";
 import { roleNames } from "../roles";
-import { AttentionSummary, CoOwnerBalance, ComingUp, Documents } from "./records";
+import { AttentionSummary, BoatProcedures, CoOwnerBalance, ComingUp, Documents } from "./records";
 
 export const metadata: Metadata = { title: "Your boat · Hey Newton" };
 
@@ -55,7 +56,7 @@ function nextSteps(
       ),
     });
   }
-  comingSoon.push("asking about the boat from its manuals"); // #14
+  comingSoon.push("asking about the boat from its manuals and procedures"); // #14, #21
   return { steps, comingSoon };
 }
 
@@ -77,7 +78,7 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
   if (!boat) notFound();
   if (boat.deletingSince) return <BeingDeleted boatId={boat.boatId} boatName={boat.boatName} isOwner={boat.role === "owner"} />;
 
-  const records = await getBoatRecords(boat.boatId);
+  const [records, procedures] = await Promise.all([getBoatRecords(boat.boatId), getBoatProcedures(boat.boatId)]);
   const today = todayUtc(new Date());
   const due = schedule(records.renewals, records.maintenance, {
     today,
@@ -118,6 +119,7 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
         documents={documents}
       />
       <Documents documents={records.documents} boatId={boat.boatId} address={address} />
+      <BoatProcedures procedures={procedures} />
 
       <section aria-labelledby="next-steps" className="flex flex-col gap-4">
         <h2 id="next-steps" className="text-xl font-semibold">

@@ -5,14 +5,34 @@ import { answerFromManuals, buildPrompt, citationLine, numbersIn, NOT_COVERED, t
 const excerpt = (page: number, content: string, documentId = "manual-1"): SearchResult => ({
   chunkId: `${documentId}/${page}`,
   boatId: "test-boat",
+  sourceType: "document",
   documentId,
+  procedureId: null,
   filename: "manual-excerpt.pdf",
+  procedureTitle: null,
   documentReceivedAt: "2026-10-11T08:15:40Z",
+  procedureUpdatedAt: null,
   page,
   content,
   indexedAt: "2026-10-12T00:00:00Z",
   similarity: 0.9,
 });
+
+const procedureExcerpt: SearchResult = {
+  chunkId: "procedure-1/0",
+  boatId: "test-boat",
+  sourceType: "procedure",
+  documentId: null,
+  procedureId: "procedure-1",
+  filename: null,
+  procedureTitle: "Picking up our mooring",
+  documentReceivedAt: null,
+  procedureUpdatedAt: "2026-10-20T12:00:00Z",
+  page: null,
+  content: "Approach slowly from downwind; use the boathook to lift the pickup line.",
+  indexedAt: "2026-10-20T12:00:00Z",
+  similarity: 0.9,
+};
 
 const oil = excerpt(2, "6.3 Engine oil\nCapacity with filter: 4.8 quarts (4.5 liters).\nUse oil rated API CH-4 or better, SAE 15W-40 above 5 C.");
 const schedule = excerpt(1, "Raw-water pump impeller              250 h      24 months\nCoolant (replace)                    1,000 h    24 months");
@@ -43,6 +63,7 @@ describe("answerFromManuals", () => {
       answer: "It takes 4.8 quarts (4.5 liters) with the filter.",
       sources: [
         {
+          sourceType: "document",
           documentId: "manual-1",
           filename: "manual-excerpt.pdf",
           page: 2,
@@ -94,20 +115,47 @@ describe("answerFromManuals", () => {
     const more = excerpt(2, "6.4 Raw-water impeller\nClose the seacock before opening the pump cover.");
     const result = await ask({ covered: true, answer: "Close the seacock; SAE 15W-40 oil.", sources: [3, 1, 3, 2] }, [oil, schedule, more])
       .result;
-    expect(result.covered && result.sources.map((s) => s.page)).toEqual([2, 1]);
+    expect(result.covered && result.sources.filter((s) => s.sourceType === "document").map((s) => s.page)).toEqual([2, 1]);
     expect(result.covered && result.citation).toBe(
       "From manual-excerpt.pdf, page 2 (received 11 Oct 2026); manual-excerpt.pdf, page 1 (received 11 Oct 2026).",
     );
   });
 
+  it("names a procedure and its last-edited date in the source", async () => {
+    const result = await answerFromManuals({
+      question: "How do we pick up our mooring?",
+      search: async () => [procedureExcerpt],
+      model: scripted({ covered: true, answer: "Approach slowly from downwind.", sources: [1] }).model,
+    });
+    expect(result).toEqual({
+      covered: true,
+      answer: "Approach slowly from downwind.",
+      sources: [
+        {
+          sourceType: "procedure",
+          procedureId: "procedure-1",
+          title: "Picking up our mooring",
+          updatedAt: "2026-10-20T12:00:00Z",
+        },
+      ],
+      citation: "From Picking up our mooring (last edited 20 Oct 2026).",
+    });
+  });
+
   it("shows the model numbered excerpts with their document and page, then the question", async () => {
     const { asked, result } = ask({ covered: false, answer: "", sources: [] });
     await result;
-    expect(asked[0]!.system).toContain("only excerpts from that boat's own manuals");
+    expect(asked[0]!.system).toContain("manuals and owner-written procedures");
     expect(asked[0]!.prompt).toBe(buildPrompt("How much oil?", [oil, schedule]));
     expect(asked[0]!.prompt).toMatch(/^<excerpt number="1" document="manual-excerpt.pdf" page="2">\n6\.3 Engine oil/);
     expect(asked[0]!.prompt).toContain('<excerpt number="2" document="manual-excerpt.pdf" page="1">');
     expect(asked[0]!.prompt.endsWith("Question: How much oil?")).toBe(true);
+  });
+
+  it("shows procedure titles to the model without adding them to the answer", async () => {
+    const { asked, model } = scripted({ covered: false, answer: "", sources: [] });
+    await answerFromManuals({ question: "How do we pick up our mooring?", search: async () => [procedureExcerpt], model });
+    expect(asked[0]!.prompt).toContain('<excerpt number="1" procedure="Picking up our mooring">');
   });
 });
 
@@ -119,7 +167,9 @@ describe("numbersIn and citationLine", () => {
 
   it("leaves out dates it doesn't have", () => {
     expect(
-      citationLine([{ documentId: "d", filename: null, page: 3, documentReceivedAt: null, indexedAt: null }]),
+      citationLine([
+        { sourceType: "document", documentId: "d", filename: null, page: 3, documentReceivedAt: null, indexedAt: null },
+      ]),
     ).toBe("From a manual, page 3.");
   });
 });

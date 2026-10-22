@@ -96,6 +96,20 @@
       "receivedAt": "2026-10-11T08:15:40Z"
     }
   ],
+  "procedures": [
+    {
+      "id": "00000000-0000-4000-8000-000000000701",
+      "title": "Picking up our mooring",
+      "updatedAt": "2026-10-20T12:00:00Z",
+      "content": "Before leaving the dock, check the wind and current and agree who is on the bow. Approach slowly from downwind or down-current, whichever gives the boat more control. Keep the engine in neutral as the bow reaches the pickup; use the boathook to lift the pickup line, then lead it to the bow cleat. Keep hands clear of the line and confirm it is secure before shutting down."
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000702",
+      "title": "Guest safety briefing",
+      "updatedAt": "2026-10-20T12:00:00Z",
+      "content": "Show guests where the lifejackets and first-aid kit are kept, how to use the companionway handholds, and which crew member to ask before moving around the deck. Keep the cockpit clear of loose gear, and tell everyone where to gather if the skipper calls for it."
+    }
+  ],
   "renewals": [
     {
       "id": "00000000-0000-4000-8000-000000000301",
