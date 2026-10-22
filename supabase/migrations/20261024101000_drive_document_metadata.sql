@@ -4,8 +4,24 @@ alter table public.documents
   add column source_url text,
   add column source_modified_at timestamptz;
 
+do $$
+declare
+  storage_path_constraint text;
+begin
+  select conname
+    into storage_path_constraint
+    from pg_constraint
+    where conrelid = 'public.documents'::regclass
+      and contype = 'c'
+      and pg_get_constraintdef(oid) like '%split_part(storage_path%';
+  if storage_path_constraint is null then
+    raise exception 'Could not find the documents storage-path constraint';
+  end if;
+  execute format('alter table public.documents drop constraint %I', storage_path_constraint);
+end;
+$$;
+
 alter table public.documents
-  drop constraint documents_storage_path_check,
   add constraint documents_storage_path_check
     check (
       (source = 'drive' and storage_path is null and drive_file_id is not null and source_url is not null)
