@@ -138,6 +138,7 @@ What a signed-in person can do in the app.
 Answers from a boat's manuals through Claude, with the page they came from, and their evals.
 
 - [#87](https://github.com/heynewton/newton/pull/87) · 2026-10-19 · Answers from the boat's manuals, with the page they came from · closes [#14](https://github.com/heynewton/newton/issues/14)
+- [#169](https://github.com/heynewton/newton/pull/169) · 2026-10-22 · Owner-written procedures with source and freshness citations · closes [#21](https://github.com/heynewton/newton/issues/21)
 
 ### What's next
 
