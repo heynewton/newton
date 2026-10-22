@@ -87,6 +87,9 @@ jobs:
       SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PROD_PUBLISHABLE_KEY }}
       SHA: ${{ needs.verify.outputs.sha }}
       TAG: ${{ needs.verify.outputs.tag }}
+      # The footer embeds the published release tag and its verified commit at build time.
+      NEXT_PUBLIC_NEWTON_BUILD_SHA: ${{ needs.verify.outputs.sha }}
+      NEXT_PUBLIC_NEWTON_RELEASE_TAG: ${{ needs.verify.outputs.tag }}
     steps:
       - name: Check the prod settings
         env:
