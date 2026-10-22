@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Privacy · Hey Newton" };
 
 // When the text changes, change this date too. What each part is based on (tables, providers,
 // regions) is in docs/architecture.md, docs/tokens.md and docs/decisions/.
-const LAST_UPDATED = "2026-10-20";
+const LAST_UPDATED = "2026-10-22";
 
 // The services that see Newton's data on our behalf. Keep in step with docs/architecture.md.
 const processors = [
@@ -37,6 +37,12 @@ const processors = [
   {
     name: "Google (Gmail)",
     role: "Our inbox: holds the messages you send to our contact address, such as privacy requests. It does not see your boat's data.",
+    where: "United States.",
+    href: "https://policies.google.com/privacy",
+  },
+  {
+    name: "Google Drive",
+    role: "Provides files from a folder an owner or co-owner selects. Newton uses temporary read-only access during import, does not keep a Drive token or a copy of the original file, and retains document metadata and derived manual passages.",
     where: "United States.",
     href: "https://policies.google.com/privacy",
   },
@@ -106,8 +112,10 @@ export default function Privacy() {
             knows who can see and change what, and how to split costs.
           </li>
           <li>
-            <strong>Documents.</strong> Files filed for the boat, such as invoices, insurance,
-            certificates and manuals, with their name, type, size, date and who added them.
+            <strong>Documents.</strong> Files sent to a boat and their metadata. For a Google Drive
+            import, Newton keeps the Drive file ID and link, name, type, size, modification date,
+            filing results and manual passages used for search; it discards the original file bytes
+            after processing and does not keep a Google Drive token.
           </li>
           <li>
             <strong>Records.</strong> Renewals, maintenance items and expenses (amount, date, who
@@ -128,9 +136,9 @@ export default function Privacy() {
             document it came from.
           </li>
           <li>
-            <strong>Manual search (coming soon).</strong> The text of the boat&apos;s manuals, split
-            into passages with their page numbers, and a search vector for each, so Newton can find
-            the right page when you ask a question.
+            <strong>Manual search.</strong> The text of the boat&apos;s manuals, split into passages
+            with their page numbers, and a search vector for each, so Newton can find the right page
+            when you ask a question. Drive-imported manuals use the same derived passages.
           </li>
           <li>
             <strong>Questions (coming soon).</strong> When you ask Newton a question, the question

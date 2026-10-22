@@ -325,10 +325,12 @@ export type DocumentType = Database["public"]["Enums"]["document_type"];
 export type BoatDocument = {
   id: string;
   type: DocumentType;
-  source: "email" | "upload";
+  source: "email" | "upload" | "drive";
   filename: string | null;
   receivedAt: string;
   sizeBytes: number | null;
+  hasStoredFile: boolean;
+  sourceModifiedAt: string | null;
 };
 
 export type BoatMember = {
@@ -354,7 +356,7 @@ export async function getBoatRecords(boatId: string): Promise<BoatRecords> {
   const [documents, renewals, maintenance, expenses, members] = await Promise.all([
     supabase
       .from("documents")
-      .select("id, type, source, filename, received_at, size_bytes")
+      .select("id, type, source, filename, received_at, size_bytes, storage_path, source_modified_at")
       .eq("boat_id", boatId)
       .order("received_at", { ascending: false }),
     supabase
@@ -385,6 +387,8 @@ export async function getBoatRecords(boatId: string): Promise<BoatRecords> {
       filename: d.filename,
       receivedAt: d.received_at,
       sizeBytes: d.size_bytes,
+      hasStoredFile: d.storage_path !== null,
+      sourceModifiedAt: d.source_modified_at,
     })),
     renewals: renewals.data!,
     maintenance: maintenance.data!,
@@ -411,12 +415,14 @@ export async function getDocumentLink(boatId: string, documentId: string): Promi
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("documents")
-    .select("storage_path")
+    .select("storage_path, source_url")
     .eq("boat_id", boatId)
     .eq("id", documentId)
     .maybeSingle();
   if (error) throw new Error(`Could not load the document: ${error.message}`);
   if (!data) return null;
+  if (data.source_url) return data.source_url;
+  if (!data.storage_path) return null;
   const { data: signed, error: signError } = await supabase.storage
     .from("documents")
     .createSignedUrl(data.storage_path, DOCUMENT_LINK_SECONDS);

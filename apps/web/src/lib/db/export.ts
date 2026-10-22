@@ -78,7 +78,10 @@ export async function loadBoatExport(person: Person, boatId: string, now = new D
   const byTable = Object.fromEntries(BOAT_TABLES.map((t, i) => [t, tableRows[i]])) as Record<BoatTable, Row[]>;
 
   const documents = byTable.documents;
-  const fileBytes = documents.reduce((n, d) => n + Number(d.size_bytes ?? 0), 0);
+  const fileBytes = documents.reduce(
+    (n, d) => n + (d.storage_path ? Number(d.size_bytes ?? 0) : 0),
+    0,
+  );
   if (fileBytes > EXPORT_MAX_FILE_BYTES) return { ok: false, reason: "too_large", fileBytes };
 
   // Everyone the records refer to, by ID and name only: members, payers, who added a document
@@ -102,16 +105,21 @@ export async function loadBoatExport(person: Person, boatId: string, now = new D
     ...BOAT_TABLES.map((name) => ({ name, rows: byTable[name] })),
   ];
 
-  const files: ExportFile[] = documents.map((d) => ({
-    path: d.storage_path as string,
-    documentId: d.id as string,
-    open: async () => {
-      // Through RLS as the same person ("documents bucket: members read").
-      const { data, error } = await supabase.storage.from("documents").download(d.storage_path as string);
-      if (error || !data) throw new Error(`Could not export ${d.storage_path}: ${error?.message ?? "no file"}`);
-      return data.stream();
-    },
-  }));
+  const files: ExportFile[] = documents
+    .filter((d): d is Row & { storage_path: string } => typeof d.storage_path === "string")
+    .map((d) => {
+      const path = d.storage_path;
+      return {
+        path,
+        documentId: d.id as string,
+        open: async () => {
+          // Through RLS as the same person ("documents bucket: members read").
+          const { data, error } = await supabase.storage.from("documents").download(path);
+          if (error || !data) throw new Error(`Could not export ${path}: ${error?.message ?? "no file"}`);
+          return data.stream();
+        },
+      };
+    });
 
   return {
     ok: true,

@@ -19,6 +19,7 @@ import {
 } from "@/lib/records";
 import { Contact } from "../../legal-page";
 import { CopyAddress } from "./copy-address";
+import { DriveImport } from "./drive-import";
 
 // The boat page's read-only record sections. Every date and amount shown here was computed by
 // packages/calc (through @/lib/records); these components only lay them out, with the basis
@@ -68,14 +69,20 @@ function Source({ boatId, documentId, documents }: { boatId: string; documentId:
         From {documentName(doc)}
       </a>
       <span className={`-mt-2 text-sm ${muted}`}>
-        {received(doc) === "emailed" ? "Emailed" : "Uploaded"} {formatDate(dateOf(doc.receivedAt))}
+        {received(doc) === "emailed"
+          ? "Emailed"
+          : received(doc) === "uploaded"
+            ? "Uploaded"
+            : "Imported from Google Drive"}{" "}
+        {formatDate(dateOf(doc.receivedAt))}
       </span>
     </p>
   );
 }
 
 function received(doc: BoatDocument): string {
-  return doc.source === "email" ? "emailed" : "uploaded";
+  if (doc.source === "email") return "emailed";
+  return doc.source === "drive" ? "imported from Google Drive" : "uploaded";
 }
 
 // A section's "source · freshness" line, under its heading.
@@ -379,10 +386,12 @@ export function Documents({
   documents,
   boatId,
   address,
+  canImportDrive,
 }: {
   documents: BoatDocument[];
   boatId: string;
   address: string | null;
+  canImportDrive: boolean;
 }) {
   const lastReceived = latestOn(documents.map((d) => d.receivedAt));
   return (
@@ -391,7 +400,7 @@ export function Documents({
         <h2 id="documents" className="scroll-mt-4 text-xl font-semibold">
           Documents
         </h2>
-        {lastReceived && <Freshness>Last received {formatDate(lastReceived)}.</Freshness>}
+        {lastReceived && <Freshness>Latest document date {formatDate(lastReceived)}.</Freshness>}
       </div>
       {address && (
         <div className="flex flex-col gap-1">
@@ -402,11 +411,12 @@ export function Documents({
           <CopyAddress address={address} />
         </div>
       )}
+      {canImportDrive && <DriveImport boatId={boatId} />}
       {documents.length === 0 ? (
         <p className={`${card} ${muted}`}>
           {address
-            ? "No documents yet. Insurance certificates, invoices and manuals will be listed here once they are forwarded to the boat."
-            : "No documents yet. Insurance certificates, invoices and manuals will be listed here once they are forwarded to the boat’s own email address (coming soon)."}
+            ? "No documents yet. Forward documents to the boat or import a Google Drive folder to get started."
+            : "No documents yet. Import a Google Drive folder to get started; forwarding to the boat’s own email address is coming soon."}
         </p>
       ) : (
         <ul className="flex flex-col divide-y divide-black/10 rounded-2xl border border-black/10 dark:divide-white/15 dark:border-white/15">
@@ -421,6 +431,9 @@ export function Documents({
                 <span className="font-medium break-all underline">{documentName(doc)}</span>
                 <span className={`shrink-0 text-sm ${muted}`}>
                   {documentTypes[doc.type]}, {received(doc)} {formatDate(dateOf(doc.receivedAt))}
+                  {doc.source === "drive" && doc.sourceModifiedAt && (
+                    <> · Drive modified {formatDate(dateOf(doc.sourceModifiedAt))}</>
+                  )}
                 </span>
               </a>
             </li>
@@ -476,8 +489,8 @@ export function ExportData({
       </h2>
       <div className={`${card} flex flex-col gap-3`}>
         <p className="text-zinc-700 dark:text-zinc-300">
-          Download every record and file of the boat in one zip, to keep a copy or move it elsewhere. The
-          records are JSON files,{" "}
+          Download the boat&apos;s records and stored files in one zip. Google Drive imports include their source
+          links and metadata, not a copy of the original files. The records are JSON files,{" "}
           <a className="underline" href="https://github.com/heynewton/newton/blob/main/docs/export.md">
             described here
           </a>

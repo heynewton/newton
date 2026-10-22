@@ -80,7 +80,7 @@ async function Settings({ params }: Pick<PageProps<"/boats/[boatId]/settings">, 
       {records && (
         <ExportData
           boatId={boat.boatId}
-          fileBytes={records.documents.reduce((n, d) => n + (d.sizeBytes ?? 0), 0)}
+          fileBytes={records.documents.reduce((n, d) => n + (d.hasStoredFile ? d.sizeBytes ?? 0 : 0), 0)}
           maxFileBytes={EXPORT_MAX_FILE_BYTES}
         />
       )}

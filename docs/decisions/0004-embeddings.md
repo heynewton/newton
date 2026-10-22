@@ -68,11 +68,9 @@ When a document **becomes a manual**: stored with type `manual`, or changed to `
 extraction (#11) or a person. Indexing replaces the document's chunks, so running it twice is
 harmless, and changing the model means running it again for every manual.
 
-It runs outside the request that stored the document, as a background job with the service
-role, once the job runner is decided (#11): the job reads the PDF from Storage and calls
-`indexDocument()` from `packages/indexing` when `shouldIndex()` says so. Until then nothing
-calls it on its own. Email-in (#10), which stores manuals, and Q&A (#14), which searches them,
-are not part of #13.
+For Google Drive imports (#111), `indexDocument()` runs during import while the PDF is held in
+memory; the source file is discarded afterward. Email-in documents still do not automatically
+run through the indexer. Q&A (#14) can use indexed manuals, but its app screen is not part of #13.
 
 ## What would make us switch
 

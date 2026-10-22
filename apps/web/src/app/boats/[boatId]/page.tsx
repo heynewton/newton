@@ -34,8 +34,8 @@ function nextSteps(
       title: "Forward documents to the boat",
       description: (
         <>
-          Send or forward invoices, insurance and manuals to the boat&apos;s own address, and Newton keeps them
-          with the boat.{" "}
+          Send invoices and insurance to the boat&apos;s address, or import an existing Google Drive folder.
+          Newton files them with the boat.{" "}
           <a href="#documents" className="inline-flex min-h-11 items-center font-medium underline">
             Find the address
           </a>
@@ -118,7 +118,7 @@ async function Boat({ params }: Pick<PageProps<"/boats/[boatId]">, "params">) {
         boatId={boat.boatId}
         documents={documents}
       />
-      <Documents documents={records.documents} boatId={boat.boatId} address={address} />
+      <Documents documents={records.documents} boatId={boat.boatId} address={address} canImportDrive={canInvite(boat.role)} />
       <BoatProcedures procedures={procedures} />
 
       <section aria-labelledby="next-steps" className="flex flex-col gap-4">
