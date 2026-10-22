@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { EMBEDDING_DIMENSIONS, type Embedder } from "./embedder";
 import { FakeEmbedder } from "./fake-embedder";
-import { indexDocument, searchChunks, shouldIndex } from "./index-document";
+import { indexDocument, indexProcedure, searchChunks, shouldIndex } from "./index-document";
 import { extractPages } from "./pdf";
 import { MemoryChunkStore } from "./store";
 
@@ -36,7 +36,10 @@ describe("indexDocument on the fixture manual", () => {
     expect(result).toEqual({ pages: 2, pagesWithoutText: [], chunks: store.rows.length });
     expect(store.rows.length).toBeGreaterThan(2);
 
-    const pageOf = (text: string) => store.rows.find((row) => row.content.includes(text))?.page;
+    const pageOf = (text: string) => {
+      const row = store.rows.find((candidate) => candidate.content.includes(text));
+      return row && "page" in row ? row.page : undefined;
+    };
     expect(pageOf("6.1 General")).toBe(1);
     expect(pageOf("Zinc anodes in heat exchanger")).toBe(1);
     expect(pageOf("6.3 Engine oil")).toBe(2);
@@ -73,7 +76,7 @@ describe("indexDocument on the fixture manual", () => {
 
     await indexDocument({ document: testBoat, pdf: manual, embedder, store, maxChars: 400 });
     expect(store.rows.length).toBe(before);
-    expect(store.rows.filter((row) => row.documentId === "manual-2").length).toBeGreaterThan(0);
+    expect(store.rows.filter((row) => "documentId" in row && row.documentId === "manual-2").length).toBeGreaterThan(0);
   });
 
   it("only searches chunks made by the same model", async () => {
@@ -87,6 +90,42 @@ describe("indexDocument on the fixture manual", () => {
     await expect(
       indexDocument({ document: testBoat, pdf: manual, embedder: broken, store: new MemoryChunkStore() }),
     ).rejects.toThrow(/1024 numbers/);
+  });
+
+  it("indexes a procedure with a source title and edit time, and replaces it on edit", async () => {
+    const store = new MemoryChunkStore();
+    const embedder = new FakeEmbedder();
+    const procedure = {
+      id: "procedure-1",
+      boatId: "test-boat",
+      title: "Picking up our mooring",
+      updatedAt: "2026-10-20T12:00:00Z",
+    };
+    const result = await indexProcedure({
+      procedure,
+      content: "Approach slowly from downwind; use the boathook to lift the pickup line.",
+      embedder,
+      store,
+    });
+    expect(result).toEqual({ pages: 1, pagesWithoutText: [], chunks: 1 });
+    const [hit] = await searchChunks({ question: "How do we pick up our mooring?", embedder, store, boatId: "test-boat" });
+    expect(hit).toMatchObject({
+      sourceType: "procedure",
+      procedureId: "procedure-1",
+      procedureTitle: "Picking up our mooring",
+      procedureUpdatedAt: "2026-10-20T12:00:00Z",
+      page: null,
+      content: expect.stringContaining("boathook"),
+    });
+
+    await indexProcedure({
+      procedure: { ...procedure, updatedAt: "2026-10-21T12:00:00Z" },
+      content: "Updated: approach from up-current.",
+      embedder,
+      store,
+    });
+    expect(store.rows.filter((row) => "procedureId" in row && row.procedureId === "procedure-1")).toHaveLength(1);
+    expect(store.rows.some((row) => row.content.includes("boathook"))).toBe(false);
   });
 });
 

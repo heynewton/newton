@@ -24,6 +24,7 @@ const PAGE_ROWS = 1000;
 const BOAT_TABLES = [
   "memberships",
   "documents",
+  "boat_procedures",
   "renewals",
   "maintenance_items",
   "expenses",

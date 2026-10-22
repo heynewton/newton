@@ -1,11 +1,11 @@
 import { chunkPages, type ChunkOptions } from "./chunk";
 import { checkEmbeddings, type Embedder } from "./embedder";
 import { extractPages } from "./pdf";
-import type { ChunkStore, DocumentRef, SearchOptions, SearchResult } from "./store";
+import type { ChunkStore, DocumentRef, ProcedureRef, SearchOptions, SearchResult } from "./store";
 
 /**
- * Which documents are indexed (docs/decisions/0004-embeddings.md): manuals only. Nothing else
- * is sent to the embedding provider. Owner-written procedures (#21) will join them.
+ * Which documents are indexed (docs/decisions/0004-embeddings.md): manuals and owner-written
+ * procedures. Nothing else is sent to the embedding provider.
  */
 export function shouldIndex(document: { type: string; contentType?: string | null }): boolean {
   return document.type === "manual" && (document.contentType ?? "application/pdf") === "application/pdf";
@@ -56,6 +56,46 @@ export async function indexDocument(input: IndexDocumentInput): Promise<IndexDoc
     pagesWithoutText: pages.filter((page) => page.text.trim() === "").map((page) => page.page),
     chunks: chunks.length,
   };
+}
+
+export interface IndexProcedureInput extends ChunkOptions {
+  procedure: ProcedureRef;
+  content: string;
+  embedder: Embedder;
+  store: ChunkStore;
+}
+
+/** Indexes a short procedure, retaining its title and edit time for source citations. */
+export async function prepareProcedureChunks(
+  procedure: ProcedureRef,
+  content: string,
+  embedder: Embedder,
+  maxChars = 12_000,
+) {
+  const pages = [{ page: 1, text: `${procedure.title}\n${content}` }];
+  const chunks = chunkPages(pages, { maxChars });
+  const texts = chunks.map((chunk) => chunk.content);
+  const embeddings = texts.length === 0 ? [] : await embedder.embed(texts, "document");
+  checkEmbeddings(texts, embeddings, embedder.model);
+
+  return chunks.map((chunk, i) => ({
+      boatId: procedure.boatId,
+      procedureId: procedure.id,
+      procedureTitle: procedure.title,
+      procedureUpdatedAt: procedure.updatedAt,
+      chunkIndex: chunk.index,
+      content: chunk.content,
+      embedding: embeddings[i] as number[],
+      embeddingModel: embedder.model,
+    }));
+}
+
+export async function indexProcedure(input: IndexProcedureInput): Promise<IndexDocumentResult> {
+  const { procedure, content, embedder, store } = input;
+  const chunks = await prepareProcedureChunks(procedure, content, embedder, input.maxChars ?? 12_000);
+  await store.replaceProcedureChunks(procedure, chunks);
+
+  return { pages: 1, pagesWithoutText: content.trim() ? [] : [1], chunks: chunks.length };
 }
 
 export interface SearchInput extends SearchOptions {
