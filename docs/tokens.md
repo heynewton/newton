@@ -33,8 +33,8 @@ Rules for all of them:
 | Resend SMTP keys | secret | Resend | The prod or dev Resend team (Free), one key each (#109) | Supabase Auth SMTP of `newton-dev` and `newton-prod` (#61, #63) | That project's SMTP settings only, not GitHub |
 | `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY`, `CRON_SECRET` | secrets | Resend, Supabase, us | That environment's Resend team (#109); that Supabase project | Email-in webhook (#10) and reminders job (#12) | Vercel env vars of that deployment: the dev site's on `heynewton-web` Production only, never Preview |
 | `ANTHROPIC_API_KEY` | secret | Anthropic | `heynewton` org in the Claude Console, one workspace per environment | Filing (#11) in the web app (after email-in and the daily `/api/filing` run); the live evals of filing and manual Q&A (`packages/agent`, #11, #14) | Local `.env` for the evals; Vercel env vars of each deployment for filing (without it, filing is off there and documents stay unsorted). Not in CI |
-| Google OAuth clients (`newton-dev`, `newton-prod`) | client ID, secret | Google Cloud | Project Google Cloud project `heynewton`, on dev@heynewton.app | Google sign-in on `/sign-in` (#131); temporary read-only Drive folder import (#111) | Supabase Auth settings for sign-in; `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in the web app's environments for Drive Picker. Not in GitHub |
-| Google Picker API keys | public API key | Google Cloud | Project Google Cloud project `heynewton` | Google Picker and Drive API for folder import (#111) | `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` in the web app's environments; restrict by website origin and API. Not in GitHub |
+| Google OAuth clients (`newton-dev`, `newton-prod`) | client ID, secret | Google Cloud | Project Google Cloud project `heynewton`, on dev@heynewton.app | Google sign-in on `/sign-in` (#131); temporary read-only Drive folder import (#111) | Supabase Auth settings for sign-in; `NEXT_PUBLIC_GOOGLE_CLIENT_ID` on `heynewton-web` (dev client, Production and Preview) and `heynewton-prod` (prod client, Production) for Drive Picker. Not in GitHub |
+| Google Picker API keys (dev and prod) | public API key | Google Cloud | Project Google Cloud project `heynewton` | Google Picker and Drive API for folder import (#111) | `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` on `heynewton-web` (dev key, Production and Preview) and `heynewton-prod` (prod key, Production); restrict each to its site's origins and the Picker and Drive APIs. Not in GitHub |
 | Sign in with Apple key and client secrets (`newton-dev`, `newton-prod`) | private key (`.p8`); client secret (a JWT, expires every 6 months) | Apple | The project Apple Developer account, on dev@heynewton.app | Apple sign-in on `/sign-in` (#27) | The `.p8` in the project password manager only; each client secret in that Supabase project's Auth settings (set through the Management API). Not in GitHub |
 | `VOYAGE_API_KEY` | secret | Voyage AI | Project Voyage AI account | Indexing and search of manuals (`packages/indexing`, #13, #14, #111) | Local `.env`; Vercel environment variables for imports. Not in CI |
 
@@ -406,6 +406,52 @@ then restart the stack. `supabase/config.toml` keeps Google off without it.
   Supabase's domain. A Supabase custom domain (paid add-on) would make it `heynewton.app`.
 - **Renewal:** the client secrets don't expire. If one leaks, add a new secret on the client in
   Google Cloud, set it as above, then delete the old one.
+
+## Google Drive folder import (#111)
+
+The boat page shows **Import from Google Drive** only when both
+`NEXT_PUBLIC_GOOGLE_CLIENT_ID` and `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` are present in the build.
+Reuse the existing Google OAuth web clients used by Supabase sign-in; the importer does not need
+additional OAuth clients or client secrets. Use a separate Picker API key for dev and prod. These
+browser-side values are public, but still restrict them to Newton's origins and APIs.
+
+**Google Cloud** (project `heynewton`, signed in as dev@heynewton.app):
+
+- Enable **Google Picker API** and **Google Drive API**.
+- Create a Picker API key for each environment. Under API restrictions, allow only Google Picker
+  API and Google Drive API. Under website restrictions, allow only the relevant HTTPS origins:
+  `dev.heynewton.app` and `heynewton-web.vercel.app` for dev; `heynewton.app` for prod. Add an
+  exact Vercel preview origin to the dev key only when you need to test Drive import on that
+  preview.
+- Reuse the existing `newton-dev` and `newton-prod` OAuth web clients from
+  [Google sign-in](#google-sign-in-131); do not create another client just for Drive import. Add
+  their respective site origins under **Authorized JavaScript origins**: `https://dev.heynewton.app`
+  and `https://heynewton-web.vercel.app` on `newton-dev`; `https://heynewton.app` on `newton-prod`.
+  Google OAuth origins do not accept paths or wildcard preview hosts; add a preview's exact origin
+  to the dev client before testing it.
+- Publish the Google Auth Platform consent screen and complete Google's verification for the
+  restricted `drive.readonly` scope before external users use the importer. The client ID and
+  Picker key are not secrets; the OAuth client secret is not used by the browser importer.
+
+**Vercel.** Add each value with `vercel env add`; the CLI prompts for the value. Do not put values
+in source files, command arguments, or chat. `heynewton-web`'s **Production** target is the dev
+site (`dev.heynewton.app`); its **Preview** target is PR previews. Use the `newton-dev` client ID
+and dev Picker key for both. `heynewton-prod` serves production and uses only the `newton-prod`
+client ID and prod Picker key:
+
+```bash
+vercel env add NEXT_PUBLIC_GOOGLE_CLIENT_ID production --project=heynewton-web
+vercel env add NEXT_PUBLIC_GOOGLE_CLIENT_ID preview --project=heynewton-web
+vercel env add NEXT_PUBLIC_GOOGLE_PICKER_API_KEY production --project=heynewton-web
+vercel env add NEXT_PUBLIC_GOOGLE_PICKER_API_KEY preview --project=heynewton-web
+vercel env add NEXT_PUBLIC_GOOGLE_CLIENT_ID production --project=heynewton-prod
+vercel env add NEXT_PUBLIC_GOOGLE_PICKER_API_KEY production --project=heynewton-prod
+```
+
+After adding or changing values, redeploy the dev site and production so Next.js includes them in
+the browser bundle. A PR preview also needs a redeploy after its Preview variables are added.
+Verify the button appears on a boat page as an owner or co-owner, then test selecting and importing
+a small folder. Google OAuth verification is a prerequisite for external accounts.
 
 ## Apple sign-in (#27)
 
